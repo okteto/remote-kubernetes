@@ -87,29 +87,31 @@ function startUpCommand(namespace: string, name: string, manifestPath: string) {
 		});
 
 		return new Promise(resolve => {
-			let previous = okteto.state.unknown;
-			progress.report({ increment: 0 });
-			while(true) {
+			var seen = new Map<string, boolean>();
+			progress.report({ increment: 0, message: "Launching your Okteto Environment..." });
+			const intervalID = setInterval(()=>{
+			
 				const state = okteto.getState(namespace, name);
 				console.log(`okteto is ${state}`);
 				switch(state) {
 					case okteto.state.provisioning:
-						if (previous !== okteto.state.provisioning) {
+						if (!seen.has(state)) {
 							progress.report({ increment: 20, message: "Provisioning your persistent volume..." });
 						}
+						
 						break;
-					case okteto.state.startingSync:
-						if (previous !== okteto.state.provisioning) {
+					case okteto.state.startingSync:						
+					if (!seen.has(state)) {
 							progress.report({ increment: 20, message: "Starting the file synchronization service..."});
 						}
 						break;
 					case okteto.state.synchronizing:
-						if (previous !== okteto.state.provisioning) {
+						if (!seen.has(state)) {
 							progress.report({ increment: 20, message: "Synchronizing your files..."});
 						}
 						break;
 					case okteto.state.activating:
-						if (previous !== okteto.state.provisioning) {
+						if (!seen.has(state)) {	
 							progress.report({ increment: 20, message: "Activating your Okteto Environment..."});
 						}
 						break;
@@ -117,11 +119,12 @@ function startUpCommand(namespace: string, name: string, manifestPath: string) {
 						progress.report({ increment: 20, message: "Your Okteto Environment is ready..."});				
 						onOktetoReady(name);
 						resolve();
+						clearInterval(intervalID);
 						return;
 				}
 
-				previous = state
-			}
+				seen.set(state, true);
+			}, 1000);
 		});				
 	})
 }
