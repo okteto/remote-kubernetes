@@ -3,10 +3,11 @@ import * as execa from 'execa';
 import * as home from 'user-home';
 import * as path from 'path'
 import * as commandExists from 'command-exists';
+import * as vscode from 'vscode';
+import * as os from 'os';
 
 const oktetoFolder = '.okteto'
 const stateFile = 'okteto.state'
-const binary = '/Users/ramiro/okteto/okteto/bin/okteto'
 
 export const state = {
   provisioning: 'provisioning',
@@ -19,19 +20,19 @@ export const state = {
 
 
 export function isInstalled(): boolean{
-  return commandExists.sync(binary)
+  return commandExists.sync(getBinary())
 }
 
 export function start(manifest: string, namespace: string): execa.ExecaChildProcess<string> {
-  console.log(`launching ${binary} up -f ${manifest} --namespace ${namespace}`);
-  return execa(binary, ['up', '-f', manifest, '--namespace', namespace], {
+  console.log(`launching ${getBinary()} up -f ${manifest} --namespace ${namespace}`);
+  return execa(getBinary(), ['up', '-f', manifest, '--namespace', namespace], {
       env: {OKTETO_AUTODEPLOY: "1"},
   });
 }
 
 export function down(manifest: string, namespace: string): execa.ExecaChildProcess<string> {
   console.log(`launching okteto down -f ${manifest} --namespace ${namespace}`);
-  return execa(binary, ['down', '-f', manifest, '--namespace', namespace]);
+  return execa(getBinary(), ['down', '-f', manifest, '--namespace', namespace]);
 }
 
 export function getState(namespace: string, name: string): string {
@@ -52,4 +53,17 @@ export function getState(namespace: string, name: string): string {
 
   console.error(`received unknown state: ${c}`);
   return state.unknown
+}
+
+function getBinary(): string {
+  let binary = vscode.workspace.getConfiguration('okteto').get<string>('binary');
+  if (!binary) {
+    if (os.platform() == 'win32') {
+      binary = 'okteto.exe'
+    } else {
+      binary = 'okteto'
+    }
+  }
+
+  return binary;
 }

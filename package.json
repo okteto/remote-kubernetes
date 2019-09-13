@@ -24,7 +24,17 @@
 				"command": "okteto.down",
 				"title": "Okteto: Stop"
 			}
-		]
+		],
+		"configuration": {
+			"title": "Okteto",
+			"properties": {
+				"okteto.binary": {
+					"type": "string",
+					"default": "",
+					"description": "The path to the Okteto binary"
+				}
+			}
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "yarn run compile",

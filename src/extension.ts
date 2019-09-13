@@ -2,9 +2,7 @@ import * as vscode from 'vscode';
 import * as manifest from './manifest'
 import * as ssh from './ssh'
 import * as okteto from './okteto'
-import * as path from 'path'
 import * as kubernetes from './kubernetes';
-import { ok } from 'assert';
 
 
 
