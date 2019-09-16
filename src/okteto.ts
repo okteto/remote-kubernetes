@@ -5,7 +5,6 @@ import * as path from 'path'
 import * as commandExists from 'command-exists';
 import * as vscode from 'vscode';
 import * as os from 'os';
-import { rejects } from 'assert';
 
 const oktetoFolder = '.okteto'
 const stateFile = 'okteto.state'

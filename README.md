@@ -1,5 +1,6 @@
 # Remote - Kubernetes
 
+
 The **Remote - Kubernetes** extension uses Okteto to move your development environment to Kubernetes. 
 
 Kubernetes, Okteto and VS Code make a great development environment because you can:

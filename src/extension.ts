@@ -28,6 +28,7 @@ function downCommand(state: vscode.Memento) {
 
 		const name = manifest.getName(manifestPath);
 		okteto.down(manifestPath, ktx.namespace, name).then((e) => {
+			ssh.removeConfig(name);
 			state.update('activeManifest', '');
 			vscode.window.showInformationMessage("Okteto environment deactivated");
 			console.log(`okteto environment deactivated`);
