@@ -1,9 +1,13 @@
 {
-	"name": "okteto-vscode",
+	"name": "remote-kubernetes",
 	"publisher": "okteto",
 	"displayName": "Remote - Kubernetes",
 	"description": "Remote Kubernetes Development with Okteto",
-	"keywords": ["kubernetes", "docker", "remote"],
+	"keywords": [
+		"kubernetes",
+		"docker",
+		"remote"
+	],
 	"version": "0.1.0",
 	"icon": "media/okteto.png",
 	"author": {
@@ -28,7 +32,7 @@
 	"activationEvents": [
 		"*"
 	],
-	"main": "./out/extension.js",
+	"main": "./dist/extension",
 	"contributes": {
 		"commands": [
 			{
@@ -51,12 +55,12 @@
 			}
 		}
 	},
-	"bundleDependencies": ["ms-vscode-remote.remote-ssh"],
 	"scripts": {
-		"vscode:prepublish": "yarn run compile",
-		"compile": "tsc -p ./",
-		"watch": "tsc -watch -p ./",
-		"pretest": "yarn run compile",
+		"vscode:prepublish": "webpack --mode production",
+		"compile": "webpack --mode development",
+		"watch": "webpack --mode development --watch",
+		"package": "vsce package",
+		"pretest": "npm run compile",
 		"test": "node ./out/test/runTest.js"
 	},
 	"devDependencies": {
@@ -66,21 +70,27 @@
 		"@types/vscode": "^1.38.0",
 		"glob": "^7.1.4",
 		"mocha": "^6.1.4",
+		"ts-loader": "^6.1.0",
 		"tslint": "^5.12.1",
 		"typescript": "^3.3.1",
-		"vscode-test": "^1.0.2"
+		"vsce": "^1.66.0",
+		"vscode-test": "^1.0.2",
+		"webpack": "^4.40.2",
+		"webpack-cli": "^3.3.8"
 	},
 	"dependencies": {
 		"@kubernetes/client-node": "^0.10.2",
 		"@types/command-exists": "^1.2.0",
 		"@types/user-home": "^2.0.0",
 		"@types/yaml": "^1.0.2",
+		"bufferutil": "^4.0.1",
 		"command-exists": "^1.2.8",
 		"execa": "^2.0.4",
 		"fs": "^0.0.1-security",
 		"ssh-config": "^2.0.0-beta.1",
 		"tcp-ping": "^0.1.1",
 		"user-home": "^2.0.0",
+		"utf-8-validate": "^5.0.2",
 		"yaml": "^1.6.0"
 	}
 }

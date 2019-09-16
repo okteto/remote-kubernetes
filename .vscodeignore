@@ -1,0 +1,16 @@
+.vscode
+node_modules
+out/
+src/
+remote-kubernetes-*/
+**/*.ts
+**/tsconfig.json
+**/tslint.json
+**/webpack.config.js
+
+okteto.yml
+.stignore
+
+.git
+.gitignore
+.github
