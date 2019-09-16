@@ -2,7 +2,7 @@
 	"name": "remote-kubernetes",
 	"publisher": "okteto",
 	"displayName": "Remote - Kubernetes",
-	"description": "Remote Kubernetes Development with Okteto",
+	"description": "Remote Kubernetes Development in VS Code with Okteto",
 	"keywords": [
 		"kubernetes",
 		"docker",

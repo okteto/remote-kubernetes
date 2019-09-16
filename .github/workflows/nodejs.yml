@@ -20,7 +20,7 @@ jobs:
     - name: npm install, build, and test
       run: |
         npm install
-        npm package
+        npm run package
       env:
         CI: true
     - uses: actions/upload-artifact@master
