@@ -73,6 +73,7 @@
 		"ts-loader": "^6.1.0",
 		"tslint": "^5.12.1",
 		"typescript": "^3.3.1",
+		"vsce": "^1.66.0",
 		"vscode-test": "^1.0.2",
 		"webpack": "^4.40.2",
 		"webpack-cli": "^3.3.8"
@@ -90,7 +91,6 @@
 		"tcp-ping": "^0.1.1",
 		"user-home": "^2.0.0",
 		"utf-8-validate": "^5.0.2",
-		"vsce": "^1.66.0",
 		"yaml": "^1.6.0"
 	}
 }
