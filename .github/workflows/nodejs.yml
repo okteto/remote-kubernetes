@@ -1,0 +1,31 @@
+name: CI/CD
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [10.x]
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: npm install, build, and test
+      run: |
+        npm install
+        npm run package
+        mkdir -p artifacts
+        mv remote-kubernetes-*.vsix artifacts/
+      env:
+        CI: true
+    - uses: actions/upload-artifact@master
+      with: 
+        name: artifacts
+        path: artifacts
