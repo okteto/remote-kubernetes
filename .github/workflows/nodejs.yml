@@ -1,4 +1,4 @@
-name: Node CI
+name: CI/CD
 
 on: [push]
 
@@ -23,7 +23,7 @@ jobs:
         npm package
       env:
         CI: true
-    - uses: actions/upload-artifact@master
-        name: kubernetetes-remote.vsix
-        path: kubernetetes-remote-*.vsix
-        
+    - users: actions/upload-artifact@master
+      with: 
+        name: kubernetes-remote.vsix
+        path: kubernetes-remote-*.vsix
