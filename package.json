@@ -3,7 +3,22 @@
 	"publisher": "okteto",
 	"displayName": "Okteto for VS Code",
 	"description": "Develop directly in Kubernetes with Okteto",
+	"keywords": ["kubernetes", "docker", "remote"],
 	"version": "0.1.0",
+	"icon": "media/okteto.png",
+	"author": {
+		"name": "rberrelleza"
+	},
+	"homepage": "https://github.com/okteto/vscode/README.md",
+	"bugs": {
+		"url": "https://github.com/okteto/vscode/issues",
+		"email": "hello@okteto.com"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/okteto/vscode.git"
+	},
+	"license": "SEE LICENSE IN LICENSE",
 	"engines": {
 		"vscode": "^1.38.0"
 	},

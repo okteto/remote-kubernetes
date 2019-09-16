@@ -32,7 +32,7 @@ export function start(manifest: string, namespace: string, name: string): Promis
     cleanState(namespace, name);
     const term = vscode.window.createTerminal({
       name: `okteto`,
-      hideFromUser: true,
+      hideFromUser: false,
       env: {
         "OKTETO_AUTODEPLOY":"1",
         "OKTETO_CLIENTSIDE_TRANSLATION":"1"
