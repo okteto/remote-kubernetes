@@ -27,26 +27,24 @@ export function isInstalled(): boolean{
 
 export function start(manifest: string, namespace: string, name: string): Promise<string> {
   console.log(`launching ${getBinary()} up -f ${manifest} --namespace ${namespace} --remote`);
-  disposeTerminal();
-  cleanState(namespace, name);
-  const term = vscode.window.createTerminal({
-    name: `okteto`,
-    hideFromUser: false,
-  });
-
-  term.sendText(`OKTETO_AUTODEPLOY=1 ${getBinary()} up -f ${manifest} --namespace ${namespace} --remote`, true);
   return new Promise<string>((resolve, reject) => {
-    const id = setInterval(() =>{
-      const c = getState(namespace, name)
-      switch(c) {
-        case state.ready:
-          resolve();
-          clearInterval(id);
-        case state.failed:
-            reject(`${getBinary()} up -f ${manifest} --namespace ${namespace} --remote failed`);
-          clearInterval(id);
+    disposeTerminal();
+    cleanState(namespace, name);
+    const term = vscode.window.createTerminal({
+      name: `okteto`,
+      hideFromUser: true,
+      env: {
+        "OKTETO_AUTODEPLOY":"1",
+        "OKTETO_CLIENTSIDE_TRANSLATION":"1"
       }
-    }, 1000);
+    });
+
+    try{
+      term.sendText(`${getBinary()} up -f ${manifest} --namespace ${namespace} --remote`, true);
+    }catch(err) {
+      reject(err);
+    }
+    resolve();
   });
 }
 
@@ -103,7 +101,7 @@ export function getState(namespace: string, name: string): string {
   return state.unknown
 }
 
-export function monitorFailed(namespace: string, name:string, callback: () => void){
+export function onFailed(namespace: string, name:string, callback: () => void){
   const id = setInterval(() =>{
     const c = getState(namespace, name)
     if (c == state.failed) {

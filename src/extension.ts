@@ -64,8 +64,10 @@ function upCommand() {
 	
 	okteto.start(manifestPath, namespace, name)
 	.then(()=>{
-		okteto.monitorFailed(namespace, name, onOktetoFailed);
+		console.log('okteto started');
 		vscode.commands.executeCommand("okteto.startUp", namespace, name, manifestPath);
+		okteto.onFailed(namespace, name, onOktetoFailed);
+		
 	})
 	.catch((reason)=>{
 		console.log(reason);
@@ -78,8 +80,7 @@ function upCommand() {
 function startUpCommand(namespace: string, name: string, manifestPath: string) {
 	console.log('okteto.startUp');
 	vscode.window.withProgress({
-		location: vscode.ProgressLocation.Notification,
-		title: "Starting your development environment",
+		location: vscode.ProgressLocation.Notification,		
 		cancellable: true
 	}, (progress, token) => {
 		token.onCancellationRequested(() => {
@@ -88,7 +89,7 @@ function startUpCommand(namespace: string, name: string, manifestPath: string) {
 
 		return new Promise(resolve => {
 			var seen = new Map<string, boolean>();
-			progress.report({ increment: 0, message: "Launching your Okteto Environment..." });
+			progress.report({  message: "Launching your Okteto Environment..." });
 			const intervalID = setInterval(()=>{
 			
 				const state = okteto.getState(namespace, name);
@@ -98,27 +99,26 @@ function startUpCommand(namespace: string, name: string, manifestPath: string) {
 						console.log('up is starting');
 					case okteto.state.provisioning:
 						if (!seen.has(state)) {
-							progress.report({ increment: 20, message: "Provisioning your persistent volume..." });
+							progress.report({ message: "Provisioning your persistent volume..." });
 						}
-						
 						break;
 					case okteto.state.startingSync:						
 					if (!seen.has(state)) {
-							progress.report({ increment: 20, message: "Starting the file synchronization service..."});
+							progress.report({ message: "Starting the file synchronization service..."});
 						}
 						break;
 					case okteto.state.synchronizing:
 						if (!seen.has(state)) {
-							progress.report({ increment: 20, message: "Synchronizing your files..."});
+							progress.report({ message: "Synchronizing your files..."});
 						}
 						break;
 					case okteto.state.activating:
 						if (!seen.has(state)) {	
-							progress.report({ increment: 20, message: "Activating your Okteto Environment..."});
+							progress.report({ message: "Activating your Okteto Environment..."});
 						}
 						break;
 					case okteto.state.ready:
-						progress.report({ increment: 20, message: "Your Okteto Environment is ready..."});				
+						progress.report({ message: "Your Okteto Environment is ready..."});				
 						onOktetoReady(name);
 						resolve();
 						clearInterval(intervalID);
@@ -141,9 +141,10 @@ function onOktetoReady(name: string) {
 	ssh.updateConfig(name, 22000);
 	// launch remote extension
 	vscode.commands.executeCommand("opensshremotes.openEmptyWindow", {hostName: name}).then((r) =>{
-		console.log(r);	
+		console.log(`opensshremotes.openEmptyWindow executed`);	
 	}, (f) => {
-		console.error(f);	
+		console.error(`opensshremotes.openEmptyWindow failed: ${f}`);	
+		onOktetoFailed();
 	});
 
 	// opensshremotesexplorer.emptyWindowInNewWindow
