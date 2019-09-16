@@ -6,8 +6,11 @@ import * as kubernetes from './kubernetes';
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('okteto extension activated');
-	context.subscriptions.push(vscode.commands.registerCommand('okteto.up', upCommand));	
-	context.subscriptions.push(vscode.commands.registerCommand('okteto.down', downCommand));
+	const upFn = () => {upCommand(context.workspaceState)}
+	const downFn = () => {downCommand(context.workspaceState)}
+
+	context.subscriptions.push(vscode.commands.registerCommand('okteto.up', upFn));	
+	context.subscriptions.push(vscode.commands.registerCommand('okteto.down', downFn));
 }
 
 function downCommand(state: vscode.Memento) {
@@ -25,35 +28,43 @@ function downCommand(state: vscode.Memento) {
 
 		const name = manifest.getName(manifestPath);
 		okteto.down(manifestPath, ktx.namespace, name).then((e) => {
+			state.update('activeManifest', '');
 			vscode.window.showInformationMessage("Okteto environment deactivated");
+			console.log(`okteto environment deactivated`);
 		}, (reason) => {
 			console.error(`okteto down exited with an error: ${reason}`);
 		});
 	}
 
-	selectManifest().then((value) => {
-		if (!value) {
-			return;
-		}
+	const manifestPath = state.get<string>('activeManifest');
+	if (!manifestPath){
+		selectManifest('Load').then((value) => {
+			if (!value) {
+				return;
+			}
 
-		runDown(value[0].fsPath);
-	}, (reason) => {
-		console.log(`user canceled down: ${reason}`);
-	});
+			runDown(value[0].fsPath);
+		}, (reason) => {
+			console.log(`user canceled down: ${reason}`);
+		});
+	} else {
+		runDown(manifestPath);
+	}
 }
 
-function upCommand() {
+function upCommand(state: vscode.Memento) {
 	console.log('okteto.up');
 	if (!okteto.isInstalled()){
 		vscode.window.showErrorMessage('You need to install okteto in order to use this extension. Go to https://github.com/okteto/okteto for more information.');
 	}
 	
-	selectManifest().then((value) => {
+	selectManifest('Load').then((value) => {
 		if (!value) {
 			return;
 		}
 
 		const manifestPath = value[0].fsPath;
+		state.update('activeManifest', manifestPath);
 		console.log(`user selected: ${manifestPath}`);
 		const name = manifest.getName(manifestPath);
 		const ktx = kubernetes.getCurrentContext(); 
@@ -158,10 +169,10 @@ function onOktetoFailed() {
 	vscode.window.showErrorMessage(`Okteto: Up command failed to start your development environment`);
 }
 
-function selectManifest() : Thenable<vscode.Uri[] | undefined> {
+function selectManifest(label: string) : Thenable<vscode.Uri[] | undefined> {
 	return vscode.window.showOpenDialog({
 		defaultUri: manifest.getDefaultLocation(),
-		openLabel: 'Active',
+		openLabel: label,
 		canSelectMany: false,
 		canSelectFiles: true,
 		canSelectFolders: false,
