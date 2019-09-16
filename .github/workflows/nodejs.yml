@@ -23,7 +23,7 @@ jobs:
         npm package
       env:
         CI: true
-    - users: actions/upload-artifact@master
+    - uses: actions/upload-artifact@master
       with: 
         name: kubernetes-remote.vsix
         path: kubernetes-remote-*.vsix
