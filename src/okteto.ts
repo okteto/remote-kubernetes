@@ -100,7 +100,7 @@ export function getState(namespace: string, name: string): string {
   return state.unknown
 }
 
-export function onFailed(namespace: string, name:string, callback: () => void){
+export function notifyIfFailed(namespace: string, name:string, callback: () => void){
   const id = setInterval(() =>{
     const c = getState(namespace, name)
     if (c == state.failed) {
