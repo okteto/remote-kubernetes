@@ -5,39 +5,85 @@ import * as path from 'path'
 import * as commandExists from 'command-exists';
 import * as vscode from 'vscode';
 import * as os from 'os';
+import { rejects } from 'assert';
 
 const oktetoFolder = '.okteto'
 const stateFile = 'okteto.state'
 
 export const state = {
+  starting: 'starting',
   provisioning: 'provisioning',
   startingSync: 'startingSync',
   synchronizing: 'synchronizing',
   activating: 'activating',
   ready: 'ready',
   unknown: 'unknown',
+  failed: 'failed',
 }
-
 
 export function isInstalled(): boolean{
   return commandExists.sync(getBinary())
 }
 
-export function start(manifest: string, namespace: string): execa.ExecaChildProcess<string> {
-  console.log(`launching ${getBinary()} up -f ${manifest} --namespace ${namespace}`);
-  return execa(getBinary(), ['up', '-f', manifest, '--namespace', namespace], {
-      env: {OKTETO_AUTODEPLOY: "1"},
+export function start(manifest: string, namespace: string, name: string): Promise<string> {
+  console.log(`launching ${getBinary()} up -f ${manifest} --namespace ${namespace} --remote`);
+  disposeTerminal();
+  cleanState(namespace, name);
+  const term = vscode.window.createTerminal({
+    name: `okteto`,
+    hideFromUser: false,
+  });
+
+  term.sendText(`OKTETO_AUTODEPLOY=1 ${getBinary()} up -f ${manifest} --namespace ${namespace} --remote`, true);
+  return new Promise<string>((resolve, reject) => {
+    const id = setInterval(() =>{
+      const c = getState(namespace, name)
+      switch(c) {
+        case state.ready:
+          resolve();
+          clearInterval(id);
+        case state.failed:
+            reject(`${getBinary()} up -f ${manifest} --namespace ${namespace} --remote failed`);
+          clearInterval(id);
+      }
+    }, 1000);
   });
 }
 
-export function down(manifest: string, namespace: string): execa.ExecaChildProcess<string> {
+export function down(manifest: string, namespace: string, name:string): Promise<string> {
   console.log(`launching okteto down -f ${manifest} --namespace ${namespace}`);
-  return execa(getBinary(), ['down', '-f', manifest, '--namespace', namespace]);
+  disposeTerminal();
+  return new Promise<string>((resolve, reject) => {
+    execa(getBinary(), ['down', '-f', manifest, '--namespace', namespace]).then((value)=>{
+      resolve();
+    },
+    (reason) => {
+      reject(reason);
+    });
+  })
+  
+}
+
+function getStateFile(namespace: string, name:string): string {
+  return path.join(home, oktetoFolder, namespace, name, stateFile);
 }
 
 export function getState(namespace: string, name: string): string {
-  const p = path.join(home, oktetoFolder, namespace, name, stateFile);
-  const c = fs.readFileSync(p, 'utf-8');
+  const p = getStateFile(namespace, name);
+
+  if (!fs.existsSync(p)) {
+    // if it doesn't exist we just return the initial state
+    return state.provisioning;
+  }
+
+  var c = state.provisioning;
+  
+  try {
+    c = fs.readFileSync(p, 'utf-8');
+  }catch(err) {
+    console.error(`failed to open ${p}: ${err}`);
+  }
+
   switch(c) {
       case state.provisioning:
           return state.provisioning;
@@ -49,10 +95,34 @@ export function getState(namespace: string, name: string): string {
           return state.activating;
       case state.ready:
           return state.ready;
+      case state.failed:
+          return state.failed;
   }
 
   console.error(`received unknown state: ${c}`);
   return state.unknown
+}
+
+export function monitorFailed(namespace: string, name:string, callback: () => void){
+  const id = setInterval(() =>{
+    const c = getState(namespace, name)
+    if (c == state.failed) {
+      callback();
+      clearInterval(id);
+    }
+  }, 1000)
+}
+
+export function cleanState(namespace: string, name:string) {
+  const p = getStateFile(namespace, name);
+  
+  try{
+    fs.unlinkSync(p);
+  }catch(err) {
+    if (err.code !== 'ENOENT'){
+      console.error(`failed to delete ${p}: ${err}`);
+    }
+  }
 }
 
 function getBinary(): string {
@@ -66,4 +136,12 @@ function getBinary(): string {
   }
 
   return binary;
+}
+
+function disposeTerminal(){
+  vscode.window.terminals.forEach((t) => {
+    if (t.name == `okteto`) {
+      t.dispose()
+    }
+  });
 }
