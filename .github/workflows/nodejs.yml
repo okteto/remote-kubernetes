@@ -21,9 +21,11 @@ jobs:
       run: |
         npm install
         npm run package
+        mkdir -p artifacts
+        mv "kubernetes-remote-*.vsix" artifacts/
       env:
         CI: true
     - uses: actions/upload-artifact@master
       with: 
-        name: kubernetes-remote.vsix
-        path: kubernetes-remote-*.vsix
+        name: artifacts
+        path: artifacts
