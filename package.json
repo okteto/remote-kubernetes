@@ -1,9 +1,9 @@
 {
 	"name": "okteto-vscode",
 	"publisher": "okteto",
-	"displayName": "okteto",
+	"displayName": "Okteto for VS Code",
 	"description": "Develop directly in Kubernetes with Okteto",
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"engines": {
 		"vscode": "^1.38.0"
 	},
@@ -26,7 +26,7 @@
 			}
 		],
 		"configuration": {
-			"title": "Okteto",
+			"title": "Okteto for VS Code",
 			"properties": {
 				"okteto.binary": {
 					"type": "string",
@@ -36,6 +36,7 @@
 			}
 		}
 	},
+	"bundleDependencies": ["ms-vscode-remote.remote-ssh"],
 	"scripts": {
 		"vscode:prepublish": "yarn run compile",
 		"compile": "tsc -p ./",
