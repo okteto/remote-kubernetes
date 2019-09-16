@@ -2,6 +2,7 @@ import * as ssh from 'ssh-config';
 import * as fs from 'fs';
 import * as home from 'user-home';
 import * as path from 'path';
+import * as gp from 'get-port';
 
 function getPath() : string {
     return path.join(home, ".ssh", "config");
@@ -51,4 +52,8 @@ export function updateConfig(name: string, port: number) {
     
     save(config);
     console.log(`generated config for ${name} in ${configPath}`)
+}
+
+export function getPort(): Promise<number> {
+    return gp({port: 22000});
 }

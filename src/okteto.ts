@@ -24,8 +24,8 @@ export function isInstalled(): boolean{
   return commandExists.sync(getBinary())
 }
 
-export function start(manifest: string, namespace: string, name: string): Promise<string> {
-  console.log(`launching ${getBinary()} up -f ${manifest} --namespace ${namespace} --remote`);
+export function start(manifest: string, namespace: string, name: string, port: number): Promise<string> {
+  console.log(`launching ${getBinary()} up -f ${manifest} --namespace ${namespace} --remote=${port}`);
   return new Promise<string>((resolve, reject) => {
     disposeTerminal();
     cleanState(namespace, name);
@@ -38,7 +38,7 @@ export function start(manifest: string, namespace: string, name: string): Promis
     });
 
     try{
-      term.sendText(`${getBinary()} up -f ${manifest} --namespace ${namespace} --remote`, true);
+      term.sendText(`${getBinary()} up -f ${manifest} --namespace ${namespace} --remote ${port}`, true);
     }catch(err) {
       reject(err);
     }
