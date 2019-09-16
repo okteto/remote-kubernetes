@@ -31,7 +31,7 @@
 				"okteto.binary": {
 					"type": "string",
 					"default": "",
-					"description": "The path to the Okteto binary. When empty, it will use \"okteto\" on the path"
+					"description": "An absolute path to the Okteto executable. When empty, it will use \"okteto\" on the path"
 				}
 			}
 		}
