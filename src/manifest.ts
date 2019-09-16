@@ -1,13 +1,10 @@
 import * as fs from 'fs';
 import * as yaml from 'yaml';
 import * as path from 'path';
+import * as vscode from 'vscode';
 
 export function exists(manifestPath: string): boolean {
     return fs.existsSync(manifestPath);
-}
-
-export function getPath(currentFolder: string) {
-    return path.join(currentFolder, 'okteto.yml');
 }
 
 export function getName(manifestPath: string): string {
@@ -37,3 +34,13 @@ export function create(name: string, port: number, manifestPath: string) {
         console.error(err);
     }
 };
+
+export function getDefaultLocation(): vscode.Uri | undefined{
+    if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length == 0) {
+        return undefined;
+    }
+
+    const p = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, 'okteto.yml');
+    return vscode.Uri.file(p);
+
+}
