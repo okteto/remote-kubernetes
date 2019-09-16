@@ -97,7 +97,7 @@ export function getState(namespace: string, name: string): string {
           return state.failed;
   }
 
-  console.error(`received unknown state: ${c}`);
+  console.error(`received unknown state: '${c}'`);
   return state.unknown
 }
 
