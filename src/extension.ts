@@ -152,5 +152,5 @@ function onOktetoReady(name: string) {
 }
 
 function onOktetoFailed() {
-	vscode.window.showErrorMessage(`Okteto: Start command failed to start your development environment`);
+	vscode.window.showErrorMessage(`Okteto: Up command failed to start your development environment`);
 }

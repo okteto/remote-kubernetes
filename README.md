@@ -1,8 +1,8 @@
-# Okteto for VS Code 
+# Remote - Kubernetes
 
-The **Okteto for VS Code** extension moves your development environment to Kubernetes. 
+The **Remote - Kubernetes** extension uses Okteto to move your development environment to Kubernetes. 
 
-Kubernetes, Okteto and VS Code  make a great development environment because you can:
+Kubernetes, Okteto and VS Code make a great development environment because you can:
 
 - Forget about building, pushing or deploying containers.
 - Launch reproducible development environment with all your tools in seconds.
@@ -10,7 +10,7 @@ Kubernetes, Okteto and VS Code  make a great development environment because you
 - Eliminate integration issues by developing the same way code runs in production.
 - Keep using your favorite tools locally.
 
-The extension starts a development environment in your Kubernetes cluster by using https://github.com/okteto/okteto. Once the environment is ready, the extension prompts you to open it directly in VS Code using the `Remote - SSH` extension.
+The extension starts a development environment in your Kubernetes cluster by using https://github.com/okteto/okteto. Once the environment is ready, the extension prompts you to open it directly in VS Code using the [Visual Studio Code Remote - SSH](https://code.visualstudio.com/docs/remote/ssh) extension.
 
 ## Installation
 
@@ -26,7 +26,7 @@ Follow these steps to get started:
 
 1. Clone https://github.com/okteto/getting-started-golang locally
 1. Start VSCode
-1. Run the `Okteto: Start` command to launch your development environment in Kubernetes
+1. Run the `Okteto: Up` command to launch your development environment in Kubernetes
 1. When prompted, select the `getting-started-golang` SSH host in the dialog.
 1. Once you're connected, use `File > Open Folder` to open the code folder on your development environment.
 
@@ -48,6 +48,6 @@ You can also reach out to [@OktetoHQ](https://twitter.com/oktetohq) on Twitter.
 
 ## License
 
-**Okteto for VS Code* is licensed under the Apache 2.0 License.
+**Remote - Kubernetes* is licensed under the Apache 2.0 License.
 
 This project adheres to the Contributor Covenant [code of conduct](code-of-conduct.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to hello@okteto.com.

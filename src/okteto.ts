@@ -35,7 +35,6 @@ export function start(manifest: string, namespace: string, name: string): Promis
       hideFromUser: false,
       env: {
         "OKTETO_AUTODEPLOY":"1",
-        "OKTETO_CLIENTSIDE_TRANSLATION":"1"
       }
     });
 
