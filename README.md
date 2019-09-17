@@ -25,11 +25,12 @@ Follow these steps to get started:
 
 ## Getting started
 
-1. Clone https://github.com/okteto/getting-started-golang locally
+1. Clone https://github.com/okteto/go-getting-started locally
 1. Start VSCode
 1. Run the `Okteto: Up` command to launch your development environment in Kubernetes
-1. When prompted, select the `getting-started-golang` SSH host in the dialog.
-1. Once you're connected, use `File > Open Folder` to open the code folder on your development environment.
+1. When prompted, select the `go-getting-started` SSH host in the dialog.
+1. Once you're connected, use `File > Open Folder` to open the `/okteto` folder on your development environment.
+1. Develop directly in Kubernetes!
 
 ## Questions and Feedback
 
