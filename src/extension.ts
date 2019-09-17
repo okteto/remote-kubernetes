@@ -65,8 +65,8 @@ function upCommand(state: vscode.Memento) {
 		}
 
 		const manifestPath = value[0].fsPath;
-		state.update('activeManifest', manifestPath);
 		console.log(`user selected: ${manifestPath}`);
+		state.update('activeManifest', manifestPath);
 		const name = manifest.getName(manifestPath);
 		const ktx = kubernetes.getCurrentContext(); 
 		if (!ktx.namespace) {
@@ -74,25 +74,28 @@ function upCommand(state: vscode.Memento) {
 			return;
 		}
 	
-		okteto.start(manifestPath, ktx.namespace, name)
-		.then(()=>{
-			console.log('okteto started');
-			waitForUp(ktx.namespace, name)
-			okteto.notifyIfFailed(ktx.namespace, name, onOktetoFailed);
-		}, (reason) =>{
-			throw reason;
-		})
+		ssh.getPort().then((port) => {
+			okteto.start(manifestPath, ktx.namespace, name, port)
+			.then(()=>{
+				console.log('okteto started');
+				waitForUp(ktx.namespace, name, port)
+				okteto.notifyIfFailed(ktx.namespace, name, onOktetoFailed);
+			}, (reason) =>{ throw reason;})
+			.catch((reason)=>{
+				console.error(`okteto.start failed: ${reason}`);
+				onOktetoFailed();
+			});
+		}, (reason) => {throw reason;})
 		.catch((reason)=>{
-			console.log(reason);
+			console.error(`ssh.getport failed: ${reason}`);
 			onOktetoFailed();
 		});
 	}, (reason) => {
 		console.log(`user canceled: ${reason}`);
 		}
-	)
-}
+	)}
 
-function waitForUp(namespace: string, name: string) {
+function waitForUp(namespace: string, name: string, port: number) {
 	console.log('okteto.startUp');
 	vscode.window.withProgress({
 		location: vscode.ProgressLocation.Notification,		
@@ -134,7 +137,7 @@ function waitForUp(namespace: string, name: string) {
 						break;
 					case okteto.state.ready:
 						progress.report({ message: "Your Okteto Environment is ready..."});				
-						onOktetoReady(name);
+						onOktetoReady(name, port);
 						resolve();
 						clearInterval(intervalID);
 						return;
@@ -151,9 +154,9 @@ function waitForUp(namespace: string, name: string) {
 	})
 }
 
-function onOktetoReady(name: string) {
+function onOktetoReady(name: string, port: number) {
 	// generate SSH configuration
-	ssh.updateConfig(name, 22000);
+	ssh.updateConfig(name, port);
 	// launch remote extension
 	vscode.commands.executeCommand("opensshremotes.openEmptyWindow", {hostName: name}).then((r) =>{
 		console.log(`opensshremotes.openEmptyWindow executed`);	
