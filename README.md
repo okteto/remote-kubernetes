@@ -35,10 +35,10 @@ Follow these steps to get started:
 
 Got questions? Have feedback? 
 
-1. See [the documentation](https://github.com/okteto/vscode/tree/master/docs)
-1. [Request features](https://github.com/okteto/vscode/labels/enhancement), [upvote existing issues](https://github.com/okteto/vscode/issues) or [report a problem](https://github.com/okteto/vscode/issues/new?template=bug_report.md&title=).
+1. See [the documentation](https://github.com/okteto/remote-kubernetes/tree/master/docs)
+1. [Request features](https://github.com/okteto/remote-kubernetes/labels/enhancement), [upvote existing issues](https://github.com/okteto/remote-kubernetes/issues) or [report a problem](https://github.com/okteto/remote-kubernetes/issues/new?template=bug_report.md&title=).
 1. Contribute to our documentation.
-1. Submit a [pull request](https://github.com/okteto/vscode/pulls) 😎
+1. Submit a [pull request](https://github.com/okteto/remote-kubernetes/pulls) 😎
 
 
 ## Stay in Touch
