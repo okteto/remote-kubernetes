@@ -25,7 +25,7 @@ export function isInstalled(): boolean{
 }
 
 export function start(manifest: string, namespace: string, name: string, port: number): Promise<string> {
-  console.log(`launching ${getBinary()} up -f ${manifest} --namespace ${namespace} --remote=${port}`);
+  console.log(`launching ${getBinary()} up -f ${manifest} --namespace ${namespace} --remote ${port}`);
   return new Promise<string>((resolve, reject) => {
     disposeTerminal();
     cleanState(namespace, name);
