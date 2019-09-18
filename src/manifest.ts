@@ -13,18 +13,20 @@ export function getName(manifestPath: string): Promise<string> {
 
             const doc = yaml.parseDocument(data).toJSON();
             resolve(doc.name);
-        })
+        });
     });
     
     
 }
 
 export function getDefaultLocation(): vscode.Uri | undefined{
-    if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length == 0) {
+    if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
         return undefined;
     }
 
     const p = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, 'okteto.yml');
-    return vscode.Uri.file(p);
+    const loc = vscode.Uri.file(p);
+    console.log(`default location: ${loc.fsPath.toString()}`);
+    return loc;
 
 }

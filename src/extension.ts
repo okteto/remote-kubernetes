@@ -1,14 +1,15 @@
 import * as vscode from 'vscode';
-import * as manifest from './manifest'
-import * as ssh from './ssh'
-import * as okteto from './okteto'
+import * as manifest from './manifest';
+import * as ssh from './ssh';
+import * as okteto from './okteto';
 import * as kubernetes from './kubernetes';
-import { resolve } from 'path';
+
+export const TERMINAL = `okteto`;
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('okteto extension activated');
-    const upFn = () => {upCommand(context.workspaceState)}
-    const downFn = () => {downCommand(context.workspaceState)}
+    const upFn = () => {upCommand(context.workspaceState);};
+    const downFn = () => {downCommand(context.workspaceState);};
 
     context.subscriptions.push(vscode.commands.registerCommand('okteto.up', upFn));	
     context.subscriptions.push(vscode.commands.registerCommand('okteto.down', downFn));
@@ -111,7 +112,7 @@ function down(manifestPath: string, state: vscode.Memento) {
             }, (reason)=> {
                 console.error(`failed to delete ssh configuration: ${reason}`);
             });
-        })
+        });
     }, (reason) => {
         vscode.window.showErrorMessage(`Command failed: ${reason.message}`);
     });
@@ -157,7 +158,7 @@ function up(state: vscode.Memento) {
                 }, (reason) => {
                     console.error(`okteto.start failed: ${reason.message}`);
                     onOktetoFailed();    
-                })
+                });
             }, (reason) => {
                 console.error(`ssh.getPort failed: ${reason.message}`);
                 onOktetoFailed();
@@ -193,12 +194,12 @@ function waitForUp(namespace: string, name: string, port: number) {
 
                 seen.set(state, true);
 
-                if (okteto.state.ready == state) {
+                if (okteto.state.ready === state) {
                     onOktetoReady(name, port);
                     resolve();
                     clearInterval(intervalID);
                     return;
-                } else if (okteto.state.failed == state) {
+                } else if (okteto.state.failed === state) {
                     onOktetoFailed();
                     resolve();
                     clearInterval(intervalID);
@@ -206,7 +207,7 @@ function waitForUp(namespace: string, name: string, port: number) {
                 }
             }, 1000);
         });				
-    })
+    });
 }
 
 function onOktetoReady(name: string, port: number) {
@@ -226,6 +227,7 @@ function onOktetoReady(name: string, port: number) {
 
 function onOktetoFailed() {
     vscode.window.showErrorMessage(`Okteto: Up command failed to start your development environment`);
+    okteto.showTerminal();
 }
 
 function showManifestPicker(label: string) : Thenable<vscode.Uri[] | undefined> {
@@ -238,7 +240,7 @@ function showManifestPicker(label: string) : Thenable<vscode.Uri[] | undefined> 
         filters: {
             'Okteto Manifest': ['yml', 'yaml']
         }
-    })
+    });
 }
 
 function askIfInstall(): Promise<boolean> {
@@ -247,7 +249,7 @@ function askIfInstall(): Promise<boolean> {
         const no = 'no';
         vscode.window.showInformationMessage('Okteto is not installed. Would you like it to install it now?', yes, no)
         .then((choice) => {
-            if (!choice || choice == no) {
+            if (!choice || choice === no) {
                 resolve(false);
             } else {
                 resolve(true);

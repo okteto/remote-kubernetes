@@ -1,14 +1,15 @@
 import * as fs from 'fs';
 import * as execa from 'execa';
 import * as home from 'user-home';
-import * as path from 'path'
+import * as path from 'path';
 import * as commandExists from 'command-exists';
 import * as vscode from 'vscode';
 import * as os from 'os';
 import * as download from 'download';
 
-const oktetoFolder = '.okteto'
-const stateFile = 'okteto.state'
+const oktetoFolder = '.okteto';
+const stateFile = 'okteto.state';
+const Terminal = `okteto`;
 
 export const state = {
   starting: 'starting',
@@ -19,10 +20,10 @@ export const state = {
   ready: 'ready',
   unknown: 'unknown',
   failed: 'failed',
-}
+};
 
 export function isInstalled(): boolean{
-  return commandExists.sync(getBinary())
+  return commandExists.sync(getBinary());
 }
 
 export function install() {
@@ -62,7 +63,7 @@ export function install() {
       } else {
         resolve();
       }
-    })
+    });
   });
 }
 
@@ -140,17 +141,17 @@ export function getState(namespace: string, name: string): string {
   }
 
   console.error(`received unknown state: '${c}'`);
-  return state.unknown
+  return state.unknown;
 }
 
 export function notifyIfFailed(namespace: string, name:string, callback: () => void){
-  const id = setInterval(() =>{
-    const c = getState(namespace, name)
-    if (c == state.failed) {
+  const id = setInterval(() => {
+    const c = getState(namespace, name);
+    if (c === state.failed) {
       callback();
       clearInterval(id);
     }
-  }, 1000)
+  }, 1000);
 }
 
 export function cleanState(namespace: string, name:string) {
@@ -168,10 +169,10 @@ export function cleanState(namespace: string, name:string) {
 function getBinary(): string {
   let binary = vscode.workspace.getConfiguration('okteto').get<string>('binary');
   if (!binary) {
-    if (os.platform() == 'win32') {
-      binary = 'okteto.exe'
+    if (os.platform() === 'win32') {
+      binary = 'okteto.exe';
     } else {
-      binary = 'okteto'
+      binary = 'okteto';
     }
   }
 
@@ -180,8 +181,16 @@ function getBinary(): string {
 
 function disposeTerminal(){
   vscode.window.terminals.forEach((t) => {
-    if (t.name == `okteto`) {
-      t.dispose()
+    if (t.name === Terminal) {
+      t.dispose();
+    }
+  });
+}
+
+export function showTerminal(){
+  vscode.window.terminals.forEach((t) => {
+    if (t.name === Terminal) {
+      t.show();
     }
   });
 }
