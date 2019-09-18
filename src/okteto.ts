@@ -25,7 +25,7 @@ export function isInstalled(): boolean{
   return commandExists.sync(getBinary())
 }
 
-export function install(progress: (progress: number)=>void) {
+export function install() {
  return new Promise<string>((resolve, reject) => {
     let source = '';
     let destination = '';
@@ -64,6 +64,7 @@ export function install(progress: (progress: number)=>void) {
     })
   });
 }
+
 export function start(manifest: string, namespace: string, name: string, port: number): Promise<string> {
   console.log(`launching ${getBinary()} up -f ${manifest} --namespace ${namespace} --remote ${port}`);
   return new Promise<string>((resolve, reject) => {
@@ -90,6 +91,16 @@ export function down(manifest: string, namespace: string, name:string): execa.Ex
   console.log(`launching okteto down -f ${manifest} --namespace ${namespace}`);
   disposeTerminal();
   return execa(getBinary(), ['down', '-f', manifest, '--namespace', namespace]);
+}
+
+export function getStateMessages(): Map<string, string> {
+  const messages = new Map<string, string>();
+  messages.set(state.provisioning, "Provisioning your persistent volume...");
+  messages.set(state.startingSync, "Starting the file synchronization service...");
+  messages.set(state.synchronizing, "Synchronizing your files...");
+  messages.set(state.activating, "Activating your Okteto Environment...");
+  messages.set(state.ready, "Your Okteto Environment is ready...");
+  return messages;  
 }
 
 function getStateFile(namespace: string, name:string): string {
