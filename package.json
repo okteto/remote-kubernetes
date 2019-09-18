@@ -65,7 +65,8 @@
 		"watch": "webpack --mode development --watch",
 		"package": "vsce package",
 		"pretest": "npm run compile",
-		"test": "node ./out/test/runTest.js"
+		"test": "node ./out/test/runTest.js",
+		"publish": "vsce publish -p $VSCE_TOKEN"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.1.1",
