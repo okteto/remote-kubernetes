@@ -47,18 +47,14 @@ export function install(progress: (progress: number)=>void) {
 
     const st = fs.createWriteStream(destination);
     download(source).pipe(st);
-    st.on('downloadProgress', (p)=>{
-      console.log(`downloading => ${p.percent}`);
-      progress(p.percent);
-    })
-    .on('error', (err) =>{
+    st.on('error', (err) =>{
       reject(err);
     }).on('finish', () =>{
       if (chmod) {
         console.log(`setting exec permissions`);
         const r = execa.commandSync(`chmod +x ${destination}`);
         if (r.failed) {
-          reject(`chmod +x ${destination} failed`);
+          reject(`chmod +x ${destination} failed: ${r.stderr}`);
         } else {
           resolve();
         }
@@ -83,25 +79,17 @@ export function start(manifest: string, namespace: string, name: string, port: n
 
     try{
       term.sendText(`${getBinary()} up -f ${manifest} --namespace ${namespace} --remote ${port}`, true);
+      resolve();
     }catch(err) {
-      reject(err);
+      reject(err.message);
     }
-    resolve();
   });
 }
 
-export function down(manifest: string, namespace: string, name:string): Promise<string> {
+export function down(manifest: string, namespace: string, name:string): execa.ExecaChildProcess<string> {
   console.log(`launching okteto down -f ${manifest} --namespace ${namespace}`);
   disposeTerminal();
-  return new Promise<string>((resolve, reject) => {
-    execa(getBinary(), ['down', '-f', manifest, '--namespace', namespace]).then((value)=>{
-      resolve();
-    },
-    (reason) => {
-      reject(reason);
-    });
-  })
-  
+  return execa(getBinary(), ['down', '-f', manifest, '--namespace', namespace]);
 }
 
 function getStateFile(namespace: string, name:string): string {

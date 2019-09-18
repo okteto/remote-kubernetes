@@ -25,18 +25,19 @@ function installCmd() {
 				progress.report({increment: percentage});
 			}
 
-			okteto.install(p).then(()=>{
+			okteto.install(p)
+			.then(()=>{
 				console.log("okteto was successfully installed");
 				resolve();
 				vscode.window.showInformationMessage(`Okteto was successfully installed`);
 			}, (reason) => {
 				console.error(`okteto was not installed: ${reason}`);
-				reject(reason);
-				vscode.window.showErrorMessage(`Okteto was not installed: ${reason}`);
+				throw new Error(reason);
 			}).catch((reason) => {
 				console.error(`okteto was not installed: ${reason}`);
-				reject(reason);
-				vscode.window.showErrorMessage(`Okteto was not installed: ${reason}`);
+				vscode.window.showErrorMessage(`Okteto was not installed: ${reason.message}`);
+				reject();
+				
 			});
 		});
 	});
@@ -48,49 +49,53 @@ function downCommand(state: vscode.Memento) {
 		vscode.window.showErrorMessage('You need to install okteto in order to use this extension. Go to https://github.com/okteto/okteto for more information.');
 	}
 
-	function runDown(manifestPath :string) {
-		const ktx = kubernetes.getCurrentContext(); 
-		if (!ktx.namespace) {
-			vscode.window.showErrorMessage("Couldn't detect your current Kubernetes context.");
-			return;
-		}
-
-		const name = manifest.getName(manifestPath);
-		okteto.down(manifestPath, ktx.namespace, name).then((e) => {
-			ssh.removeConfig(name);
-			state.update('activeManifest', '');
-			vscode.window.showInformationMessage("Okteto environment deactivated");
-			console.log(`okteto environment deactivated`);
-		}, (reason) => {
-			console.error(`okteto down exited with an error: ${reason}`);
-		});
-	}
-
 	const manifestPath = state.get<string>('activeManifest');
 	if (!manifestPath){
-		selectManifest('Load').then((value) => {
-			if (!value) {
-				return;
+		showManifestPicker('Load')
+		.then((value) => {
+			if (value) { 
+				down(value[0].fsPath, state);
 			}
-
-			runDown(value[0].fsPath);
-		}, (reason) => {
-			console.log(`user canceled down: ${reason}`);
 		});
 	} else {
-		runDown(manifestPath);
+		down(manifestPath, state);
 	}
 }
 
+function down(manifestPath :string, state: vscode.Memento) {
+	const ktx = kubernetes.getCurrentContext(); 
+	if (!ktx.namespace) {
+		vscode.window.showErrorMessage("Couldn't detect your current Kubernetes context.");
+		return;
+	}
+
+	const name = manifest.getName(manifestPath);
+	okteto.down(manifestPath, ktx.namespace, name)
+	.then((e) => {
+		if (e.failed) {
+			throw new Error(e.stderr);
+		}
+		ssh.removeConfig(name);
+		state.update('activeManifest', '');
+		vscode.window.showInformationMessage("Okteto environment deactivated");
+		console.log(`okteto environment deactivated`);
+	}, (reason) => {
+		throw new Error(reason.message);
+	})
+	.catch((reason) => {
+		vscode.window.showErrorMessage(`Command failed: ${reason.message}`);
+	});
+}
 function upCommand(state: vscode.Memento) {
 	console.log('okteto.up');
-	const yes = 'yes'
-	const no = 'no'
+	
 	if (!okteto.isInstalled()){
-		vscode.window.showInformationMessage('Okteto is not installed. Would you like it to install it now?', yes, no);
+		vscode.window.showInformationMessage('Okteto is not installed. Would you like it to install it now?', 'yes', 'no');
+		return
 	}
 	
-	selectManifest('Load').then((value) => {
+	showManifestPicker('Load')
+	.then((value) => {
 		if (!value) {
 			return;
 		}
@@ -105,7 +110,8 @@ function upCommand(state: vscode.Memento) {
 			return;
 		}
 	
-		ssh.getPort().then((port) => {
+		ssh.getPort()
+		.then((port) => {
 			okteto.start(manifestPath, ktx.namespace, name, port)
 			.then(()=>{
 				console.log('okteto started');
@@ -204,7 +210,7 @@ function onOktetoFailed() {
 	vscode.window.showErrorMessage(`Okteto: Up command failed to start your development environment`);
 }
 
-function selectManifest(label: string) : Thenable<vscode.Uri[] | undefined> {
+function showManifestPicker(label: string) : Thenable<vscode.Uri[] | undefined> {
 	return vscode.window.showOpenDialog({
 		defaultUri: manifest.getDefaultLocation(),
 		openLabel: label,
