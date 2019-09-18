@@ -1,7 +1,7 @@
 //@ts-check
 
 'use strict';
-
+const webpack = require('webpack');
 const path = require('path');
 
 /**@type {import('webpack').Configuration}*/
@@ -25,6 +25,7 @@ const config = {
     // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
     extensions: ['.ts', '.js']
   },
+  plugins: [new webpack.IgnorePlugin(/^electron$/)],
   module: {
     rules: [
       {

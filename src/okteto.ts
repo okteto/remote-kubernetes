@@ -5,6 +5,7 @@ import * as path from 'path'
 import * as commandExists from 'command-exists';
 import * as vscode from 'vscode';
 import * as os from 'os';
+import * as download from 'download';
 
 const oktetoFolder = '.okteto'
 const stateFile = 'okteto.state'
@@ -24,6 +25,49 @@ export function isInstalled(): boolean{
   return commandExists.sync(getBinary())
 }
 
+export function install(progress: (progress: number)=>void) {
+ return new Promise<string>((resolve, reject) => {
+    let source = '';
+    let destination = '';
+    let chmod = true;
+    switch(os.platform()){
+      case 'win32':
+        source = 'https://downloads.okteto.com/cli/okteto-Windows-x86_64';
+        destination = String.raw`c:\windows\system32\okteto.exe`;
+        chmod = false;
+        break;
+      case 'darwin':
+        source = 'https://downloads.okteto.com/cli/okteto-Darwin-x86_64';
+        destination = '/usr/local/bin/okteto';
+        break;
+      default:
+          source = 'https://downloads.okteto.com/cli/okteto-Linux-x86_64';
+          destination = '/usr/local/bin/okteto';
+    }
+
+    const st = fs.createWriteStream(destination);
+    download(source).pipe(st);
+    st.on('downloadProgress', (p)=>{
+      console.log(`downloading => ${p.percent}`);
+      progress(p.percent);
+    })
+    .on('error', (err) =>{
+      reject(err);
+    }).on('finish', () =>{
+      if (chmod) {
+        console.log(`setting exec permissions`);
+        const r = execa.commandSync(`chmod +x ${destination}`);
+        if (r.failed) {
+          reject(`chmod +x ${destination} failed`);
+        } else {
+          resolve();
+        }
+      } else {
+        resolve();
+      }
+    })
+  });
+}
 export function start(manifest: string, namespace: string, name: string, port: number): Promise<string> {
   console.log(`launching ${getBinary()} up -f ${manifest} --namespace ${namespace} --remote ${port}`);
   return new Promise<string>((resolve, reject) => {

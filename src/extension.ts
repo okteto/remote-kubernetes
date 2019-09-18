@@ -11,6 +11,35 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(vscode.commands.registerCommand('okteto.up', upFn));	
 	context.subscriptions.push(vscode.commands.registerCommand('okteto.down', downFn));
+	context.subscriptions.push(vscode.commands.registerCommand('okteto.install', installCmd));
+	
+}
+
+function installCmd() {
+	vscode.window.withProgress({
+		location: vscode.ProgressLocation.Window,
+		title: "Installing Okteto",
+	}, (progress, token)=>{
+		return new Promise((resolve, reject) => {
+			function p(percentage: number) {
+				progress.report({increment: percentage});
+			}
+
+			okteto.install(p).then(()=>{
+				console.log("okteto was successfully installed");
+				resolve();
+				vscode.window.showInformationMessage(`Okteto was successfully installed`);
+			}, (reason) => {
+				console.error(`okteto was not installed: ${reason}`);
+				reject(reason);
+				vscode.window.showErrorMessage(`Okteto was not installed: ${reason}`);
+			}).catch((reason) => {
+				console.error(`okteto was not installed: ${reason}`);
+				reject(reason);
+				vscode.window.showErrorMessage(`Okteto was not installed: ${reason}`);
+			});
+		});
+	});
 }
 
 function downCommand(state: vscode.Memento) {
@@ -55,8 +84,10 @@ function downCommand(state: vscode.Memento) {
 
 function upCommand(state: vscode.Memento) {
 	console.log('okteto.up');
+	const yes = 'yes'
+	const no = 'no'
 	if (!okteto.isInstalled()){
-		vscode.window.showErrorMessage('You need to install okteto in order to use this extension. Go to https://github.com/okteto/okteto for more information.');
+		vscode.window.showInformationMessage('Okteto is not installed. Would you like it to install it now?', yes, no);
 	}
 	
 	selectManifest('Load').then((value) => {
