@@ -17,7 +17,6 @@
 	"homepage": "https://github.com/okteto/remote-kubernetes",
 	"bugs": {
 		"url": "https://github.com/okteto/remote-kubernetes/issues",
-		"email": "hello@okteto.com"
 	},
 	"repository": {
 		"type": "git",
