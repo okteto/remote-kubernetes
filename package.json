@@ -8,11 +8,12 @@
 		"docker",
 		"remote"
 	],
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"icon": "media/icon.png",
 	"author": {
 		"name": "rberrelleza"
 	},
+	"preview": true,
 	"homepage": "https://github.com/okteto/remote-kubernetes",
 	"bugs": {
 		"url": "https://github.com/okteto/remote-kubernetes/issues",
