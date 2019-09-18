@@ -16,7 +16,7 @@
 	"preview": true,
 	"homepage": "https://github.com/okteto/remote-kubernetes",
 	"bugs": {
-		"url": "https://github.com/okteto/remote-kubernetes/issues",
+		"url": "https://github.com/okteto/remote-kubernetes/issues"
 	},
 	"repository": {
 		"type": "git",
