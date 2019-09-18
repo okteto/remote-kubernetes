@@ -5,6 +5,7 @@ import * as path from 'path'
 import * as commandExists from 'command-exists';
 import * as vscode from 'vscode';
 import * as os from 'os';
+import * as download from 'download';
 
 const oktetoFolder = '.okteto'
 const stateFile = 'okteto.state'
@@ -24,6 +25,47 @@ export function isInstalled(): boolean{
   return commandExists.sync(getBinary())
 }
 
+export function install() {
+ return new Promise<string>((resolve, reject) => {
+    let source = '';
+    let destination = '';
+    let chmod = true;
+    switch(os.platform()){
+      case 'win32':
+        source = 'https://downloads.okteto.com/cli/okteto-Windows-x86_64';
+        destination = String.raw`c:\windows\system32\okteto.exe`;
+        chmod = false;
+        break;
+      case 'darwin':
+        source = 'https://downloads.okteto.com/cli/okteto-Darwin-x86_64';
+        destination = '/usr/local/bin/okteto';
+        break;
+      default:
+          source = 'https://downloads.okteto.com/cli/okteto-Linux-x86_64';
+          destination = '/usr/local/bin/okteto';
+    }
+
+    const st = fs.createWriteStream(destination);
+    download(source).pipe(st);
+    st.on('error', (err) =>{
+      reject(err);
+      return;
+    }).on('finish', () =>{
+      if (chmod) {
+        console.log(`setting exec permissions`);
+        const r = execa.commandSync(`chmod +x ${destination}`);
+        if (r.failed) {
+          reject(`chmod +x ${destination} failed: ${r.stderr}`);
+        } else {
+          resolve();
+        }
+      } else {
+        resolve();
+      }
+    })
+  });
+}
+
 export function start(manifest: string, namespace: string, name: string, port: number): Promise<string> {
   console.log(`launching ${getBinary()} up -f ${manifest} --namespace ${namespace} --remote ${port}`);
   return new Promise<string>((resolve, reject) => {
@@ -39,25 +81,27 @@ export function start(manifest: string, namespace: string, name: string, port: n
 
     try{
       term.sendText(`${getBinary()} up -f ${manifest} --namespace ${namespace} --remote ${port}`, true);
+      resolve();
     }catch(err) {
-      reject(err);
+      reject(err.message);
     }
-    resolve();
   });
 }
 
-export function down(manifest: string, namespace: string, name:string): Promise<string> {
+export function down(manifest: string, namespace: string, name:string): execa.ExecaChildProcess<string> {
   console.log(`launching okteto down -f ${manifest} --namespace ${namespace}`);
   disposeTerminal();
-  return new Promise<string>((resolve, reject) => {
-    execa(getBinary(), ['down', '-f', manifest, '--namespace', namespace]).then((value)=>{
-      resolve();
-    },
-    (reason) => {
-      reject(reason);
-    });
-  })
-  
+  return execa(getBinary(), ['down', '-f', manifest, '--namespace', namespace]);
+}
+
+export function getStateMessages(): Map<string, string> {
+  const messages = new Map<string, string>();
+  messages.set(state.provisioning, "Provisioning your persistent volume...");
+  messages.set(state.startingSync, "Starting the file synchronization service...");
+  messages.set(state.synchronizing, "Synchronizing your files...");
+  messages.set(state.activating, "Activating your Okteto Environment...");
+  messages.set(state.ready, "Your Okteto Environment is ready...");
+  return messages;  
 }
 
 function getStateFile(namespace: string, name:string): string {

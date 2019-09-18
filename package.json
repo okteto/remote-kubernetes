@@ -8,7 +8,7 @@
 		"docker",
 		"remote"
 	],
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"icon": "media/okteto.png",
 	"author": {
 		"name": "rberrelleza"
@@ -35,6 +35,10 @@
 	"main": "./dist/extension",
 	"contributes": {
 		"commands": [
+			{
+				"command": "okteto.install",
+				"title": "Okteto: Install"
+			},
 			{
 				"command": "okteto.up",
 				"title": "Okteto: Up"
@@ -81,10 +85,12 @@
 	"dependencies": {
 		"@kubernetes/client-node": "^0.10.2",
 		"@types/command-exists": "^1.2.0",
+		"@types/download": "^6.2.4",
 		"@types/user-home": "^2.0.0",
 		"@types/yaml": "^1.0.2",
 		"bufferutil": "^4.0.1",
 		"command-exists": "^1.2.8",
+		"download": "^7.1.0",
 		"execa": "^2.0.4",
 		"fs": "^0.0.1-security",
 		"get-port": "^5.0.0",
