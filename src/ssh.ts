@@ -13,7 +13,7 @@ export function removeConfig(name: string) :Promise<string> {
             resolve();
         }, (reason) => {
             reject(reason.message);
-        })
+        });
     });
 }
 
@@ -33,7 +33,7 @@ export function updateConfig(name: string, port: number): Promise<string> {
                 );
                 
             }
-        })
+        });
     });
 }
 
@@ -50,7 +50,7 @@ function getEntry(name: string, port: number): any {
         ForwardAgent: 'yes',
         StrictHostKeyChecking: 'no',
         UserKnownHostsFile: '/dev/null'
-    }
+    };
 }
 
 function getPath() : string {
@@ -65,7 +65,7 @@ function getConfig(): any {
         config = ssh.parse(c);
     }
 
-    return config
+    return config;
 }
 
 function addToExisting(configPath: string, name:string, port: number): Promise<string> {
@@ -82,7 +82,7 @@ function addToExisting(configPath: string, name:string, port: number): Promise<s
             save(config).then(
                 () => resolve(),
                 (reason) => reject(reason)
-            )
+            );
         });
     });
 }
@@ -93,7 +93,7 @@ function addToNew(configPath: string, name:string, port: number): Promise<string
     config.append(getEntry(name, port));
     save(config).then(
         () => {resolve();}, 
-        (reason) =>{reject(reason)});
+        (reason) =>{reject(reason);});
     });
 }
 
