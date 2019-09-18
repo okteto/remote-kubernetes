@@ -49,6 +49,7 @@ export function install() {
     download(source).pipe(st);
     st.on('error', (err) =>{
       reject(err);
+      return;
     }).on('finish', () =>{
       if (chmod) {
         console.log(`setting exec permissions`);

@@ -3,6 +3,7 @@ import * as manifest from './manifest'
 import * as ssh from './ssh'
 import * as okteto from './okteto'
 import * as kubernetes from './kubernetes';
+import { resolve } from 'path';
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('okteto extension activated');
@@ -15,49 +16,56 @@ export function activate(context: vscode.ExtensionContext) {
     
 }
 
-function installCmd() {
-    console.log('okteto.install');
-    vscode.window.withProgress({
+function installCmd(): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+        vscode.window.withProgress({
         location: vscode.ProgressLocation.Window,
         title: "Installing Okteto",
     }, (progress, token)=>{
-        return new Promise((resolve, reject) => {
-            okteto.install()
-            .then(()=>{
-                console.log("okteto was successfully installed");
-                resolve();
-                vscode.window.showInformationMessage(`Okteto was successfully installed`);
-            }, (reason) => {
-                console.error(`okteto was not installed: ${reason}`);
-                throw new Error(reason);
-            }).catch((reason) => {
-                console.error(`okteto was not installed: ${reason}`);
-                reject();
-                vscode.window.showErrorMessage(`Okteto was not installed: ${reason.message}`);
-            });
+        const p = install();
+        p.then(()=>{ 
+            vscode.window.showInformationMessage(`Okteto was successfully installed`);
+            resolve();
+        }, (reason) => {
+            vscode.window.showErrorMessage(`Okteto was not installed: ${reason.message}`);
+            reject();
+        }
+        );
+        return p;
+    });
+  });
+}
+
+function install(): Promise<string>{
+    return new Promise((resolve, reject) => {
+        okteto.install()
+        .then(()=>{
+            console.log("okteto was successfully installed");
+            resolve();
+        }, (reason) => {
+            console.error(`okteto was not installed: ${reason}`);
+            throw new Error(reason);
+        }).catch((reason) => {
+            console.error(`okteto was not installed: ${reason}`);
+            reject();
         });
     });
 }
 
 function downCommand(state: vscode.Memento) {
     if (!okteto.isInstalled()){
-        const yes = 'yes';
-        const no = 'no';
-        vscode.window.showInformationMessage('Okteto is not installed. Would you like it to install it now?', yes, no)
-          .then((choice)=>{
-              if (!choice || choice == no) {
-                  return
-              }
-
-              okteto.install().then(() => {
-                getManifestOrAsk(state).then((manifestPath)=> {
-                    if (manifestPath) {
-                        down(manifestPath, state);
-                    }
-                }, (reason) => {
-                vscode.window.showErrorMessage(`Okteto: Install command failed: ${reason.message}`);
-              })
-          })
+        askIfInstall().then((choice)=>{
+            if (choice) {
+                installCmd().then(() => {
+                    getManifestOrAsk(state).then((manifestPath)=> {
+                        if (manifestPath) {
+                            down(manifestPath, state);
+                        }
+                    }, (reason) => {
+                        vscode.window.showErrorMessage(`Okteto: Install command failed: ${reason.message}`);
+                    });
+                });
+            }
         });
     } else {
         getManifestOrAsk(state).then((manifestPath)=> {
@@ -111,20 +119,15 @@ function down(manifestPath: string, state: vscode.Memento) {
 
 function upCommand(state: vscode.Memento) {
     if (!okteto.isInstalled()){
-        const yes = 'yes';
-        const no = 'no';
-        vscode.window.showInformationMessage('Okteto is not installed. Would you like it to install it now?', yes, no)
-          .then((choice)=>{
-              if (!choice || choice == no) {
-                  return
-              }
-
-              okteto.install().then(() => {
-                  up(state);
-              }, (reason) => {
-                vscode.window.showErrorMessage(`Okteto: Install command failed: ${reason.message}`);
-              })
-          })
+        askIfInstall().then((choice) => {
+            if (choice) {
+                installCmd().then(() => {
+                    up(state);
+                }, (reason) => {
+                    vscode.window.showErrorMessage(`Okteto: Install command failed: ${reason.message}`);
+                });
+            }
+        });
     } else {
         up(state);
     } 
@@ -236,5 +239,22 @@ function showManifestPicker(label: string) : Thenable<vscode.Uri[] | undefined> 
             'Okteto Manifest': ['yml', 'yaml']
         }
     })
+}
+
+function askIfInstall(): Promise<boolean> {
+    return new Promise<boolean>((resolve, reject) => {
+        const yes = 'yes';
+        const no = 'no';
+        vscode.window.showInformationMessage('Okteto is not installed. Would you like it to install it now?', yes, no)
+        .then((choice) => {
+            if (!choice || choice == no) {
+                resolve(false);
+            } else {
+                resolve(true);
+            }
+        }, (reason) => {
+            reject(reason.message);
+        });
+    });
 }
 
