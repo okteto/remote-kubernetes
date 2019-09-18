@@ -6,6 +6,7 @@ import * as commandExists from 'command-exists';
 import * as vscode from 'vscode';
 import * as os from 'os';
 import * as download from 'download';
+import { TERMINAL } from './extension';
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
@@ -73,8 +74,9 @@ export function start(manifest: string, namespace: string, name: string, port: n
     disposeTerminal();
     cleanState(namespace, name);
     const term = vscode.window.createTerminal({
-      name: `okteto`,
+      name: TERMINAL,
       hideFromUser: false,
+      cwd: path.dirname(manifest),
       env: {
         "OKTETO_AUTODEPLOY":"1",
       }
