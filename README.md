@@ -17,7 +17,7 @@ The extension starts a development environment in your Kubernetes cluster by usi
 
 Follow these steps to get started:
 
-1. [Install VS Code](https://code.visualstudio.com/) and this extension.
+1. [Install VS Code](https://code.visualstudio.com/) and [this extension](https://marketplace.visualstudio.com/items?itemName=okteto.remote-kubernetes).
 1. [Install and configure](https://github.com/okteto/okteto/blob/master/docs/installation.md) `kubectl`
 1. [Download and configure](https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/) your `kubeconfig` file.
 1. Run the `Okteto: Up` command!
