@@ -73,6 +73,7 @@ function addToExisting(configPath: string, name:string, port: number): Promise<s
         fs.readFile(configPath, {encoding: 'utf8'}, (err, data) => {
             if (err) {
                 reject(err.message);
+                return;
             }
 
             const config = ssh.parse(data);
