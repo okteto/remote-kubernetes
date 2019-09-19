@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.1.3
+- On `Okteto: Up` failure, automatically open the terminal to show the user what went wrong
+- Set the `cwd` of the terminal to that of the okteto manifest
+
 ## 0.1.2
 
 - Initial release
