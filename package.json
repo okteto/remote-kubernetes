@@ -6,9 +6,11 @@
 	"keywords": [
 		"kubernetes",
 		"docker",
-		"remote"
+		"remote",
+		"remote development",
+		"ssh"
 	],
-	"version": "0.1.3",
+	"version": "0.1.4",
 	"icon": "media/icon.png",
 	"author": {
 		"name": "rberrelleza"
