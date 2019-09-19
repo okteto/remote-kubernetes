@@ -22,6 +22,7 @@ Follow these steps to get started:
 1. [Download and configure](https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/) your `kubeconfig` file.
 1. Run the `Okteto: Up` command!
 
+If you already have `okteto` installed, make sure you're at least on version `1.4.6`.
 
 ## Getting started
 
