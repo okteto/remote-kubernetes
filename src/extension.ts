@@ -94,7 +94,7 @@ function getManifestOrAsk(state: vscode.Memento): Promise<string> {
 
 function down(manifestPath: string, state: vscode.Memento) {
     const ktx = kubernetes.getCurrentContext(); 
-    if (!ktx.namespace) {
+    if (!ktx) {
         vscode.window.showErrorMessage("Couldn't detect your current Kubernetes context.");
         return;
     }
@@ -144,7 +144,7 @@ function up(state: vscode.Memento) {
         console.log(`user selected: ${manifestPath}`);
         manifest.getName(manifestPath).then((name) =>{
             const ktx = kubernetes.getCurrentContext();
-            if (!ktx.namespace) {
+            if (!ktx) {
                 vscode.window.showErrorMessage("Couldn't detect your current Kubernetes context.");
                 return;
             } 

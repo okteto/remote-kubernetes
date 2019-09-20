@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.1.4
+- Use `default` if there's no namespace defined in the context
+
 ## 0.1.3
 - On `Okteto: Up` failure, automatically open the terminal to show the user what went wrong.
 - Set the `cwd` of the terminal to that of the okteto manifest.
