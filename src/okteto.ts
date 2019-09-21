@@ -79,6 +79,7 @@ export function start(manifest: string, namespace: string, name: string, port: n
       cwd: path.dirname(manifest),
       env: {
         "OKTETO_AUTODEPLOY":"1",
+        "OKTETO_ORIGIN":"vscode"
       }
     });
 
