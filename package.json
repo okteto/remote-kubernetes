@@ -8,7 +8,11 @@
 		"docker",
 		"remote",
 		"remote development",
-		"ssh"
+		"ssh",
+		"containers",
+		"aks",
+		"gke",
+		"eks"
 	],
 	"version": "0.1.4",
 	"icon": "media/icon.png",
@@ -29,7 +33,8 @@
 		"vscode": "^1.38.0"
 	},
 	"categories": [
-		"Other"
+		"Other",
+		"Azure"
 	],
 	"activationEvents": [
 		"*"
