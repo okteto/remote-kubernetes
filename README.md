@@ -15,23 +15,21 @@ The extension starts a development environment in your Kubernetes cluster by usi
 
 ## Installation
 
-Follow these steps to get started:
-
 1. [Install VS Code](https://code.visualstudio.com/) and [this extension](https://marketplace.visualstudio.com/items?itemName=okteto.remote-kubernetes).
+1. Install the [Remote - SSH](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh) extension.
 1. [Install and configure](https://github.com/okteto/okteto/blob/master/docs/installation.md) `kubectl`
 1. [Download and configure](https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/) your `kubeconfig` file.
-1. Run the `Okteto: Up` command!
 
 If you already have `okteto` installed, make sure you're at least on version `1.4.6`.
 
 ## Getting started
 
 1. Clone https://github.com/okteto/go-getting-started locally
-1. Start VSCode
-1. Run the `Okteto: Up` command to launch your development environment in Kubernetes
-1. When prompted, select the `go-getting-started` SSH host in the dialog.
-1. Once you're connected, use `File > Open Folder` to open the `/okteto` folder on your development environment.
-1. Develop directly in Kubernetes!
+1. Start VS Code
+1. Run the `Okteto: Up` command to launch your development environment in Kubernetes. When prompted, pick the `okteto.yml` manifest. 
+1. After a few seconds, you'll be asked to select a host. Pick the `go-getting-started` entry from the dialog to launch your remote VS Code instance.
+1. Once connected, use `File > Open Folder` to open the `/okteto` folder on your remote development environment.
+1. Develop directly in Kubernetes from VS Code!
 
 ## Questions and Feedback
 
