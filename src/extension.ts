@@ -4,15 +4,12 @@ import * as ssh from './ssh';
 import * as okteto from './okteto';
 import * as kubernetes from './kubernetes';
 
-export const TERMINAL = `okteto`;
+export var activeManifest: string;
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('okteto extension activated');
-    const upFn = () => {upCommand(context.workspaceState);};
-    const downFn = () => {downCommand(context.workspaceState);};
-
-    context.subscriptions.push(vscode.commands.registerCommand('okteto.up', upFn));	
-    context.subscriptions.push(vscode.commands.registerCommand('okteto.down', downFn));
+    context.subscriptions.push(vscode.commands.registerCommand('okteto.up', upCommand));	
+    context.subscriptions.push(vscode.commands.registerCommand('okteto.down', downCommand));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.install', installCmd));
     
 }
@@ -53,14 +50,14 @@ function install(): Promise<string>{
     });
 }
 
-function downCommand(state: vscode.Memento) {
+function downCommand() {
     if (!okteto.isInstalled()){
         askIfInstall().then((choice)=>{
             if (choice) {
                 installCmd().then(() => {
-                    getManifestOrAsk(state).then((manifestPath)=> {
+                    getManifestOrAsk().then((manifestPath)=> {
                         if (manifestPath) {
-                            down(manifestPath, state);
+                            down(manifestPath);
                         }
                     }, (reason) => {
                         vscode.window.showErrorMessage(`Okteto: Install command failed: ${reason.message}`);
@@ -69,19 +66,18 @@ function downCommand(state: vscode.Memento) {
             }
         });
     } else {
-        getManifestOrAsk(state).then((manifestPath)=> {
+        getManifestOrAsk().then((manifestPath)=> {
             if (manifestPath) {
-                down(manifestPath, state);
+                down(manifestPath);
             }
         });
     }
 }
 
-function getManifestOrAsk(state: vscode.Memento): Promise<string> {
+function getManifestOrAsk(): Promise<string> {
     return new Promise<string>((resolve, reject) =>{
-        const manifestPath = state.get<string>('activeManifest');
-        if (manifestPath) {
-            resolve(manifestPath);
+        if (activeManifest) {
+            resolve(activeManifest);
         } else {
             showManifestPicker('Load').then((value) => {
                 if (value) { 
@@ -92,7 +88,7 @@ function getManifestOrAsk(state: vscode.Memento): Promise<string> {
     });
 }
 
-function down(manifestPath: string, state: vscode.Memento) {
+function down(manifestPath: string) {
     const ktx = kubernetes.getCurrentContext(); 
     if (!ktx) {
         vscode.window.showErrorMessage("Couldn't detect your current Kubernetes context.");
@@ -106,7 +102,7 @@ function down(manifestPath: string, state: vscode.Memento) {
             }
 
             ssh.removeConfig(name).then(()=> {
-                state.update('activeManifest', '');
+                activeManifest = '';
                 vscode.window.showInformationMessage("Okteto environment deactivated");
                 console.log(`okteto environment deactivated`);
             }, (reason)=> {
@@ -118,23 +114,23 @@ function down(manifestPath: string, state: vscode.Memento) {
     });
 }
 
-function upCommand(state: vscode.Memento) {
+function upCommand() {
     if (!okteto.isInstalled()){
         askIfInstall().then((choice) => {
             if (choice) {
                 installCmd().then(() => {
-                    up(state);
+                    up();
                 }, (reason) => {
                     vscode.window.showErrorMessage(`Okteto: Install command failed: ${reason.message}`);
                 });
             }
         });
     } else {
-        up(state);
+        up();
     } 
 }
 
-function up(state: vscode.Memento) {
+function up() {
     showManifestPicker('Load').then((value) => {
         if (!value) {
             return;
@@ -153,7 +149,7 @@ function up(state: vscode.Memento) {
                 okteto.start(manifestPath, ktx.namespace, name, port).then(()=>{
                     console.log('okteto started');
                     okteto.notifyIfFailed(ktx.namespace, name, onOktetoFailed);
-                    state.update('activeManifest', manifestPath);
+                    activeManifest = manifestPath;
                     waitForUp(ktx.namespace, name, port);
                 }, (reason) => {
                     console.error(`okteto.start failed: ${reason.message}`);
