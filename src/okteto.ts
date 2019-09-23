@@ -6,11 +6,10 @@ import * as commandExists from 'command-exists';
 import * as vscode from 'vscode';
 import * as os from 'os';
 import * as download from 'download';
-import { TERMINAL } from './extension';
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
-const Terminal = `okteto`;
+const oktetoTerminalName = `okteto`;
 
 export const state = {
   starting: 'starting',
@@ -74,7 +73,7 @@ export function start(manifest: string, namespace: string, name: string, port: n
     disposeTerminal();
     cleanState(namespace, name);
     const term = vscode.window.createTerminal({
-      name: TERMINAL,
+      name: oktetoTerminalName,
       hideFromUser: false,
       cwd: path.dirname(manifest),
       env: {
@@ -184,7 +183,7 @@ function getBinary(): string {
 
 function disposeTerminal(){
   vscode.window.terminals.forEach((t) => {
-    if (t.name === Terminal) {
+    if (t.name === oktetoTerminalName) {
       t.dispose();
     }
   });
@@ -192,7 +191,7 @@ function disposeTerminal(){
 
 export function showTerminal(){
   vscode.window.terminals.forEach((t) => {
-    if (t.name === Terminal) {
+    if (t.name === oktetoTerminalName) {
       t.show();
     }
   });
