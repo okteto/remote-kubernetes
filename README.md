@@ -13,11 +13,16 @@ Kubernetes, Okteto and VS Code make a great development environment because you 
 
 The extension starts a development environment in your Kubernetes cluster by using https://github.com/okteto/okteto. Once the environment is ready, the extension prompts you to open it directly in VS Code using the [Visual Studio Code Remote - SSH](https://code.visualstudio.com/docs/remote/ssh) extension.
 
+## Requirements
+
+1. VS Code 1.38 or newer.
+1. Deploy access to a Kubernetes cluster (you can use https://cloud.okteto.com/, Okteto's free managed Kubernetes service for developers).
+1 An OpenSSH compatible [SSH client](https://code.visualstudio.com/docs/remote/troubleshooting#_installing-a-supported-ssh-client).
+
 ## Installation
 
 1. [Install VS Code](https://code.visualstudio.com/) and [this extension](https://marketplace.visualstudio.com/items?itemName=okteto.remote-kubernetes).
 1. Install the [Remote - SSH](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh) extension.
-1. [Install and configure](https://github.com/okteto/okteto/blob/master/docs/installation.md) `kubectl`
 1. [Download and configure](https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/) your `kubeconfig` file.
 
 If you already have `okteto` installed, make sure you're at least on version `1.4.6`.
