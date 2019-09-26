@@ -208,6 +208,12 @@ function waitForUp(namespace: string, name: string, port: number) {
 
 function onOktetoReady(name: string, port: number) {
     ssh.updateConfig(name, port).then(()=> {
+        vscode.window.onDidCloseTerminal((t) => {
+            if (t.name === okteto.terminalName) {
+                ssh.removeConfig(name);
+            }
+        });
+
         vscode.commands.executeCommand("opensshremotes.openEmptyWindow", {hostName: name})
         .then((r) =>{
           console.log(`opensshremotes.openEmptyWindow executed`);	
