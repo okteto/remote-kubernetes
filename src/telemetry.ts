@@ -31,13 +31,10 @@ export class Reporter {
     private enabled: boolean = true;
     private mp: mixpanel.Mixpanel;
 
-    constructor(private extensionVersion: string, private sessionId: string) {
+    constructor(private extensionVersion: string, private sessionId: string, private oktetoID: string) {
         const config = vscode.workspace.getConfiguration('okteto');
         if (config) {
-            const e = config.get<boolean>('telemetry');
-            if (e) {
-                this.enabled = e;
-            }
+            this.enabled = config.get<boolean>('telemetry') || true;
         }
 
         this.mp = mixpanel.init('564133a36e3c39ecedf700669282c315');
@@ -54,6 +51,7 @@ export class Reporter {
             os: os.platform(),
             version: this.extensionVersion,
             session: this.sessionId,
+            oktetoId: this.oktetoID,
         }, (err)=> {
             if (err) {
                 console.error(`failed to send telemetry: ${err}`);
