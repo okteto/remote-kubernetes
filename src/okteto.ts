@@ -8,9 +8,12 @@ import * as commandExists from 'command-exists';
 import * as vscode from 'vscode';
 import * as os from 'os';
 import * as download from 'download';
+import * as semver from 'semver';
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
+const minimum = '1.4.8';
+
 export const terminalName = `okteto`;
 
 export const state = {
@@ -24,8 +27,45 @@ export const state = {
   failed: 'failed',
 };
 
-export function isInstalled(): boolean{
-  return commandExists.sync(getBinary());
+export function needsInstall(): {install: boolean, upgrade: boolean}{
+  if (!commandExists.sync(getBinary())) {
+    return {install: true, upgrade: false};
+  }
+  
+  if (needsUpgrade()) {
+    return {install: true, upgrade: true};
+  }
+
+  return {install: false, upgrade: false};
+}
+
+export function needsUpgrade(): boolean{
+  const binary = getBinary();
+  const version =  getVersion(binary);
+  if (version) {
+    try{
+      return semver.lt(version, minimum);
+    }catch(err){
+      console.log(`invalid version: ${err}`);
+      return true;
+    }
+  }
+  
+  return true;
+}
+
+function getVersion(binary: string): string {
+  const r = execa.commandSync(`${binary} version`);
+  if (r.failed) {
+    return "";
+  } 
+  
+  const version = r.stdout.replace('okteto version ', '').trim();
+  if (semver.valid(version)) {
+    return version;
+  }
+
+  return "";
 }
 
 export function install() {
