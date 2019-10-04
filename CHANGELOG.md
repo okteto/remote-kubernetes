@@ -3,6 +3,7 @@
 ## 0.1.5
 - Clean the SSH config when the terminal is disposed.
 - Keep the selected manifest in memory instead of in the workspace state.
+- Wait until the SSH server can handle connections.
 
 ## 0.1.4
 - Use `default` if there's no namespace defined in the context.
