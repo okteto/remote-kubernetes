@@ -1,5 +1,7 @@
 # Change Log
 
+## 0.1.6
+
 ## 0.1.5
 - Clean the SSH config when the terminal is disposed.
 - Keep the selected manifest in memory instead of in the workspace state.
