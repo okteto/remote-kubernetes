@@ -53,18 +53,14 @@ function install(): Promise<string>{
 
 function downCommand() {
     if (!okteto.isInstalled()){
-        askIfInstall().then((choice)=>{
-            if (choice) {
-                installCmd().then(() => {
-                    getManifestOrAsk().then((manifestPath)=> {
-                        if (manifestPath) {
-                            down(manifestPath);
-                        }
-                    }, (reason) => {
-                        vscode.window.showErrorMessage(`Okteto: Install command failed: ${reason.message}`);
-                    });
-                });
-            }
+        installCmd().then(() => {
+            getManifestOrAsk().then((manifestPath)=> {
+                if (manifestPath) {
+                    down(manifestPath);
+                }
+            }, (reason) => {
+                vscode.window.showErrorMessage(`Okteto: Install command failed: ${reason.message}`);
+            });
         });
     } else {
         getManifestOrAsk().then((manifestPath)=> {
@@ -117,14 +113,10 @@ function down(manifestPath: string) {
 
 function upCommand() {
     if (!okteto.isInstalled()){
-        askIfInstall().then((choice) => {
-            if (choice) {
-                installCmd().then(() => {
-                    up();
-                }, (reason) => {
-                    vscode.window.showErrorMessage(`Okteto: Install command failed: ${reason.message}`);
-                });
-            }
+        installCmd().then(() => {
+            up();
+        }, (reason) => {
+            vscode.window.showErrorMessage(`Okteto: Install command failed: ${reason.message}`);            
         });
     } else {
         up();
@@ -261,21 +253,3 @@ function showManifestPicker(label: string) : Thenable<vscode.Uri[] | undefined> 
         }
     });
 }
-
-function askIfInstall(): Promise<boolean> {
-    return new Promise<boolean>((resolve, reject) => {
-        const yes = 'yes';
-        const no = 'no';
-        vscode.window.showInformationMessage('Okteto is not installed. Would you like it to install it now?', yes, no)
-        .then((choice) => {
-            if (!choice || choice === no) {
-                resolve(false);
-            } else {
-                resolve(true);
-            }
-        }, (reason) => {
-            reject(reason.message);
-        });
-    });
-}
-
