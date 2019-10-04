@@ -3,7 +3,6 @@ import * as manifest from './manifest';
 import * as ssh from './ssh';
 import * as okteto from './okteto';
 import * as kubernetes from './kubernetes';
-import { rejects } from 'assert';
 
 export var activeManifest: string;
 
