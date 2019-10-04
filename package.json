@@ -110,7 +110,6 @@
 		"fs": "^0.0.1-security",
 		"get-port": "^5.0.0",
 		"mixpanel": "^0.10.2",
-		"node-ssh": "^6.0.0",
 		"ssh-config": "^2.0.0-beta.1",
 		"tcp-ping": "^0.1.1",
 		"user-home": "^2.0.0",
