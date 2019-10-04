@@ -195,6 +195,7 @@ function waitForUp(namespace: string, name: string, port: number) {
         cancellable: true
     }, (progress, token) => {
         token.onCancellationRequested(() => {
+            reporter.track(events.upCancelled);
             vscode.commands.executeCommand('okteto.down');
         });
 

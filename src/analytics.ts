@@ -10,6 +10,7 @@ export const events = {
     down: 'cmd_down',
     downFinished: 'cmd_down_success',
     up: 'cmd_up',
+    upCancelled: 'cmd_up_cancelled',
     upReady: 'cmd_up_ready',
     upFinished: 'cmd_up_success',
     oktetoDownFailed: 'okteto_down_failed',
