@@ -52,18 +52,14 @@ function install(): Promise<string>{
 
 function downCommand() {
     if (!okteto.isInstalled()){
-        askIfInstall().then((choice)=>{
-            if (choice) {
-                installCmd().then(() => {
-                    getManifestOrAsk().then((manifestPath)=> {
-                        if (manifestPath) {
-                            down(manifestPath);
-                        }
-                    }, (reason) => {
-                        vscode.window.showErrorMessage(`Okteto: Install command failed: ${reason.message}`);
-                    });
-                });
-            }
+        installCmd().then(() => {
+            getManifestOrAsk().then((manifestPath)=> {
+                if (manifestPath) {
+                    down(manifestPath);
+                }
+            }, (reason) => {
+                vscode.window.showErrorMessage(`Okteto: Install command failed: ${reason.message}`);
+            });
         });
     } else {
         getManifestOrAsk().then((manifestPath)=> {
@@ -116,14 +112,10 @@ function down(manifestPath: string) {
 
 function upCommand() {
     if (!okteto.isInstalled()){
-        askIfInstall().then((choice) => {
-            if (choice) {
-                installCmd().then(() => {
-                    up();
-                }, (reason) => {
-                    vscode.window.showErrorMessage(`Okteto: Install command failed: ${reason.message}`);
-                });
-            }
+        installCmd().then(() => {
+            up();
+        }, (reason) => {
+            vscode.window.showErrorMessage(`Okteto: Install command failed: ${reason.message}`);            
         });
     } else {
         up();
@@ -191,9 +183,16 @@ function waitForUp(namespace: string, name: string, port: number) {
                 seen.set(state, true);
 
                 if (okteto.state.ready === state) {
-                    onOktetoReady(name, port);
-                    resolve();
                     clearInterval(intervalID);
+                    ssh.isReady(port).then(() =>{
+                        console.log(`SSH server is ready`);
+                        onOktetoReady(name, port);
+                        resolve();
+                    }, (err) => {
+                        console.error(`SSH wasn't available after 60 seconds: ${err.Message}`);
+                        onOktetoFailed();
+                        resolve();
+                    });
                     return;
                 } else if (okteto.state.failed === state) {
                     onOktetoFailed();
@@ -213,18 +212,27 @@ function onOktetoReady(name: string, port: number) {
                 ssh.removeConfig(name);
             }
         });
-
-        vscode.commands.executeCommand("opensshremotes.openEmptyWindow", {hostName: name})
-        .then((r) =>{
-          console.log(`opensshremotes.openEmptyWindow executed`);	
-        }, (reason) => {
-          console.error(`opensshremotes.openEmptyWindow failed: ${reason}`);	
-          onOktetoFailed();
+        
+        ssh.isReady(port).then(() =>{
+            startRemote(name);
+        }, err => {
+            
+            startRemote(name);
         });
     });    
 
     // opensshremotesexplorer.emptyWindowInNewWindow
     // opensshremotes.openEmptyWindow -> opens the host-selection dialog	
+}
+
+function startRemote(name: string) {
+    vscode.commands.executeCommand("opensshremotes.openEmptyWindow", {hostName: name})
+    .then((r) =>{
+        console.log(`opensshremotes.openEmptyWindow executed`);	
+    }, (reason) => {
+        console.error(`opensshremotes.openEmptyWindow failed: ${reason}`);	
+        onOktetoFailed();
+    });
 }
 
 function onOktetoFailed() {
@@ -244,21 +252,3 @@ function showManifestPicker(label: string) : Thenable<vscode.Uri[] | undefined> 
         }
     });
 }
-
-function askIfInstall(): Promise<boolean> {
-    return new Promise<boolean>((resolve, reject) => {
-        const yes = 'yes';
-        const no = 'no';
-        vscode.window.showInformationMessage('Okteto is not installed. Would you like it to install it now?', yes, no)
-        .then((choice) => {
-            if (!choice || choice === no) {
-                resolve(false);
-            } else {
-                resolve(true);
-            }
-        }, (reason) => {
-            reject(reason.message);
-        });
-    });
-}
-

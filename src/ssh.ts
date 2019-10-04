@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as home from 'user-home';
 import * as path from 'path';
 import * as gp from 'get-port';
+import * as net from 'net';
 
 export function removeConfig(name: string) :Promise<string> {
     return new Promise<string>((resolve, reject) =>{
@@ -109,4 +110,25 @@ function save(config: any): Promise<string> {
             }
         });
     });      
+}
+
+export function isReady(port: number): Promise<Boolean> {
+    return new Promise(function(resolve, reject) {
+        const timeout = 60000;
+        var timer = setTimeout(function() {
+            reject("timeout");
+            socket.end();
+        }, timeout);
+
+        var socket = net.createConnection(port, "localhost", function() {
+            clearTimeout(timer);
+            resolve();
+            socket.end();
+        });
+
+        socket.on('error', function(err) {
+            clearTimeout(timer);
+            reject(err);
+        });
+    });
 }

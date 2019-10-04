@@ -14,7 +14,7 @@
 		"gke",
 		"eks"
 	],
-	"version": "0.1.4",
+	"version": "0.1.5",
 	"icon": "media/icon.png",
 	"author": {
 		"name": "rberrelleza"
@@ -37,7 +37,9 @@
 		"Azure"
 	],
 	"activationEvents": [
-		"*"
+		"onCommand:okteto.install",
+		"onCommand:okteto.up",
+		"onCommand:okteto.down"
 	],
 	"main": "./dist/extension",
 	"contributes": {
@@ -85,7 +87,7 @@
 		"ts-loader": "^6.1.0",
 		"tslint": "^5.12.1",
 		"typescript": "^3.3.1",
-		"vsce": "^1.66.0",
+		"vsce": "^1.67.1",
 		"vscode-test": "^1.0.2",
 		"webpack": "^4.40.2",
 		"webpack-cli": "^3.3.8"
@@ -102,6 +104,7 @@
 		"execa": "^2.0.4",
 		"fs": "^0.0.1-security",
 		"get-port": "^5.0.0",
+		"node-ssh": "^6.0.0",
 		"ssh-config": "^2.0.0-beta.1",
 		"tcp-ping": "^0.1.1",
 		"user-home": "^2.0.0",
