@@ -29,29 +29,36 @@ export const events = {
 
 export class Reporter {
     private enabled: boolean = true;
+    private distinctId: string;
     private mp: mixpanel.Mixpanel;
 
-    constructor(private extensionVersion: string, private sessionId: string, private oktetoID: string) {
+    constructor(token: string, private extensionVersion: string, oktetoId: string) {
+        this.mp = mixpanel.init(token);
         const config = vscode.workspace.getConfiguration('okteto');
         if (config) {
             this.enabled = config.get<boolean>('telemetry') || true;
         }
 
-        this.mp = mixpanel.init('564133a36e3c39ecedf700669282c315');
+        if (oktetoId) {
+            this.distinctId = oktetoId;
+        } else {
+            this.distinctId = vscode.env.machineId;
+        }
+
     }
 
     public track(event: string) {
         if (!this.enabled) {
             return;
         }
-
+        
         this.mp.track(event, {
-            distinct_id: vscode.env.machineId,
-            vscodeversion: vscode.version,
+            distinct_id: this.distinctId,
             os: os.platform(),
             version: this.extensionVersion,
-            session: this.sessionId,
-            oktetoId: this.oktetoID,
+            vscodeversion: vscode.version,
+            session: vscode.env.sessionId,
+            machine_id: vscode.env.machineId,
         }, (err)=> {
             if (err) {
                 console.error(`failed to send telemetry: ${err}`);

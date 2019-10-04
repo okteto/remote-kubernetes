@@ -7,8 +7,9 @@ import * as okteto from './okteto';
 import * as kubernetes from './kubernetes';
 import {Reporter, events} from './telemetry';
 
-export var activeManifest: string;
+let activeManifest: string;
 let reporter: Reporter;
+const mpToken = '564133a36e3c39ecedf700669282c315';
 
 export function activate(context: vscode.ExtensionContext) {
     let version = "0.0.0";
@@ -20,9 +21,9 @@ export function activate(context: vscode.ExtensionContext) {
     console.log(`okteto.remote-kubernetes ${version} activated`);
     
     const oktetoID = okteto.getOktetoId() || "";
-
-    reporter = new Reporter(version, vscode.env.sessionId, oktetoID);
+    reporter = new Reporter(mpToken, version, oktetoID);
     reporter.track(events.activated);
+
     context.subscriptions.push(vscode.commands.registerCommand('okteto.up', upCommand));	
     context.subscriptions.push(vscode.commands.registerCommand('okteto.down', downCommand));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.install', installCmd));
