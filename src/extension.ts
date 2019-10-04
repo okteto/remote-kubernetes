@@ -30,16 +30,21 @@ export function activate(context: vscode.ExtensionContext) {
     
 }
 
-function installCmd(): Promise<string> {
+function installCmd(upgrade: boolean): Promise<string> {
+    let title = "Installing Okteto";
+    if (upgrade) {
+        title = "Okteto is out of date, upgrading";
+    } 
+
     return new Promise<string>((resolve, reject) => {
         vscode.window.withProgress({
-        location: vscode.ProgressLocation.Window,
-        title: "Installing Okteto",
+        location: vscode.ProgressLocation.Notification,
+        title: title,
     }, (progress, token)=>{
         reporter.track(events.install);
         const p = install();
         p.then(()=>{ 
-            vscode.window.showInformationMessage(`Okteto was successfully installed`);
+            //vscode.window.showInformationMessage(`Okteto was successfully installed`);
             resolve();
         }, (reason) => {
             reporter.track(events.oktetoInstallFailed);
@@ -70,8 +75,9 @@ function install(): Promise<string>{
 
 function downCommand() {
     reporter.track(events.down);
-    if (!okteto.isInstalled()){
-        installCmd()
+    const r = okteto.needsInstall();
+    if (r.install){
+        installCmd(r.upgrade)
         .then(() => {
             getManifestOrAsk().then((manifestPath)=> {
                 if (manifestPath) {
@@ -137,8 +143,9 @@ function down(manifestPath: string) {
 
 function upCommand() {
     reporter.track(events.up);
-    if (!okteto.isInstalled()){
-        installCmd()
+    const r = okteto.needsInstall();
+    if (r.install){
+        installCmd(r.upgrade)
         .then(() => {
             up();
         });
