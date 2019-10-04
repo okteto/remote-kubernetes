@@ -27,7 +27,7 @@ export const events = {
     sshHostSelectionFailed: 'ssh_host_selection_failed',
   };
 
-export class Analytics {
+export class Reporter {
     private enabled: boolean = true;
     private mp: mixpanel.Mixpanel;
 
@@ -56,7 +56,7 @@ export class Analytics {
             session: this.sessionId,
         }, (err)=> {
             if (err) {
-                console.error(`failed to send analytics: ${err}`);
+                console.error(`failed to send telemetry: ${err}`);
             }
         });
     }

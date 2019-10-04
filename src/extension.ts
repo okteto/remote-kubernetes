@@ -5,10 +5,10 @@ import * as manifest from './manifest';
 import * as ssh from './ssh';
 import * as okteto from './okteto';
 import * as kubernetes from './kubernetes';
-import {Analytics, events} from './analytics';
+import {Reporter, events} from './telemetry';
 
 export var activeManifest: string;
-let reporter: Analytics;
+let reporter: Reporter;
 
 export function activate(context: vscode.ExtensionContext) {
     let version = "0.0.0";
@@ -19,7 +19,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     console.log(`okteto.remote-kubernetes ${version} activated`);
     
-    reporter = new Analytics(version, vscode.env.sessionId);
+    reporter = new Reporter(version, vscode.env.sessionId);
     reporter.track(events.activated);
     context.subscriptions.push(vscode.commands.registerCommand('okteto.up', upCommand));	
     context.subscriptions.push(vscode.commands.registerCommand('okteto.down', downCommand));
