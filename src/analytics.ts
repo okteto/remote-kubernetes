@@ -17,6 +17,8 @@ export function track(event: string) {
         os: os.platform(),
         version: extensionVersion
     }, (err)=> {
-        console.error(`failed to send analytics: ${err}`);
+        if (err) {
+            console.error(`failed to send analytics: ${err}`);
+        }
     });
 }
