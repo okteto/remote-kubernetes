@@ -37,7 +37,9 @@
 		"Azure"
 	],
 	"activationEvents": [
-		"*"
+		"onCommand:okteto.install",
+		"onCommand:okteto.up",
+		"onCommand:okteto.down"
 	],
 	"main": "./dist/extension",
 	"contributes": {
