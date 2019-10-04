@@ -31,7 +31,7 @@ export class Analytics {
     private enabled: boolean = true;
     private mp: mixpanel.Mixpanel;
 
-    constructor(private extensionVersion: string) {
+    constructor(private extensionVersion: string, private sessionId: string) {
         const config = vscode.workspace.getConfiguration('okteto');
         if (config) {
             const e = config.get<boolean>('telemetry');
@@ -53,6 +53,7 @@ export class Analytics {
             vscodeversion: vscode.version,
             os: os.platform(),
             version: this.extensionVersion,
+            session: this.sessionId,
         }, (err)=> {
             if (err) {
                 console.error(`failed to send analytics: ${err}`);
