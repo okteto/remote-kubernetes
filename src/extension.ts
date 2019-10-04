@@ -1,13 +1,29 @@
+'use strict';
+
 import * as vscode from 'vscode';
 import * as manifest from './manifest';
 import * as ssh from './ssh';
 import * as okteto from './okteto';
 import * as kubernetes from './kubernetes';
+import {Reporter, events} from './telemetry';
 
-export var activeManifest: string;
+let activeManifest: string;
+let reporter: Reporter;
+const mpToken = '564133a36e3c39ecedf700669282c315';
 
 export function activate(context: vscode.ExtensionContext) {
-    console.log('okteto extension activated');
+    let version = "0.0.0";
+    const ex = vscode.extensions.getExtension('okteto.remote-kubernetes');
+    if (ex) {
+        version = ex.packageJSON.version;
+    }
+
+    console.log(`okteto.remote-kubernetes ${version} activated`);
+    
+    const oktetoID = okteto.getOktetoId() || "";
+    reporter = new Reporter(mpToken, version, oktetoID);
+    reporter.track(events.activated);
+
     context.subscriptions.push(vscode.commands.registerCommand('okteto.up', upCommand));	
     context.subscriptions.push(vscode.commands.registerCommand('okteto.down', downCommand));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.install', installCmd));
@@ -20,11 +36,13 @@ function installCmd(): Promise<string> {
         location: vscode.ProgressLocation.Window,
         title: "Installing Okteto",
     }, (progress, token)=>{
+        reporter.track(events.install);
         const p = install();
         p.then(()=>{ 
             vscode.window.showInformationMessage(`Okteto was successfully installed`);
             resolve();
         }, (reason) => {
+            reporter.track(events.oktetoInstallFailed);
             vscode.window.showErrorMessage(`Okteto was not installed: ${reason.message}`);
             reject();
         }
@@ -51,14 +69,14 @@ function install(): Promise<string>{
 }
 
 function downCommand() {
+    reporter.track(events.down);
     if (!okteto.isInstalled()){
-        installCmd().then(() => {
+        installCmd()
+        .then(() => {
             getManifestOrAsk().then((manifestPath)=> {
                 if (manifestPath) {
                     down(manifestPath);
                 }
-            }, (reason) => {
-                vscode.window.showErrorMessage(`Okteto: Install command failed: ${reason.message}`);
             });
         });
     } else {
@@ -78,6 +96,9 @@ function getManifestOrAsk(): Promise<string> {
             showManifestPicker('Load').then((value) => {
                 if (value) { 
                     resolve(value[0].fsPath);
+                    reporter.track(events.manifestSelected);
+                } else {
+                    reporter.track(events.manifestDismissed);
                 }
             });
         }
@@ -94,6 +115,7 @@ function down(manifestPath: string) {
     manifest.getName(manifestPath).then((name) => {
         okteto.down(manifestPath, ktx.namespace, name).then((e) =>{
             if (e.failed) {
+                reporter.track(events.oktetoDownFailed);
                 vscode.window.showErrorMessage(`Command failed: ${e.stderr}`);
             }
 
@@ -101,21 +123,24 @@ function down(manifestPath: string) {
                 activeManifest = '';
                 vscode.window.showInformationMessage("Okteto environment deactivated");
                 console.log(`okteto environment deactivated`);
+                reporter.track(events.downFinished);
             }, (reason)=> {
+                reporter.track(events.sshRemoveFailed);
                 console.error(`failed to delete ssh configuration: ${reason}`);
             });
         });
     }, (reason) => {
+        reporter.track(events.manifestLoadFailed);
         vscode.window.showErrorMessage(`Command failed: ${reason.message}`);
     });
 }
 
 function upCommand() {
+    reporter.track(events.up);
     if (!okteto.isInstalled()){
-        installCmd().then(() => {
+        installCmd()
+        .then(() => {
             up();
-        }, (reason) => {
-            vscode.window.showErrorMessage(`Okteto: Install command failed: ${reason.message}`);            
         });
     } else {
         up();
@@ -123,36 +148,44 @@ function upCommand() {
 }
 
 function up() {
-    showManifestPicker('Load').then((value) => {
+    showManifestPicker('Load')
+    .then((value) => {
         if (!value) {
+            reporter.track(events.manifestDismissed);
             return;
         }
 
+        reporter.track(events.manifestSelected);
         const manifestPath = value[0].fsPath;
         console.log(`user selected: ${manifestPath}`);
-        manifest.getName(manifestPath).then((name) =>{
+        manifest.getName(manifestPath)
+        .then((name) => {
             const ktx = kubernetes.getCurrentContext();
             if (!ktx) {
                 vscode.window.showErrorMessage("Couldn't detect your current Kubernetes context.");
                 return;
             } 
 
-            ssh.getPort().then((port) => {
-                okteto.start(manifestPath, ktx.namespace, name, port).then(()=>{
-                    console.log('okteto started');
+            ssh.getPort()
+            .then((port) => {
+                okteto.start(manifestPath, ktx.namespace, name, port)
+                .then(()=>{
                     okteto.notifyIfFailed(ktx.namespace, name, onOktetoFailed);
                     activeManifest = manifestPath;
                     waitForUp(ktx.namespace, name, port);
                 }, (reason) => {
+                    reporter.track(events.oktetoUpStartFailed);
                     console.error(`okteto.start failed: ${reason.message}`);
                     onOktetoFailed();    
                 });
             }, (reason) => {
+                reporter.track(events.sshPortFailed);
                 console.error(`ssh.getPort failed: ${reason.message}`);
                 onOktetoFailed();
             });
 
         }, (reason) =>{
+            reporter.track(events.manifestLoadFailed);
             console.error(`failed to load the manifest: ${reason.message}`);
             onOktetoFailed();
         });
@@ -165,6 +198,7 @@ function waitForUp(namespace: string, name: string, port: number) {
         cancellable: true
     }, (progress, token) => {
         token.onCancellationRequested(() => {
+            reporter.track(events.upCancelled);
             vscode.commands.executeCommand('okteto.down');
         });
 
@@ -184,17 +218,20 @@ function waitForUp(namespace: string, name: string, port: number) {
 
                 if (okteto.state.ready === state) {
                     clearInterval(intervalID);
-                    ssh.isReady(port).then(() =>{
+                    ssh.isReady(port)
+                    .then(() =>{
                         console.log(`SSH server is ready`);
                         onOktetoReady(name, port);
                         resolve();
                     }, (err) => {
+                        reporter.track(events.sshServiceFailed);
                         console.error(`SSH wasn't available after 60 seconds: ${err.Message}`);
                         onOktetoFailed();
                         resolve();
                     });
                     return;
                 } else if (okteto.state.failed === state) {
+                    reporter.track(events.oktetoUpFailed);
                     onOktetoFailed();
                     resolve();
                     clearInterval(intervalID);
@@ -206,33 +243,31 @@ function waitForUp(namespace: string, name: string, port: number) {
 }
 
 function onOktetoReady(name: string, port: number) {
-    ssh.updateConfig(name, port).then(()=> {
+    reporter.track(events.upReady);
+    ssh.updateConfig(name, port)
+    .then(()=> {
         vscode.window.onDidCloseTerminal((t) => {
             if (t.name === okteto.terminalName) {
                 ssh.removeConfig(name);
             }
         });
-        
-        ssh.isReady(port).then(() =>{
-            startRemote(name);
-        }, err => {
-            
-            startRemote(name);
+
+        // opensshremotesexplorer.emptyWindowInNewWindow
+        // opensshremotes.openEmptyWindow -> opens the host-selection dialog	
+        vscode.commands.executeCommand("opensshremotes.openEmptyWindow", {hostName: name})
+        .then((r) =>{
+            console.log(`opensshremotes.openEmptyWindow executed`);
+            reporter.track(events.upFinished);
+        }, (reason) => {
+            console.error(`opensshremotes.openEmptyWindow failed: ${reason}`);	
+            reporter.track(events.sshHostSelectionFailed);
+            onOktetoFailed();
         });
-    });    
-
-    // opensshremotesexplorer.emptyWindowInNewWindow
-    // opensshremotes.openEmptyWindow -> opens the host-selection dialog	
-}
-
-function startRemote(name: string) {
-    vscode.commands.executeCommand("opensshremotes.openEmptyWindow", {hostName: name})
-    .then((r) =>{
-        console.log(`opensshremotes.openEmptyWindow executed`);	
-    }, (reason) => {
-        console.error(`opensshremotes.openEmptyWindow failed: ${reason}`);	
-        onOktetoFailed();
-    });
+    }, (err) =>{
+        reporter.track(events.sshConfigFailed);
+        console.error(`ssh.updateConfig failed: ${err.Message}`);
+        vscode.window.showErrorMessage(`Command failed: ${err.Message}`);
+    }); 
 }
 
 function onOktetoFailed() {

@@ -1,3 +1,5 @@
+'use strict';
+
 import * as fs from 'fs';
 import * as execa from 'execa';
 import * as home from 'user-home';
@@ -195,4 +197,17 @@ export function showTerminal(){
       t.show();
     }
   });
+}
+
+export function getOktetoId(): string | undefined {
+  const tokenFile =  path.join(home, oktetoFolder, ".token.json");
+  try {
+    const c = fs.readFileSync(tokenFile, 'utf-8');
+    const token = JSON.parse(c);
+    return token.ID;
+  }catch(err) {
+    console.error(`failed to open ${tokenFile}: ${err}`);
+  }
+
+  return undefined;
 }
