@@ -1,3 +1,5 @@
+'use strict';
+
 import * as fs from 'fs';
 import * as execa from 'execa';
 import * as home from 'user-home';

@@ -1,3 +1,5 @@
+'use strict';
+
 import * as ssh from 'ssh-config';
 import * as fs from 'fs';
 import * as home from 'user-home';

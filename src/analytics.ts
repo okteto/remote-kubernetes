@@ -1,24 +1,62 @@
+'use strict';
+
 import * as mixpanel from 'mixpanel';
 import * as vscode from 'vscode';
 import * as os from 'os';
 
-const extensionVersion = '0.1.5'; 
-var reporter = mixpanel.init('564133a36e3c39ecedf700669282c315');
-const enabled = vscode.workspace.getConfiguration('okteto').get<boolean>('telemetry');
+export const events = {
+    activated: 'activated',
+    install: 'cmd_install',
+    down: 'cmd_down',
+    downFinished: 'cmd_down_success',
+    up: 'cmd_up',
+    upReady: 'cmd_up_ready',
+    upFinished: 'cmd_up_success',
+    oktetoDownFailed: 'okteto_down_failed',
+    oktetoUpStartFailed: 'okteto_up_start_failed',
+    oktetoUpFailed: 'okteto_up_failed',
+    oktetoInstallFailed: 'okteto_install_failed',
+    manifestSelected: 'manifest_selected',
+    manifestDismissed: 'manifest_select_dismissed',
+    manifestLoadFailed: 'manifest_load_failed',
+    sshConfigFailed: 'ssh_config_update_failed',
+    sshRemoveFailed: 'ssh_config_remove_failed',
+    sshPortFailed: 'ssh_get_port_failed',
+    sshServiceFailed: 'ssh_service_failed',
+    sshHostSelectionFailed: 'ssh_host_selection_failed',
+  };
 
-export function track(event: string) {
-    if (!enabled) {
-        return;
+export class Analytics {
+    private enabled: boolean = true;
+    private mp: mixpanel.Mixpanel;
+
+    constructor(private extensionVersion: string) {
+        const config = vscode.workspace.getConfiguration('okteto');
+        if (config) {
+            const e = config.get<boolean>('telemetry');
+            if (e) {
+                this.enabled = e;
+            }
+        }
+
+        this.mp = mixpanel.init('564133a36e3c39ecedf700669282c315');
     }
 
-    reporter.track(event, {
-        distinct_id: vscode.env.machineId,
-        vscodeversion: vscode.version,
-        os: os.platform(),
-        version: extensionVersion
-    }, (err)=> {
-        if (err) {
-            console.error(`failed to send analytics: ${err}`);
+    public track(event: string) {
+        if (!this.enabled) {
+            return;
         }
-    });
+
+        this.mp.track(event, {
+            distinct_id: vscode.env.machineId,
+            vscodeversion: vscode.version,
+            os: os.platform(),
+            version: this.extensionVersion,
+        }, (err)=> {
+            if (err) {
+                console.error(`failed to send analytics: ${err}`);
+            }
+        });
+    }
+
 }
