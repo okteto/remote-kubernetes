@@ -39,7 +39,8 @@
 	"activationEvents": [
 		"onCommand:okteto.install",
 		"onCommand:okteto.up",
-		"onCommand:okteto.down"
+		"onCommand:okteto.down",
+		"onCommand:okteto.create"
 	],
 	"main": "./dist/extension",
 	"contributes": {
@@ -55,7 +56,13 @@
 			{
 				"command": "okteto.down",
 				"title": "Okteto: Down"
+			},
+			{
+				"command": "okteto.create",
+				"title": "Okteto: Create manifest",
+				"enablement": "workspaceFolderCount != 0"
 			}
+
 		],
 		"configuration": {
 			"title": "Okteto",

@@ -27,7 +27,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('okteto.up', upCommand));	
     context.subscriptions.push(vscode.commands.registerCommand('okteto.down', downCommand));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.install', installCmd));
-    
+    context.subscriptions.push(vscode.commands.registerCommand('okteto.create', createCmd));    
 }
 
 function installCmd(upgrade: boolean): Promise<string> {
@@ -152,6 +152,41 @@ function upCommand() {
     } else {
         up();
     } 
+}
+
+function createCmd(){
+    reporter.track(events.create);
+
+    if (!vscode.workspace.workspaceFolders) {
+        reporter.track(events.createFailed);
+        vscode.window.showErrorMessage("Couldn't determine your folder location.");
+        return;
+    }
+
+    const root = vscode.workspace.workspaceFolders[0].uri;
+    vscode.window.showQuickPick(okteto.getLanguages(),
+     {canPickMany: false, placeHolder: 'Select your development runtime'})
+    .then((choice) => {
+        if (!choice) {
+            return;
+        }
+        
+        const path = okteto.init(root, choice);
+        if (!path) {
+            reporter.track(events.oktetoInitFailed);
+            vscode.window.showErrorMessage("Couldn't generate your manifest file.");
+            return;
+        }
+
+        vscode.commands.executeCommand('vscode.openFolder', path)
+        .then(()=>{
+            reporter.track(events.createFinished);
+        }, (err) => {
+            reporter.track(events.createOpenFailed);
+            vscode.window.showErrorMessage(`Couldn't open ${path}: ${err}.`);
+        });
+        
+    });
 }
 
 function up() {

@@ -12,7 +12,7 @@ import * as semver from 'semver';
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
-const minimum = '1.4.8';
+const minimum = '1.4.9';
 
 export const terminalName = `okteto`;
 
@@ -250,4 +250,34 @@ export function getOktetoId(): string | undefined {
   }
 
   return undefined;
+}
+
+export function getLanguages(): string[] {
+  const languages = [
+    "Gradle",
+    "Maven",
+    "Node",
+    "Golang",
+    "Python",
+    "Ruby"
+  ];
+
+  return Array.from(languages).sort();
+}
+
+export function init(root: vscode.Uri, choice: string): vscode.Uri | undefined {
+  const file = path.join(root.fsPath, "okteto.yml");
+  const r = execa.commandSync(`${getBinary()} init --overwrite --file=${file}`, {
+    cwd: root.fsPath,
+    env: {
+      "OKTETO_ORIGIN":"vscode",
+      "OKTETO_LANGUAGE":choice
+    } 
+  });
+  if (r.failed) {
+    return undefined;
+  }
+
+
+  return vscode.Uri.file(file);
 }
