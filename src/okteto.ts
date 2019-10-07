@@ -10,6 +10,8 @@ import * as os from 'os';
 import * as download from 'download';
 import * as semver from 'semver';
 
+var titlecase = require('title-case');
+
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
 const minimum = '1.4.9';
@@ -252,17 +254,28 @@ export function getOktetoId(): string | undefined {
   return undefined;
 }
 
-export function getLanguages(): string[] {
-  const languages = [
-    "Gradle",
-    "Maven",
-    "Node",
-    "Golang",
-    "Python",
-    "Ruby"
-  ];
+export function getLanguages(): RuntimeItem[] {
+  const items = new Array<RuntimeItem>();
+  items.push(new RuntimeItem("Java", "Maven", "maven"));
+  items.push(new RuntimeItem("Java", "Gradle", "gradle"));
+  items.push(new RuntimeItem("Ruby", "", "ruby"));
+  items.push(new RuntimeItem("Python", "", "python"));
+  items.push(new RuntimeItem("Node", "", "javascript"));
+  items.push(new RuntimeItem("Golang", "", "golang"));
 
-  return Array.from(languages).sort();
+  const sorted = items.sort((a, b)=>{
+    if (a.label === b.label) {
+      return 0;
+    } else if (a.label > b.label) {
+      return 1;
+    } else {
+      return -1;
+    }
+  });
+
+  sorted.push(new RuntimeItem("Other", "", ""));
+  return sorted;
+
 }
 
 export function init(manifestPath: vscode.Uri, choice: string): boolean {
@@ -284,4 +297,13 @@ export function init(manifestPath: vscode.Uri, choice: string): boolean {
   }
 
   return true;
+}
+
+class RuntimeItem implements vscode.QuickPickItem {
+
+	label: string;
+	
+	constructor(private l: string, public description: string, public value: string) {
+		this.label = titlecase(l);
+	}
 }

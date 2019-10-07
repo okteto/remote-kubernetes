@@ -171,7 +171,7 @@ function createCmd(){
             return;
         }
 
-        if (!okteto.init(manifestPath, choice)) {
+        if (!okteto.init(manifestPath, choice.value)) {
             reporter.track(events.oktetoInitFailed);
             vscode.window.showErrorMessage("Couldn't generate your manifest file.");
             return;
