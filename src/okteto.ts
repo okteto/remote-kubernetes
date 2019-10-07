@@ -265,19 +265,17 @@ export function getLanguages(): string[] {
   return Array.from(languages).sort();
 }
 
-export function init(root: vscode.Uri, choice: string): vscode.Uri | undefined {
-  const file = path.join(root.fsPath, "okteto.yml");
-  const r = execa.commandSync(`${getBinary()} init --overwrite --file=${file}`, {
-    cwd: root.fsPath,
+export function init(manifestPath: vscode.Uri, choice: string): boolean {
+  const r = execa.commandSync(`${getBinary()} init --overwrite --file=${manifestPath}`, {
+    cwd: path.dirname(manifestPath.fsPath),
     env: {
       "OKTETO_ORIGIN":"vscode",
       "OKTETO_LANGUAGE":choice
     } 
   });
   if (r.failed) {
-    return undefined;
+    return false;
   }
 
-
-  return vscode.Uri.file(file);
+  return true;
 }

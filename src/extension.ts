@@ -157,21 +157,21 @@ function upCommand() {
 function createCmd(){
     reporter.track(events.create);
 
-    if (!vscode.workspace.workspaceFolders) {
+    const manifestPath = manifest.getDefaultLocation();
+    if (!manifestPath) {
         reporter.track(events.createFailed);
-        vscode.window.showErrorMessage("Couldn't determine your folder location.");
+        vscode.window.showErrorMessage("Couldn't detect your project's path.");
         return;
     }
-
-    const root = vscode.workspace.workspaceFolders[0].uri;
+   
     vscode.window.showQuickPick(okteto.getLanguages(),
      {canPickMany: false, placeHolder: 'Select your development runtime'})
     .then((choice) => {
         if (!choice) {
             return;
         }
-        
-        const path = okteto.init(root, choice);
+
+        const path = okteto.init(manifestPath, choice);
         if (!path) {
             reporter.track(events.oktetoInitFailed);
             vscode.window.showErrorMessage("Couldn't generate your manifest file.");
@@ -185,7 +185,6 @@ function createCmd(){
             reporter.track(events.createOpenFailed);
             vscode.window.showErrorMessage(`Couldn't open ${path}: ${err}.`);
         });
-        
     });
 }
 
