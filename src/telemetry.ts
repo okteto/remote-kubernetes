@@ -7,6 +7,10 @@ import * as os from 'os';
 export const events = {
     activated: 'activated',
     install: 'cmd_install',
+    create: 'cmd_create',
+    createFailed: 'cmd_create_failed',
+    createOpenFailed: 'cmd_create_open_failed',
+    createFinished: 'cmd_create_success',
     down: 'cmd_down',
     downFinished: 'cmd_down_success',
     up: 'cmd_up',
@@ -16,6 +20,7 @@ export const events = {
     oktetoDownFailed: 'okteto_down_failed',
     oktetoUpStartFailed: 'okteto_up_start_failed',
     oktetoUpFailed: 'okteto_up_failed',
+    oktetoInitFailed: 'okteto_init_failed',
     oktetoInstallFailed: 'okteto_install_failed',
     manifestSelected: 'manifest_selected',
     manifestDismissed: 'manifest_select_dismissed',

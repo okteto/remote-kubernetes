@@ -39,7 +39,8 @@
 	"activationEvents": [
 		"onCommand:okteto.install",
 		"onCommand:okteto.up",
-		"onCommand:okteto.down"
+		"onCommand:okteto.down",
+		"onCommand:okteto.create"
 	],
 	"main": "./dist/extension",
 	"contributes": {
@@ -55,6 +56,11 @@
 			{
 				"command": "okteto.down",
 				"title": "Okteto: Down"
+			},
+			{
+				"command": "okteto.create",
+				"title": "Okteto: Create manifest",
+				"enablement": "workspaceFolderCount != 0"
 			}
 		],
 		"configuration": {
@@ -114,6 +120,7 @@
 		"semver": "^6.3.0",
 		"ssh-config": "^2.0.0-beta.1",
 		"tcp-ping": "^0.1.1",
+		"title-case": "^2.1.1",
 		"user-home": "^2.0.0",
 		"utf-8-validate": "^5.0.2",
 		"yaml": "^1.6.0"
