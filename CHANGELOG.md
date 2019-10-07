@@ -1,6 +1,7 @@
 # Change Log
 
 ## 0.1.6
+- Added `Okteto: Create manifest`command to initialize the Okteto manifest.
 
 ## 0.1.5
 - Clean the SSH config when the terminal is disposed.
