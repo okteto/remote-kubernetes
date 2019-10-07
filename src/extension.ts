@@ -171,19 +171,18 @@ function createCmd(){
             return;
         }
 
-        const path = okteto.init(manifestPath, choice);
-        if (!path) {
+        if (!okteto.init(manifestPath, choice)) {
             reporter.track(events.oktetoInitFailed);
             vscode.window.showErrorMessage("Couldn't generate your manifest file.");
             return;
         }
 
-        vscode.commands.executeCommand('vscode.openFolder', path)
+        vscode.commands.executeCommand('vscode.openFolder', manifestPath)
         .then(()=>{
             reporter.track(events.createFinished);
         }, (err) => {
             reporter.track(events.createOpenFailed);
-            vscode.window.showErrorMessage(`Couldn't open ${path}: ${err}.`);
+            vscode.window.showErrorMessage(`Couldn't open ${manifestPath}: ${err}.`);
         });
     });
 }

@@ -266,14 +266,20 @@ export function getLanguages(): string[] {
 }
 
 export function init(manifestPath: vscode.Uri, choice: string): boolean {
-  const r = execa.commandSync(`${getBinary()} init --overwrite --file=${manifestPath}`, {
-    cwd: path.dirname(manifestPath.fsPath),
-    env: {
+  try{
+    const r = execa.commandSync(`${getBinary()} init --overwrite --file=${manifestPath.fsPath}`, {
+      cwd: path.dirname(manifestPath.fsPath),
+      env: {
       "OKTETO_ORIGIN":"vscode",
       "OKTETO_LANGUAGE":choice
-    } 
-  });
-  if (r.failed) {
+      } 
+    });
+    
+    if (r.failed) {
+      return false;
+    }
+  } catch (err) {
+    console.error(`okteto init failed: ${err}`);
     return false;
   }
 
