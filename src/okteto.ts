@@ -262,6 +262,7 @@ export function getLanguages(): RuntimeItem[] {
   items.push(new RuntimeItem("Python", "", "python"));
   items.push(new RuntimeItem("Node", "", "javascript"));
   items.push(new RuntimeItem("Golang", "", "golang"));
+  items.push(new RuntimeItem("C#", "", "csharp"));
 
   const sorted = items.sort((a, b)=>{
     if (a.label === b.label) {
