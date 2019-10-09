@@ -14,7 +14,7 @@ var titlecase = require('title-case');
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
-const minimum = '1.4.9';
+const minimum = '1.5.0';
 
 export const terminalName = `okteto`;
 
@@ -53,13 +53,13 @@ export function needsUpgrade(): boolean{
     }
   }
   
-  return true;
+  return false;
 }
 
-function getVersion(binary: string): string {
+function getVersion(binary: string): string | undefined {
   const r = execa.commandSync(`${binary} version`);
   if (r.failed) {
-    return "";
+    return undefined;
   } 
   
   const version = r.stdout.replace('okteto version ', '').trim();
@@ -67,7 +67,7 @@ function getVersion(binary: string): string {
     return version;
   }
 
-  return "";
+  return undefined;
 }
 
 export function install() {
