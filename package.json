@@ -14,7 +14,7 @@
 		"gke",
 		"eks"
 	],
-	"version": "0.1.6",
+	"version": "0.1.7",
 	"icon": "media/icon.png",
 	"author": {
 		"name": "rberrelleza"
@@ -118,7 +118,6 @@
 		"get-port": "^5.0.0",
 		"mixpanel": "^0.10.2",
 		"semver": "^6.3.0",
-		"ssh-config": "^2.0.0-beta.1",
 		"tcp-ping": "^0.1.1",
 		"title-case": "^2.1.1",
 		"user-home": "^2.0.0",
