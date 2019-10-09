@@ -125,15 +125,10 @@ function down(manifestPath: string) {
                 vscode.window.showErrorMessage(`Command failed: ${e.stderr}`);
             }
 
-            ssh.removeConfig(name).then(()=> {
-                activeManifest = '';
-                vscode.window.showInformationMessage("Okteto environment deactivated");
-                console.log(`okteto environment deactivated`);
-                reporter.track(events.downFinished);
-            }, (reason)=> {
-                reporter.track(events.sshRemoveFailed);
-                console.error(`failed to delete ssh configuration: ${reason}`);
-            });
+            activeManifest = '';
+            vscode.window.showInformationMessage("Okteto environment deactivated");
+            console.log(`okteto environment deactivated`);
+            reporter.track(events.downFinished);
         });
     }, (reason) => {
         reporter.track(events.manifestLoadFailed);
@@ -261,7 +256,7 @@ function waitForUp(namespace: string, name: string, port: number) {
                     ssh.isReady(port)
                     .then(() =>{
                         console.log(`SSH server is ready`);
-                        onOktetoReady(name, port);
+                        openSSHHostSelector(name, port);
                         resolve();
                     }, (err) => {
                         reporter.track(events.sshServiceFailed);
@@ -282,32 +277,17 @@ function waitForUp(namespace: string, name: string, port: number) {
     });
 }
 
-function onOktetoReady(name: string, port: number) {
+function openSSHHostSelector(name: string, port: number) {
     reporter.track(events.upReady);
-    ssh.updateConfig(name, port)
-    .then(()=> {
-        vscode.window.onDidCloseTerminal((t) => {
-            if (t.name === okteto.terminalName) {
-                ssh.removeConfig(name);
-            }
-        });
-
-        // opensshremotesexplorer.emptyWindowInNewWindow
-        // opensshremotes.openEmptyWindow -> opens the host-selection dialog	
-        vscode.commands.executeCommand("opensshremotes.openEmptyWindow", {hostName: name})
-        .then((r) =>{
-            console.log(`opensshremotes.openEmptyWindow executed`);
-            reporter.track(events.upFinished);
-        }, (reason) => {
-            console.error(`opensshremotes.openEmptyWindow failed: ${reason}`);	
-            reporter.track(events.sshHostSelectionFailed);
-            onOktetoFailed();
-        });
-    }, (err) =>{
-        reporter.track(events.sshConfigFailed);
-        console.error(`ssh.updateConfig failed: ${err.Message}`);
-        vscode.window.showErrorMessage(`Command failed: ${err.Message}`);
-    }); 
+    vscode.commands.executeCommand("opensshremotes.openEmptyWindow", {hostName: name})
+    .then((r) =>{
+        console.log(`opensshremotes.openEmptyWindow executed`);
+        reporter.track(events.upFinished);
+    }, (reason) => {
+        console.error(`opensshremotes.openEmptyWindow failed: ${reason}`);	
+        reporter.track(events.sshHostSelectionFailed);
+        onOktetoFailed();
+    });
 }
 
 function onOktetoFailed() {

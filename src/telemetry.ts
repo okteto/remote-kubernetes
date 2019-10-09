@@ -25,8 +25,6 @@ export const events = {
     manifestSelected: 'manifest_selected',
     manifestDismissed: 'manifest_select_dismissed',
     manifestLoadFailed: 'manifest_load_failed',
-    sshConfigFailed: 'ssh_config_update_failed',
-    sshRemoveFailed: 'ssh_config_remove_failed',
     sshPortFailed: 'ssh_get_port_failed',
     sshServiceFailed: 'ssh_service_failed',
     sshHostSelectionFailed: 'ssh_host_selection_failed',
