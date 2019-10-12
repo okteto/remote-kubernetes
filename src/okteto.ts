@@ -20,7 +20,6 @@ export const terminalName = `okteto`;
 
 export const state = {
   starting: 'starting',
-  provisioning: 'provisioning',
   startingSync: 'startingSync',
   synchronizing: 'synchronizing',
   activating: 'activating',
@@ -143,7 +142,6 @@ export function down(manifest: string, namespace: string, name:string): execa.Ex
 
 export function getStateMessages(): Map<string, string> {
   const messages = new Map<string, string>();
-  messages.set(state.provisioning, "Provisioning your persistent volume...");
   messages.set(state.startingSync, "Starting the file synchronization service...");
   messages.set(state.synchronizing, "Synchronizing your files...");
   messages.set(state.activating, "Activating your Okteto Environment...");
@@ -160,10 +158,10 @@ export function getState(namespace: string, name: string): string {
 
   if (!fs.existsSync(p)) {
     // if it doesn't exist we just return the initial state
-    return state.provisioning;
+    return state.activating;
   }
 
-  var c = state.provisioning;
+  var c = state.activating;
   
   try {
     c = fs.readFileSync(p, 'utf-8');
@@ -172,8 +170,6 @@ export function getState(namespace: string, name: string): string {
   }
 
   switch(c) {
-      case state.provisioning:
-          return state.provisioning;
       case state.startingSync:
           return state.startingSync;
       case state.synchronizing:
