@@ -211,18 +211,18 @@ function up() {
                 }, (reason) => {
                     reporter.track(events.oktetoUpStartFailed);
                     console.error(`okteto.start failed: ${reason.message}`);
-                    onOktetoFailed();    
+                    onOktetoFailed(`Okteto: Up command failed to start your development environment: ${reason}`);    
                 });
             }, (reason) => {
                 reporter.track(events.sshPortFailed);
                 console.error(`ssh.getPort failed: ${reason.message}`);
-                onOktetoFailed();
+                onOktetoFailed(`Okteto: Up command failed to find an available port: ${reason}`);
             });
 
         }, (reason) =>{
             reporter.track(events.manifestLoadFailed);
             console.error(`failed to load the manifest: ${reason.message}`);
-            onOktetoFailed();
+            onOktetoFailed(`Okteto: Up command failed to load your Okteto manifest: ${reason}`);
         });
     });
 }
@@ -261,13 +261,13 @@ function waitForUp(namespace: string, name: string, port: number) {
                     }, (err) => {
                         reporter.track(events.sshServiceFailed);
                         console.error(`SSH wasn't available after 60 seconds: ${err.Message}`);
-                        onOktetoFailed();
+                        onOktetoFailed(`Okteto: Up command failed, SSH server wasn't available after 60 seconds`);
                         resolve();
                     });
                     return;
                 } else if (okteto.state.failed === state) {
                     reporter.track(events.oktetoUpFailed);
-                    onOktetoFailed();
+                    onOktetoFailed(`Okteto: Up command failed to start your development environment`);
                     resolve();
                     clearInterval(intervalID);
                     return;
@@ -286,12 +286,12 @@ function openSSHHostSelector(name: string, port: number) {
     }, (reason) => {
         console.error(`opensshremotes.openEmptyWindow failed: ${reason}`);	
         reporter.track(events.sshHostSelectionFailed);
-        onOktetoFailed();
+        onOktetoFailed(`Okteto: Up command failed to open the host selector: ${reason}`);
     });
 }
 
-function onOktetoFailed() {
-    vscode.window.showErrorMessage(`Okteto: Up command failed to start your development environment`);
+function onOktetoFailed(message: string) {
+    vscode.window.showErrorMessage(message);
     okteto.showTerminal();
 }
 

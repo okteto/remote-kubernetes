@@ -190,11 +190,11 @@ export function getState(namespace: string, name: string): string {
   return state.unknown;
 }
 
-export function notifyIfFailed(namespace: string, name:string, callback: () => void){
+export function notifyIfFailed(namespace: string, name:string, callback: (m: string) => void){
   const id = setInterval(() => {
     const c = getState(namespace, name);
     if (c === state.failed) {
-      callback();
+      callback(`Okteto: Up command failed`);
       clearInterval(id);
     }
   }, 1000);
