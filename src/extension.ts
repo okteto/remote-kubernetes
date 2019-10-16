@@ -242,7 +242,7 @@ function waitForUp(namespace: string, name: string, port: number) {
             const seen = new Map<string, boolean>();
             const messages = okteto.getStateMessages();
 
-            progress.report({  message: "Launching your Okteto Environment..." });
+            progress.report({  message: "Launching your development environment..." });
             const intervalID = setInterval(()=>{
                 const state = okteto.getState(namespace, name);
                 if (!seen.has(state)) {
