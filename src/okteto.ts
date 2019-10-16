@@ -19,11 +19,11 @@ const minimum = '1.5.0';
 export const terminalName = `okteto`;
 
 export const state = {
-  starting: 'starting',
-  provisioning: 'provisioning',
+  activating: 'activating',
+  attaching: 'attaching',
+  pulling: 'pulling',
   startingSync: 'startingSync',
   synchronizing: 'synchronizing',
-  activating: 'activating',
   ready: 'ready',
   unknown: 'unknown',
   failed: 'failed',
@@ -143,10 +143,11 @@ export function down(manifest: string, namespace: string, name:string): execa.Ex
 
 export function getStateMessages(): Map<string, string> {
   const messages = new Map<string, string>();
-  messages.set(state.provisioning, "Provisioning your persistent volume...");
+  messages.set(state.activating, "Activating your Okteto Environment...");
+  messages.set(state.attaching, "Attaching your persistent volume...");
+  messages.set(state.pulling, "Pulling your image...");
   messages.set(state.startingSync, "Starting the file synchronization service...");
   messages.set(state.synchronizing, "Synchronizing your files...");
-  messages.set(state.activating, "Activating your Okteto Environment...");
   messages.set(state.ready, "Your Okteto Environment is ready...");
   return messages;  
 }
@@ -160,34 +161,30 @@ export function getState(namespace: string, name: string): string {
 
   if (!fs.existsSync(p)) {
     // if it doesn't exist we just return the initial state
-    return state.provisioning;
+    return state.activating;
   }
 
-  var c = state.provisioning;
+  var c = state.activating;
   
   try {
     c = fs.readFileSync(p, 'utf-8');
   }catch(err) {
     console.error(`failed to open ${p}: ${err}`);
+    return state.unknown;
   }
 
   switch(c) {
-      case state.provisioning:
-          return state.provisioning;
-      case state.startingSync:
-          return state.startingSync;
-      case state.synchronizing:
-          return state.synchronizing;
       case state.activating:
-          return state.activating;
+      case state.attaching:
+      case state.pulling:
+      case state.synchronizing:
       case state.ready:
-          return state.ready;
       case state.failed:
-          return state.failed;
+        return c;
+      default:
+        console.error(`received unknown state: '${c}'`);
+        return state.unknown;
   }
-
-  console.error(`received unknown state: '${c}'`);
-  return state.unknown;
 }
 
 export function notifyIfFailed(namespace: string, name:string, callback: (m: string) => void){
