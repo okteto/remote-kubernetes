@@ -1,6 +1,7 @@
 'use strict';
 
 import * as vscode from 'vscode';
+import * as path from 'path';
 import * as manifest from './manifest';
 import * as ssh from './ssh';
 import * as okteto from './okteto';
@@ -296,8 +297,15 @@ function onOktetoFailed(message: string) {
 }
 
 function showManifestPicker(label: string) : Thenable<vscode.Uri[] | undefined> {
+    const loc = manifest.getDefaultLocation();
+    let defaultUri = undefined;
+    if (loc) {
+        const dir = path.dirname(loc.fsPath);
+        defaultUri = vscode.Uri.parse(dir);
+    }
+
     return vscode.window.showOpenDialog({
-        defaultUri: manifest.getDefaultLocation(),
+        defaultUri: defaultUri,
         openLabel: label,
         canSelectMany: false,
         canSelectFiles: true,
