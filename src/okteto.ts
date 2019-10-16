@@ -143,12 +143,12 @@ export function down(manifest: string, namespace: string, name:string): execa.Ex
 
 export function getStateMessages(): Map<string, string> {
   const messages = new Map<string, string>();
-  messages.set(state.activating, "Activating your Okteto Environment...");
+  messages.set(state.activating, "Activating your development environment...");
   messages.set(state.attaching, "Attaching your persistent volume...");
   messages.set(state.pulling, "Pulling your image...");
   messages.set(state.startingSync, "Starting the file synchronization service...");
   messages.set(state.synchronizing, "Synchronizing your files...");
-  messages.set(state.ready, "Your Okteto Environment is ready...");
+  messages.set(state.ready, "Your development environment is ready...");
   return messages;  
 }
 
