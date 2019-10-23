@@ -1,7 +1,8 @@
 # Change Log
 
 ## 0.1.7
-- Require okteto 1.5.0
+- Require okteto 1.5.1
+- New dialog to select the Okteto manifest.
 
 ## 0.1.6
 - Added `Okteto: Create manifest`command to initialize the Okteto manifest.

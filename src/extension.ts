@@ -189,7 +189,6 @@ async function up() {
         .then((port) => {
             okteto.start(manifestPath, ktx.namespace, name, port)
             .then(()=>{
-                okteto.notifyIfFailed(ktx.namespace, name, onOktetoFailed);
                 activeManifest = manifestPath;
                 waitForUp(ktx.namespace, name, port);
             }, (reason) => {
@@ -239,7 +238,7 @@ function waitForUp(namespace: string, name: string, port: number) {
                     ssh.isReady(port)
                     .then(() =>{
                         console.log(`SSH server is ready`);
-                        openSSHHostSelector(name, port);
+                        openSSHHostSelector(namespace, name);
                         resolve();
                     }, (err) => {
                         reporter.track(events.sshServiceFailed);
@@ -260,12 +259,14 @@ function waitForUp(namespace: string, name: string, port: number) {
     });
 }
 
-function openSSHHostSelector(name: string, port: number) {
+function openSSHHostSelector(namespace: string, name: string) {
     reporter.track(events.upReady);
     vscode.commands.executeCommand("opensshremotes.openEmptyWindow", {hostName: name})
     .then((r) =>{
         console.log(`opensshremotes.openEmptyWindow executed`);
         reporter.track(events.upFinished);
+        okteto.notifyIfFailed(namespace, name, onOktetoFailed);
+                
     }, (reason) => {
         console.error(`opensshremotes.openEmptyWindow failed: ${reason}`);
         reporter.track(events.sshHostSelectionFailed);
