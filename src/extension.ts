@@ -283,7 +283,7 @@ async function showManifestPicker() : Promise<vscode.Uri | undefined> {
     const files = await vscode.workspace.findFiles('**/okteto.yml', '**/node_modules/**');
     if (files.length === 0) {
         await vscode.window.showErrorMessage(`No manifests found in your workspace.\n
-Create an "okteto.yml" to describe your remote development environment.`, {
+Please run the 'Okteto: Create Manifest' command to create it and then try again.`, {
             modal: true
         });
         return;
