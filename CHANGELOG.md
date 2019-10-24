@@ -1,9 +1,9 @@
 # Change Log
 
 ## 0.1.7
-- Require okteto 1.5.1
+- Require okteto 1.5.1.
 - New file picker to select the Okteto manifest.
-- Improve error messages and reporting
+- Improved error messages and reporting.
 
 
 ## 0.1.6
