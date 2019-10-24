@@ -5,11 +5,11 @@ The **Remote - Kubernetes** extension uses Okteto to move your development envir
 
 Kubernetes, Okteto and VS Code make a great development environment because you can:
 
-- Forget about building, pushing or deploying containers.
 - Launch reproducible development environment with all your tools in seconds.
 - Automatically synchronize your code between local and remote environments.
 - Eliminate integration issues by developing the same way code runs in production.
-- Keep using your favorite tools locally.
+- Keep using your favorite tools.
+- Forget about building images or redeploying containers to test your changes in Kubernetes.
 
 The extension starts a development environment in your Kubernetes cluster by using https://github.com/okteto/okteto. Once the environment is ready, the extension prompts you to open it directly in VS Code using the [Visual Studio Code Remote - SSH](https://code.visualstudio.com/docs/remote/ssh) extension.
 
@@ -25,14 +25,14 @@ The extension starts a development environment in your Kubernetes cluster by usi
 1. Install the [Remote - SSH](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh) extension.
 1. [Download and configure](https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/) your `kubeconfig` file.
 
-If you already have `okteto` installed, make sure you're at least on version `1.4.6`.
+If you already have `okteto` installed, make sure you're at least on version `1.5.1`.
 
 ## Getting started
 
 1. Clone https://github.com/okteto/go-getting-started locally
 1. Start VS Code
 1. Run the `Okteto: Up` command to launch your development environment in Kubernetes. When prompted, pick the `okteto.yml` manifest. 
-1. After a few seconds, you'll be asked to select a host. Pick the `go-getting-started` entry from the dialog to launch your remote VS Code instance.
+1. After a few seconds, you'll be asked to select a host. Pick the `go-getting-started.okteto` entry from the dialog to launch your remote VS Code instance.
 1. Once connected, use `File > Open Folder` to open the `/okteto` folder on your remote development environment.
 1. Develop directly in Kubernetes from VS Code!
 
