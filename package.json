@@ -14,7 +14,7 @@
 		"gke",
 		"eks"
 	],
-	"version": "0.1.7",
+	"version": "0.1.8",
 	"icon": "media/icon.png",
 	"author": {
 		"name": "rberrelleza"
@@ -46,21 +46,21 @@
 	"contributes": {
 		"commands": [
 			{
-				"command": "okteto.install",
-				"title": "Okteto: Install"
-			},
-			{
-				"command": "okteto.up",
-				"title": "Okteto: Up"
+				"command": "okteto.create",
+				"title": "Okteto: Create manifest",
+				"enablement": "workspaceFolderCount != 0"
 			},
 			{
 				"command": "okteto.down",
 				"title": "Okteto: Down"
 			},
 			{
-				"command": "okteto.create",
-				"title": "Okteto: Create manifest",
-				"enablement": "workspaceFolderCount != 0"
+				"command": "okteto.install",
+				"title": "Okteto: Install"
+			},
+			{
+				"command": "okteto.up",
+				"title": "Okteto: Up"
 			}
 		],
 		"configuration": {
