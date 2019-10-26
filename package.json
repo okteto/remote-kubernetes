@@ -47,7 +47,7 @@
 		"commands": [
 			{
 				"command": "okteto.create",
-				"title": "Okteto: Create manifest",
+				"title": "Okteto: Create Manifest",
 				"enablement": "workspaceFolderCount != 0"
 			},
 			{
