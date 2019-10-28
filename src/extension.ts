@@ -266,7 +266,7 @@ function openSSHHostSelector(namespace: string, name: string) {
         console.log(`opensshremotes.openEmptyWindow executed`);
         reporter.track(events.upFinished);
         okteto.notifyIfFailed(namespace, name, onOktetoFailed);
-                
+
     }, (reason) => {
         console.error(`opensshremotes.openEmptyWindow failed: ${reason}`);
         reporter.track(events.sshHostSelectionFailed);
@@ -289,7 +289,10 @@ Please run the 'Okteto: Create Manifest' command to create it and then try again
         return;
     }
     const items = files.map(file => {
-        return { label: vscode.workspace.asRelativePath(file), uri: file };
+        return {
+            label: vscode.workspace.asRelativePath(file, true),
+            uri: file
+        };
     });
     const manifestItem = await vscode.window.showQuickPick(items, {
         canPickMany: false,
