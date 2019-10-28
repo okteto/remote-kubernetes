@@ -14,7 +14,7 @@ var titlecase = require('title-case');
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
-const minimum = '1.5.1';
+const minimum = '1.5.2';
 
 export const terminalName = `okteto`;
 
