@@ -14,7 +14,7 @@
 		"gke",
 		"eks"
 	],
-	"version": "0.1.7",
+	"version": "0.1.8",
 	"icon": "media/icon.png",
 	"author": {
 		"name": "rberrelleza"
@@ -46,21 +46,21 @@
 	"contributes": {
 		"commands": [
 			{
-				"command": "okteto.install",
-				"title": "Okteto: Install"
-			},
-			{
-				"command": "okteto.up",
-				"title": "Okteto: Up"
+				"command": "okteto.create",
+				"title": "Okteto: Create Manifest",
+				"enablement": "workspaceFolderCount != 0"
 			},
 			{
 				"command": "okteto.down",
 				"title": "Okteto: Down"
 			},
 			{
-				"command": "okteto.create",
-				"title": "Okteto: Create manifest",
-				"enablement": "workspaceFolderCount != 0"
+				"command": "okteto.install",
+				"title": "Okteto: Install"
+			},
+			{
+				"command": "okteto.up",
+				"title": "Okteto: Up"
 			}
 		],
 		"configuration": {
@@ -91,7 +91,7 @@
 	"devDependencies": {
 		"@types/glob": "^7.1.1",
 		"@types/mocha": "^5.2.6",
-		"@types/node": "^10.14.22",
+		"@types/node": "^10.17.0",
 		"@types/vscode": "^1.39.0",
 		"glob": "^7.1.5",
 		"mocha": "^6.2.2",
@@ -107,7 +107,7 @@
 		"@kubernetes/client-node": "^0.10.3",
 		"@types/command-exists": "^1.2.0",
 		"@types/download": "^6.2.4",
-		"@types/semver": "^6.0.2",
+		"@types/semver": "^6.2.0",
 		"@types/user-home": "^2.0.0",
 		"@types/yaml": "^1.2.0",
 		"bufferutil": "^4.0.1",
