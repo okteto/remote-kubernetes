@@ -1,5 +1,7 @@
 # Change Log
 
+## 0.1.9
+
 ## 0.1.8
 - Include path to subdirectory in the manifest dialog.
 - Update README and sample.
