@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.1.8
+- Include path to subdirectory in the manifest dialog.
+- Update README and sample.
+- Use port 22100 for remote SSH.
+
 ## 0.1.7
 - Require okteto 1.5.1.
 - New file picker to select the Okteto manifest.
