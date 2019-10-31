@@ -94,7 +94,7 @@ export async function install() {
       throw new Error(`failed to set exec permissions; ${r.stdout}`);  
     }
   } catch(err) {
-    throw new Error(`failed to download ${source}: ${err.Message}`);  
+    throw new Error(`failed to download ${source}: ${err.message}`);  
   }
 }
 
@@ -140,10 +140,13 @@ export function start(manifest: string, namespace: string, name: string, port: n
   });
 }
 
-export function down(manifest: string, namespace: string, name:string): execa.ExecaChildProcess<string> {
+export async function down(manifest: string, namespace: string, name:string) {
   console.log(`launching okteto down -f ${manifest} --namespace ${namespace}`);
   disposeTerminal();
-  return execa(getBinary(), ['down', '-f', manifest, '--namespace', namespace]);
+  const r = await execa.command(`${getBinary()} down --file ${manifest} --namespace ${namespace}`);
+  if (r.failed) {
+    throw new Error(r.stdout);
+  }
 }
 
 export function getStateMessages(): Map<string, string> {

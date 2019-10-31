@@ -49,7 +49,7 @@ async function installCmd(upgrade: boolean) {
             
         }catch (err) {
             reporter.track(events.oktetoInstallFailed);
-            reporter.captureError(err.Message, err);
+            reporter.captureError(err.message, err);
             vscode.window.showErrorMessage(`Okteto was not installed: ${err.message}`);
         }
       },
@@ -67,9 +67,39 @@ async function downCommand() {
         }
     }
 
+    reporter.track(events.down);
     const manifestPath = await getManifestOrAsk();
-    if (manifestPath) {
-        await down(manifestPath);
+    if (!manifestPath) {
+        return;
+    }
+
+    const ktx = kubernetes.getCurrentContext();
+    if (!ktx) {
+        vscode.window.showErrorMessage("Couldn't detect your current Kubernetes context.");
+        return;
+    }
+
+    
+    let name = "";
+
+    try {
+        name = await manifest.getName(manifestPath);
+    } catch (err) {
+        reporter.track(events.manifestLoadFailed);
+        reporter.captureError(err.message, err);
+        vscode.window.showErrorMessage(`Okteto: Down failed: ${err.message}`);
+        return;
+    }
+
+    try {
+        await okteto.down(manifestPath, ktx.namespace, name);
+        activeManifest = '';
+        vscode.window.showInformationMessage("Okteto environment deactivated");
+        reporter.track(events.downFinished);
+    } catch (err) {
+        reporter.track(events.oktetoDownFailed);
+        reporter.captureError(err.message, err);
+        vscode.window.showErrorMessage(`Okteto: Down failed: ${err.message}`);
     }
 }
 
@@ -85,32 +115,6 @@ async function getManifestOrAsk(): Promise<string | undefined> {
             reporter.track(events.manifestDismissed);
         }
     }
-}
-
-async function down(manifestPath: string) {
-    reporter.track(events.down);
-    const ktx = kubernetes.getCurrentContext();
-    if (!ktx) {
-        vscode.window.showErrorMessage("Couldn't detect your current Kubernetes context.");
-        return;
-    }
-
-    manifest.getName(manifestPath).then((name) => {
-        okteto.down(manifestPath, ktx.namespace, name).then((e) =>{
-            if (e.failed) {
-                reporter.track(events.oktetoDownFailed);
-                vscode.window.showErrorMessage(`Command failed: ${e.stderr}`);
-            }
-
-            activeManifest = '';
-            vscode.window.showInformationMessage("Okteto environment deactivated");
-            console.log(`okteto environment deactivated`);
-            reporter.track(events.downFinished);
-        });
-    }, (reason) => {
-        reporter.track(events.manifestLoadFailed);
-        vscode.window.showErrorMessage(`Command failed: ${reason.message}`);
-    });
 }
 
 async function upCommand() {
@@ -156,7 +160,7 @@ async function createCmd(){
         await okteto.init(manifestPath, choice.value);
     } catch (err) {
         reporter.track(events.oktetoInitFailed);
-        reporter.captureError(err.Message, err);
+        reporter.captureError(err.message, err);
         vscode.window.showErrorMessage("Couldn't generate your manifest file.");
         return;
     }
@@ -165,7 +169,7 @@ async function createCmd(){
         await vscode.commands.executeCommand('vscode.openFolder', manifestPath);
     } catch (err) {
         reporter.track(events.createOpenFailed);
-        reporter.captureError(err.Message, err);
+        reporter.captureError(err.message, err);
         vscode.window.showErrorMessage(`Couldn't open ${manifestPath}: ${err}.`);
         return;
     }
@@ -247,7 +251,7 @@ function waitForUp(namespace: string, name: string, port: number) {
                         resolve();
                     }, (err) => {
                         reporter.track(events.sshServiceFailed);
-                        reporter.captureError(`SSH wasn't available after 60 seconds: ${err.Message}`, err);
+                        reporter.captureError(`SSH wasn't available after 60 seconds: ${err.message}`, err);
                         onOktetoFailed(`Okteto: Up command failed, SSH server wasn't available after 60 seconds`);
                         resolve();
                     });
