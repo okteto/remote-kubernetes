@@ -7,6 +7,7 @@ import * as okteto from './okteto';
 import * as kubernetes from './kubernetes';
 import {Reporter, events} from './telemetry';
 
+
 let activeManifest: string;
 let reporter: Reporter;
 
@@ -56,6 +57,133 @@ async function installCmd(upgrade: boolean) {
     );
 }
 
+async function upCommand() {
+    const { install, upgrade } = await okteto.needsInstall();
+    if (install) {
+        try {
+            await installCmd(upgrade);
+        }catch(err) {
+            // error already handled on installCmd
+            return;
+        }
+    }
+
+    reporter.track(events.up);
+
+    const ktx = kubernetes.getCurrentContext();
+    if (!ktx) {
+        vscode.window.showErrorMessage("Couldn't detect your current Kubernetes context.");
+        return;
+    }
+    
+    const manifestUri = await showManifestPicker();
+    if (!manifestUri) {
+        reporter.track(events.manifestDismissed);
+        return;
+    }
+
+    reporter.track(events.manifestSelected);
+    const manifestPath = manifestUri.fsPath;
+    console.log(`user selected: ${manifestPath}`);
+    
+    let name: string;
+    let port: number;
+
+    try {
+        name = await manifest.getName(manifestPath);
+    } catch (err) {
+        reporter.track(events.manifestLoadFailed);
+        reporter.captureError(`failed to load the manifest: ${err.message}`, err);
+        return onOktetoFailed(`Okteto: Up failed to load your Okteto manifest: ${err.message}`);
+    }
+
+    try {
+        port = await ssh.getPort();
+    } catch (err) {
+        reporter.track(events.sshPortFailed);
+        reporter.captureError(`ssh.getPort failed: ${err.message}`, err);
+        return onOktetoFailed(`Okteto: Up failed to find an available port: ${err}`);
+    }
+
+    okteto.start(manifestPath, ktx.namespace, name, port);
+    activeManifest = manifestPath;
+
+    try{
+        await waitForUp(ktx.namespace, name, port);
+    } catch(err) {
+        return onOktetoFailed(err.message);
+    }
+    
+    await finalizeUp(ktx.namespace, name);
+}
+
+async function waitForUp(namespace: string, name: string, port: number) {
+    await vscode.window.withProgress(
+        {location: vscode.ProgressLocation.Notification, cancellable: true },
+          async (progress, token) => {
+              token.onCancellationRequested(() => {
+                  reporter.track(events.upCancelled);
+                  vscode.commands.executeCommand('okteto.down');
+              });
+  
+              const success = await waitForFinalState(namespace, name, progress);
+              if (!success) {
+                  reporter.track(events.oktetoUpFailed);
+                  throw new Error(`Okteto: Up command failed to start your development environment`);
+              }
+  
+              try {
+                  await ssh.isReady(port);
+              } catch(err) {
+                  reporter.track(events.sshServiceFailed);
+                  reporter.captureError(`SSH wasn't available after 60 seconds: ${err.message}`, err);
+                  throw new Error(`Okteto: Up command failed, SSH server wasn't available after 60 seconds`);
+              }
+          }); 
+}
+
+async function waitForFinalState(namespace: string, name:string, progress: vscode.Progress<{message?: string | undefined; increment?: number | undefined}>): Promise<boolean> {
+    const seen = new Map<string, boolean>();
+    const messages = okteto.getStateMessages();
+    progress.report({  message: "Launching your development environment..." });
+    while (true) {
+        const state = okteto.getState(namespace, name);
+        if (!seen.has(state)) {
+            progress.report({ message: messages.get(state) });
+            console.log(`okteto is ${state}`);
+        }
+
+        seen.set(state, true);
+
+        if (okteto.state.ready === state) {
+            return true;
+        } else if(okteto.state.failed === state) {
+            return false;
+        }
+
+        await sleep(1000);
+        
+    }
+}
+
+async function sleep(ms: number) {
+    return new Promise<void>(resolve =>  setTimeout(resolve, 1000));
+}
+
+async function finalizeUp(namespace: string, name: string) {
+    reporter.track(events.upReady);               
+    
+    try{
+        await vscode.commands.executeCommand("opensshremotes.openEmptyWindow", {hostName: name});
+        reporter.track(events.upFinished);
+        okteto.notifyIfFailed(namespace, name, onOktetoFailed);
+    } catch (err) {
+        reporter.captureError(`opensshremotes.openEmptyWindow failed: ${err.message}`, err);
+        reporter.track(events.sshHostSelectionFailed);
+        return onOktetoFailed(`Okteto: Up failed to open the host selector: ${err.message}`);
+    }
+}
+
 async function downCommand() {
     const { install, upgrade } = await okteto.needsInstall();
     if (install){
@@ -80,7 +208,7 @@ async function downCommand() {
     }
 
     
-    let name = "";
+    let name: string;
 
     try {
         name = await manifest.getName(manifestPath);
@@ -115,20 +243,6 @@ async function getManifestOrAsk(): Promise<string | undefined> {
             reporter.track(events.manifestDismissed);
         }
     }
-}
-
-async function upCommand() {
-    const { install, upgrade } = await okteto.needsInstall();
-    if (install) {
-        try {
-            await installCmd(upgrade);
-        }catch(err) {
-            // error already handled on installCmd
-            return;
-        }
-    }
-    
-    up();
 }
 
 async function createCmd(){
@@ -173,114 +287,6 @@ async function createCmd(){
         vscode.window.showErrorMessage(`Couldn't open ${manifestPath}: ${err}.`);
         return;
     }
-}
-
-async function up() {
-    reporter.track(events.up);
-    const manifestUri = await showManifestPicker();
-    if (!manifestUri) {
-        reporter.track(events.manifestDismissed);
-        return;
-    }
-
-    reporter.track(events.manifestSelected);
-    const manifestPath = manifestUri.fsPath;
-    console.log(`user selected: ${manifestPath}`);
-    manifest.getName(manifestPath)
-    .then((name) => {
-        const ktx = kubernetes.getCurrentContext();
-        if (!ktx) {
-            vscode.window.showErrorMessage("Couldn't detect your current Kubernetes context.");
-            return;
-        }
-
-        ssh.getPort()
-        .then((port) => {
-            okteto.start(manifestPath, ktx.namespace, name, port)
-            .then(()=>{
-                activeManifest = manifestPath;
-                waitForUp(ktx.namespace, name, port);
-            }, (reason) => {
-                reporter.track(events.oktetoUpStartFailed);
-                reporter.captureError(`okteto.start failed: ${reason.message}`, reason);
-                onOktetoFailed(`Okteto: Up command failed to start your development environment: ${reason}`);
-            });
-        }, (reason) => {
-            reporter.track(events.sshPortFailed);
-            reporter.captureError(`ssh.getPort failed: ${reason.message}`, reason);
-            onOktetoFailed(`Okteto: Up command failed to find an available port: ${reason}`);
-        });
-
-    }, (reason) =>{
-        reporter.track(events.manifestLoadFailed);
-        reporter.captureError(`failed to load the manifest: ${reason.message}`, reason);
-        onOktetoFailed(`Okteto: Up command failed to load your Okteto manifest: ${reason}`);
-    });
-}
-
-function waitForUp(namespace: string, name: string, port: number) {
-    vscode.window.withProgress({
-        location: vscode.ProgressLocation.Notification,
-        cancellable: true
-    }, (progress, token) => {
-        token.onCancellationRequested(() => {
-            reporter.track(events.upCancelled);
-            vscode.commands.executeCommand('okteto.down');
-        });
-
-        return new Promise(resolve => {
-            const seen = new Map<string, boolean>();
-            const messages = okteto.getStateMessages();
-
-            progress.report({  message: "Launching your development environment..." });
-            const intervalID = setInterval(()=>{
-                const state = okteto.getState(namespace, name);
-                if (!seen.has(state)) {
-                    progress.report({ message: messages.get(state) });
-                    console.log(`okteto is ${state}`);
-                }
-
-                seen.set(state, true);
-
-                if (okteto.state.ready === state) {
-                    clearInterval(intervalID);
-                    ssh.isReady(port)
-                    .then(() =>{
-                        console.log(`SSH server is ready`);
-                        openSSHHostSelector(namespace, name);
-                        resolve();
-                    }, (err) => {
-                        reporter.track(events.sshServiceFailed);
-                        reporter.captureError(`SSH wasn't available after 60 seconds: ${err.message}`, err);
-                        onOktetoFailed(`Okteto: Up command failed, SSH server wasn't available after 60 seconds`);
-                        resolve();
-                    });
-                    return;
-                } else if (okteto.state.failed === state) {
-                    reporter.track(events.oktetoUpFailed);
-                    onOktetoFailed(`Okteto: Up command failed to start your development environment`);
-                    resolve();
-                    clearInterval(intervalID);
-                    return;
-                }
-            }, 1000);
-        });
-    });
-}
-
-function openSSHHostSelector(namespace: string, name: string) {
-    reporter.track(events.upReady);
-    vscode.commands.executeCommand("opensshremotes.openEmptyWindow", {hostName: name})
-    .then((r) =>{
-        console.log(`opensshremotes.openEmptyWindow executed`);
-        reporter.track(events.upFinished);
-        okteto.notifyIfFailed(namespace, name, onOktetoFailed);
-
-    }, (reason) => {
-        reporter.captureError(`opensshremotes.openEmptyWindow failed: ${reason}`, reason);
-        reporter.track(events.sshHostSelectionFailed);
-        onOktetoFailed(`Okteto: Up command failed to open the host selector: ${reason}`);
-    });
 }
 
 function onOktetoFailed(message: string) {

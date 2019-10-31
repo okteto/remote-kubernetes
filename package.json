@@ -120,6 +120,7 @@
 		"get-port": "^5.0.0",
 		"mixpanel": "^0.10.3",
 		"semver": "^6.3.0",
+		"sleepjs": "^3.0.1",
 		"tcp-ping": "^0.1.1",
 		"user-home": "^2.0.0",
 		"utf-8-validate": "^5.0.2",

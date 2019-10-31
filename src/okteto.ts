@@ -116,28 +116,21 @@ function downloadFile(source: string, destination: string) {
   });
 }
 
-export function start(manifest: string, namespace: string, name: string, port: number): Promise<string> {
+export function start(manifest: string, namespace: string, name: string, port: number) {
   console.log(`launching ${getBinary()} up -f ${manifest} --namespace ${namespace} --remote ${port}`);
-  return new Promise<string>((resolve, reject) => {
-    disposeTerminal();
-    cleanState(namespace, name);
-    const term = vscode.window.createTerminal({
-      name: terminalName,
-      hideFromUser: false,
-      cwd: path.dirname(manifest),
-      env: {
-        "OKTETO_AUTODEPLOY":"1",
-        "OKTETO_ORIGIN":"vscode"
-      }
-    });
-
-    try{
-      term.sendText(`${getBinary()} up -f ${manifest} --namespace ${namespace} --remote ${port}`, true);
-      resolve();
-    }catch(err) {
-      reject(err.message);
+  disposeTerminal();
+  cleanState(namespace, name);
+  const term = vscode.window.createTerminal({
+    name: terminalName,
+    hideFromUser: false,
+    cwd: path.dirname(manifest),
+    env: {
+      "OKTETO_AUTODEPLOY":"1",
+      "OKTETO_ORIGIN":"vscode"
     }
   });
+
+  term.sendText(`${getBinary()} up -f ${manifest} --namespace ${namespace} --remote ${port}`, true);
 }
 
 export async function down(manifest: string, namespace: string, name:string) {
