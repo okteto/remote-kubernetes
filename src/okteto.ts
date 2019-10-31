@@ -9,8 +9,7 @@ import * as vscode from 'vscode';
 import * as os from 'os';
 import * as download from 'download';
 import * as semver from 'semver';
-
-var titlecase = require('title-case');
+import {pascalCase} from 'change-case';
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
@@ -29,38 +28,32 @@ export const state = {
   failed: 'failed',
 };
 
-export function needsInstall(): {install: boolean, upgrade: boolean}{
-  if (!commandExists.sync(getBinary())) {
-    return {install: true, upgrade: false};
-  }
-  
-  if (needsUpgrade()) {
-    return {install: true, upgrade: true};
-  }
-
-  return {install: false, upgrade: false};
-}
-
-export function needsUpgrade(): boolean{
+export async function needsInstall(): Promise<{install: boolean, upgrade: boolean}>{
   const binary = getBinary();
-  const version =  getVersion(binary);
-  if (version) {
-    try{
-      return semver.lt(version, minimum);
-    }catch(err){
-      console.log(`invalid version: ${err}`);
-      return true;
-    }
-  }
   
-  return false;
+  try {
+    await commandExists(binary);
+  } catch {
+      return {install: true, upgrade: false};
+  }
+    
+  try {
+    const version =  await getVersion(binary);
+    if (!version) {
+      return {install: false, upgrade: false};
+    }
+
+    return {install: semver.lt(version, minimum), upgrade: true};  
+  } catch {
+    return {install: false, upgrade: false};
+  }
 }
 
-function getVersion(binary: string): string | undefined {
-  const r = execa.commandSync(`${binary} version`);
+async function getVersion(binary: string): Promise<string | undefined> {
+  const r = await execa.command(`${binary} version`);
   if (r.failed) {
     return undefined;
-  } 
+  }
   
   const version = r.stdout.replace('okteto version ', '').trim();
   if (semver.valid(version)) {
@@ -70,44 +63,56 @@ function getVersion(binary: string): string | undefined {
   return undefined;
 }
 
-export function install() {
- return new Promise<string>((resolve, reject) => {
-    let source = '';
-    let destination = '';
-    let chmod = true;
-    switch(os.platform()){
-      case 'win32':
-        source = 'https://downloads.okteto.com/cli/okteto-Windows-x86_64';
-        destination = String.raw`c:\windows\system32\okteto.exe`;
-        chmod = false;
-        break;
-      case 'darwin':
-        source = 'https://downloads.okteto.com/cli/okteto-Darwin-x86_64';
-        destination = '/usr/local/bin/okteto';
-        break;
-      default:
-          source = 'https://downloads.okteto.com/cli/okteto-Linux-x86_64';
-          destination = '/usr/local/bin/okteto';
-    }
+export async function install() {
+  let source = '';
+  let destination = '';
+  let chmod = true;
 
+  switch(os.platform()){
+    case 'win32':
+      source = 'https://downloads.okteto.com/cli/okteto-Windows-x86_64';
+      destination = String.raw`c:\windows\system32\okteto.exe`;
+      chmod = false;
+      break;
+    case 'darwin':
+      source = 'https://downloads.okteto.com/cli/okteto-Darwin-x86_64';
+      destination = '/usr/local/bin/okteto';
+      break;
+    default:
+        source = 'https://downloads.okteto.com/cli/okteto-Linux-x86_64';
+        destination = '/usr/local/bin/okteto';
+  }
+
+  try {
+    await downloadFile(source, destination);
+    if (!chmod) {
+      return;
+    }
+  
+    const r = await execa.command(`chmod +x ${destination}`);
+    if (r.failed) {
+      throw new Error(`failed to set exec permissions; ${r.stdout}`);  
+    }
+  } catch(err) {
+    throw new Error(`failed to download ${source}: ${err.Message}`);  
+  }
+}
+
+function downloadFile(source: string, destination: string) {
+  return new Promise<string>((resolve, reject) => {
     const st = fs.createWriteStream(destination);
     download(source).pipe(st);
-    st.on('error', (err) =>{
+    st.on('error', (err, body, response) =>  {
       reject(err);
       return;
-    }).on('finish', () =>{
-      if (chmod) {
-        console.log(`setting exec permissions`);
-        const r = execa.commandSync(`chmod +x ${destination}`);
-        if (r.failed) {
-          reject(`chmod +x ${destination} failed: ${r.stderr}`);
-        } else {
-          resolve();
-        }
-      } else {
-        resolve();
-      }
     });
+
+  st.on('finish', () => {
+      resolve();
+      return;
+    });
+    
+    
   });
 }
 
@@ -259,7 +264,7 @@ export function getLanguages(): RuntimeItem[] {
   items.push(new RuntimeItem("Python", "", "python"));
   items.push(new RuntimeItem("Node", "", "javascript"));
   items.push(new RuntimeItem("Golang", "", "golang"));
-  items.push(new RuntimeItem("C#", "", "csharp"));
+  items.push(new RuntimeItem("CSharp", "", "csharp"));
 
   const sorted = items.sort((a, b)=>{
     if (a.label === b.label) {
@@ -276,25 +281,18 @@ export function getLanguages(): RuntimeItem[] {
 
 }
 
-export function init(manifestPath: vscode.Uri, choice: string): boolean {
-  try{
-    const r = execa.commandSync(`${getBinary()} init --overwrite --file=${manifestPath.fsPath}`, {
-      cwd: path.dirname(manifestPath.fsPath),
-      env: {
+export async function init(manifestPath: vscode.Uri, choice: string) {
+  const r = await execa.command(`${getBinary()} init --overwrite --file=${manifestPath.fsPath}`, {
+    cwd: path.dirname(manifestPath.fsPath),
+    env: {
       "OKTETO_ORIGIN":"vscode",
       "OKTETO_LANGUAGE":choice
       } 
     });
     
-    if (r.failed) {
-      return false;
-    }
-  } catch (err) {
-    console.error(`okteto init failed: ${err}`);
-    return false;
+  if (r.failed) {
+      throw new Error(r.stdout);
   }
-
-  return true;
 }
 
 class RuntimeItem implements vscode.QuickPickItem {
@@ -302,6 +300,6 @@ class RuntimeItem implements vscode.QuickPickItem {
 	label: string;
 	
 	constructor(private l: string, public description: string, public value: string) {
-		this.label = titlecase(l);
+		this.label = pascalCase(l);
 	}
 }

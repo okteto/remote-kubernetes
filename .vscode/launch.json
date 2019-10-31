@@ -15,7 +15,10 @@
             "outFiles": [
                 "${workspaceFolder}/dist/**/*.js"
             ],
-            "preLaunchTask": "npm: compile"
+            "preLaunchTask": "npm: compile",
+            "env": {
+                "DEBUG": "1"
+            }
         }
 
     ],

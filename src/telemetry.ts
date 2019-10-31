@@ -3,6 +3,10 @@
 import * as mixpanel from 'mixpanel';
 import * as vscode from 'vscode';
 import * as os from 'os';
+import * as sentry from '@sentry/node';
+
+const dsn = 'https://3becafe2cb9040fe9b43a353a1f524c6@sentry.io/1802969';
+const mp = '564133a36e3c39ecedf700669282c315';
 
 export const events = {
     activated: 'activated',
@@ -35,8 +39,9 @@ export class Reporter {
     private distinctId: string;
     private mp: mixpanel.Mixpanel;
 
-    constructor(token: string, private extensionVersion: string, oktetoId: string) {
-        this.mp = mixpanel.init(token);
+    constructor(private extensionVersion: string, oktetoId: string) {
+        this.mp = mixpanel.init(mp, {});
+        
         const config = vscode.workspace.getConfiguration('okteto');
         if (config) {
             this.enabled = config.get<boolean>('telemetry') || true;
@@ -46,6 +51,25 @@ export class Reporter {
             this.distinctId = oktetoId;
         } else {
             this.distinctId = vscode.env.machineId;
+        }
+
+        if (this.enabled) {
+            let environment = 'prod';
+            if (process.env.DEBUG) {
+                environment = 'dev';
+            } 
+
+            sentry.init({ dsn:  dsn, environment: environment});
+            sentry.configureScope(scope =>{
+                scope.setTags({
+                    'distinct_id': this.distinctId,
+                    'os': os.platform(),
+                    'version': this.extensionVersion,
+                    'vscodeversion': vscode.version,
+                    'session': vscode.env.sessionId,
+                    'machine_id': vscode.env.machineId,
+                });
+            });
         }
 
     }
@@ -65,8 +89,17 @@ export class Reporter {
         }, (err)=> {
             if (err) {
                 console.error(`failed to send telemetry: ${err}`);
+                sentry.captureException(err);
             }
         });
+    }
+
+    public captureError(message: string, err: any) {
+        console.error(message);
+        
+        if (this.enabled) {
+            sentry.captureException(err);
+        }
     }
 
 }
