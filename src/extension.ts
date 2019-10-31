@@ -9,7 +9,6 @@ import {Reporter, events} from './telemetry';
 
 let activeManifest: string;
 let reporter: Reporter;
-const mpToken = '564133a36e3c39ecedf700669282c315';
 
 export function activate(context: vscode.ExtensionContext) {
     let version = "0.0.0";
@@ -21,7 +20,7 @@ export function activate(context: vscode.ExtensionContext) {
     console.log(`okteto.remote-kubernetes ${version} activated`);
 
     const oktetoID = okteto.getOktetoId() || "";
-    reporter = new Reporter(mpToken, version, oktetoID);
+    reporter = new Reporter(version, oktetoID);
     reporter.track(events.activated);
 
     context.subscriptions.push(vscode.commands.registerCommand('okteto.up', upCommand));
@@ -37,27 +36,28 @@ async function installCmd(upgrade: boolean) {
     }
 
     reporter.track(events.install);
-    var p = new Promise<void>((resolve, reject)=>{
-        okteto.install().then(() => {
-            resolve();
-        }, err => {
+    await vscode.window.withProgress(
+      {location: vscode.ProgressLocation.Notification, title: title},
+      async () => {
+        try {
+            await okteto.install(); 
+            if (upgrade) {
+                vscode.window.showInformationMessage(`Okteto was successfully upgraded`);
+            } else {
+                vscode.window.showInformationMessage(`Okteto was successfully installed`);
+            }
+            
+        }catch (err) {
             reporter.track(events.oktetoInstallFailed);
             reporter.captureError(err.Message, err);
             vscode.window.showErrorMessage(`Okteto was not installed: ${err.message}`);
-            reject(err);
-        });
-    });
-
-    await vscode.window.withProgress(
-      {location: vscode.ProgressLocation.Notification, title: title},
-      (progress, token) =>{
-        return p;
+        }
       },
     );
 }
 
 async function downCommand() {
-    const { install, upgrade } = okteto.needsInstall();
+    const { install, upgrade } = await okteto.needsInstall();
     if (install){
         try {
             await installCmd(upgrade);
@@ -114,7 +114,7 @@ async function down(manifestPath: string) {
 }
 
 async function upCommand() {
-    const { install, upgrade } = okteto.needsInstall();
+    const { install, upgrade } = await okteto.needsInstall();
     if (install) {
         try {
             await installCmd(upgrade);
@@ -130,7 +130,7 @@ async function upCommand() {
 async function createCmd(){
     reporter.track(events.create);
 
-    const { install, upgrade } = okteto.needsInstall();
+    const { install, upgrade } = await okteto.needsInstall();
     if (install) {
         try {
             await installCmd(upgrade);

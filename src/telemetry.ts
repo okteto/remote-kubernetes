@@ -6,6 +6,7 @@ import * as os from 'os';
 import * as sentry from '@sentry/node';
 
 const dsn = 'https://3becafe2cb9040fe9b43a353a1f524c6@sentry.io/1802969';
+const mp = '564133a36e3c39ecedf700669282c315';
 
 export const events = {
     activated: 'activated',
@@ -38,8 +39,9 @@ export class Reporter {
     private distinctId: string;
     private mp: mixpanel.Mixpanel;
 
-    constructor(token: string, private extensionVersion: string, oktetoId: string) {
-        this.mp = mixpanel.init(token);
+    constructor(private extensionVersion: string, oktetoId: string) {
+        this.mp = mixpanel.init(mp, {});
+        
         const config = vscode.workspace.getConfiguration('okteto');
         if (config) {
             this.enabled = config.get<boolean>('telemetry') || true;

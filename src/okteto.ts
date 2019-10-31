@@ -28,33 +28,32 @@ export const state = {
   failed: 'failed',
 };
 
-export function needsInstall(): {install: boolean, upgrade: boolean}{
+export async function needsInstall(): Promise<{install: boolean, upgrade: boolean}>{
   const binary = getBinary();
-
-  if (!commandExists.sync(getBinary())) {
-    return {install: true, upgrade: false};
-  }
-
-  const version =  getVersion(binary);
   
-  if (version) {
-    try{
-      const needsUpgrade = semver.lt(version, minimum);
-      return {install: needsUpgrade, upgrade: true};
-    } catch(err) {
-      console.log(`invalid version: ${err}`);
+  try {
+    await commandExists(binary);
+  } catch {
+      return {install: true, upgrade: false};
+  }
+    
+  try {
+    const version =  await getVersion(binary);
+    if (!version) {
       return {install: false, upgrade: false};
     }
-  }
 
-  return {install: false, upgrade: false};
+    return {install: semver.lt(version, minimum), upgrade: true};  
+  } catch {
+    return {install: false, upgrade: false};
+  }
 }
 
-function getVersion(binary: string): string | undefined {
-  const r = execa.commandSync(`${binary} version`);
+async function getVersion(binary: string): Promise<string | undefined> {
+  const r = await execa.command(`${binary} version`);
   if (r.failed) {
     return undefined;
-  } 
+  }
   
   const version = r.stdout.replace('okteto version ', '').trim();
   if (semver.valid(version)) {
