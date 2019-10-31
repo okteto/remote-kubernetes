@@ -9,8 +9,7 @@ import * as vscode from 'vscode';
 import * as os from 'os';
 import * as download from 'download';
 import * as semver from 'semver';
-
-var changeCase = require('change-case');
+import {pascalCase} from 'change-case';
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
@@ -302,6 +301,6 @@ class RuntimeItem implements vscode.QuickPickItem {
 	label: string;
 	
 	constructor(private l: string, public description: string, public value: string) {
-		this.label = changeCase.pascalCase(l);
+		this.label = pascalCase(l);
 	}
 }
