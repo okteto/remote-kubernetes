@@ -1,7 +1,7 @@
 # Change Log
 
 ## 0.1.9
-- Capture errors if telemetry is enabled
+- Capture errors if telemetry is enabled.
 
 ## 0.1.8
 - Include path to subdirectory in the manifest dialog.

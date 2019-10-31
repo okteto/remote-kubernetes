@@ -91,23 +91,27 @@ export async function install() {
   }
 
   try {
-    await download(source, destination);
-  } catch(err) {
-    throw new Error(`failed to download ${source}: ${err.Message}`);  
-  }
-
-  if (!chmod) {
-    return;
-  }
-
-  try {  
+    await downloadFile(source, destination);
+    if (!chmod) {
+      return;
+    }
+  
     const r = await execa.command(`chmod +x ${destination}`);
     if (r.failed) {
       throw new Error(`failed to set exec permissions; ${r.stdout}`);  
     }
-  } catch (err) {
-    throw new Error(`failed to set exec permissions; ${err.Message}`);
+  } catch(err) {
+    throw new Error(`failed to download ${source}: ${err.Message}`);  
   }
+}
+
+async function downloadFile(source: string, destination: string) {
+  return new Promise<void>((resolve, reject) => {
+    const st = fs.createWriteStream(destination);
+    st.on('finish', ()=> resolve);
+    st.on('error', (err) => reject(err));
+    download(source).pipe(st);
+  });
 }
 
 export function start(manifest: string, namespace: string, name: string, port: number): Promise<string> {
