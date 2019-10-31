@@ -61,8 +61,8 @@ export class Reporter {
 
             sentry.init({ dsn:  dsn, environment: environment});
             sentry.configureScope(scope =>{
+                scope.setUser({"id": this.distinctId});
                 scope.setTags({
-                    'distinct_id': this.distinctId,
                     'os': os.platform(),
                     'version': this.extensionVersion,
                     'vscodeversion': vscode.version,
