@@ -13,7 +13,7 @@ export function getCurrentContext(): {context: string, namespace:string} | undef
             context: current,
             namespace: ns ? ns : 'default',
         };
-    }catch(err) {
+    } catch(err) {
         console.error(`failed to get the context: ${err}`);
         return undefined;
     }

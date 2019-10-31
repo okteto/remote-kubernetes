@@ -3,6 +3,7 @@
 import * as mixpanel from 'mixpanel';
 import * as vscode from 'vscode';
 import * as os from 'os';
+import * as sentry from 'sentry/node';
 
 export const events = {
     activated: 'activated',
@@ -48,6 +49,10 @@ export class Reporter {
             this.distinctId = vscode.env.machineId;
         }
 
+        if (this.enabled) {
+            sentry.init({ dsn: 'https://db84b5bea10a403e98ef289b985f94e7@sentry.io/1802885' });
+        }
+
     }
 
     public track(event: string) {
@@ -65,8 +70,17 @@ export class Reporter {
         }, (err)=> {
             if (err) {
                 console.error(`failed to send telemetry: ${err}`);
+                sentry.captureException(err);
             }
         });
+    }
+
+    public captureError(message: string, err: any) {
+        console.error(message);
+        
+        if (this.enabled) {
+            sentry.captureException(err);
+        }
     }
 
 }
