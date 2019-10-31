@@ -3,7 +3,7 @@
 import * as mixpanel from 'mixpanel';
 import * as vscode from 'vscode';
 import * as os from 'os';
-import * as sentry from 'sentry/node';
+import * as sentry from '@sentry/node';
 
 export const events = {
     activated: 'activated',
@@ -51,6 +51,16 @@ export class Reporter {
 
         if (this.enabled) {
             sentry.init({ dsn: 'https://db84b5bea10a403e98ef289b985f94e7@sentry.io/1802885' });
+            sentry.configureScope(scope =>{
+                scope.setTags({
+                    'distinct_id': this.distinctId,
+                    'os': os.platform(),
+                    'version': this.extensionVersion,
+                    'vscodeversion': vscode.version,
+                    'session': vscode.env.sessionId,
+                    'machine_id': vscode.env.machineId,
+                });
+            });
         }
 
     }
