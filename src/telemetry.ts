@@ -5,6 +5,8 @@ import * as vscode from 'vscode';
 import * as os from 'os';
 import * as sentry from '@sentry/node';
 
+const dsn = 'https://3becafe2cb9040fe9b43a353a1f524c6@sentry.io/1802969';
+
 export const events = {
     activated: 'activated',
     install: 'cmd_install',
@@ -50,7 +52,12 @@ export class Reporter {
         }
 
         if (this.enabled) {
-            sentry.init({ dsn: 'https://db84b5bea10a403e98ef289b985f94e7@sentry.io/1802885' });
+            let environment = 'prod';
+            if (process.env.DEBUG) {
+                environment = 'dev';
+            } 
+
+            sentry.init({ dsn:  dsn, environment: environment});
             sentry.configureScope(scope =>{
                 scope.setTags({
                     'distinct_id': this.distinctId,

@@ -10,7 +10,7 @@ import * as os from 'os';
 import * as download from 'download';
 import * as semver from 'semver';
 
-var titlecase = require('title-case');
+var changeCase = require('change-case');
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
@@ -30,30 +30,25 @@ export const state = {
 };
 
 export function needsInstall(): {install: boolean, upgrade: boolean}{
+  const binary = getBinary();
+
   if (!commandExists.sync(getBinary())) {
     return {install: true, upgrade: false};
   }
+
+  const version =  getVersion(binary);
   
-  if (needsUpgrade()) {
-    return {install: true, upgrade: true};
+  if (version) {
+    try{
+      const needsUpgrade = semver.lt(version, minimum);
+      return {install: needsUpgrade, upgrade: true};
+    } catch(err) {
+      console.log(`invalid version: ${err}`);
+      return {install: false, upgrade: false};
+    }
   }
 
   return {install: false, upgrade: false};
-}
-
-export function needsUpgrade(): boolean{
-  const binary = getBinary();
-  const version =  getVersion(binary);
-  if (version) {
-    try{
-      return semver.lt(version, minimum);
-    }catch(err){
-      console.log(`invalid version: ${err}`);
-      return true;
-    }
-  }
-  
-  return false;
 }
 
 function getVersion(binary: string): string | undefined {
@@ -105,12 +100,21 @@ export async function install() {
   }
 }
 
-async function downloadFile(source: string, destination: string) {
-  return new Promise<void>((resolve, reject) => {
+function downloadFile(source: string, destination: string) {
+  return new Promise<string>((resolve, reject) => {
     const st = fs.createWriteStream(destination);
-    st.on('finish', ()=> resolve);
-    st.on('error', (err) => reject(err));
     download(source).pipe(st);
+    st.on('error', (err, body, response) =>  {
+      reject(err);
+      return;
+    });
+
+  st.on('finish', () => {
+      resolve();
+      return;
+    });
+    
+    
   });
 }
 
@@ -262,7 +266,7 @@ export function getLanguages(): RuntimeItem[] {
   items.push(new RuntimeItem("Python", "", "python"));
   items.push(new RuntimeItem("Node", "", "javascript"));
   items.push(new RuntimeItem("Golang", "", "golang"));
-  items.push(new RuntimeItem("C#", "", "csharp"));
+  items.push(new RuntimeItem("CSharp", "", "csharp"));
 
   const sorted = items.sort((a, b)=>{
     if (a.label === b.label) {
@@ -280,19 +284,16 @@ export function getLanguages(): RuntimeItem[] {
 }
 
 export async function init(manifestPath: vscode.Uri, choice: string) {
-  try{
-    const r = await execa.command(`${getBinary()} init --overwrite --file=${manifestPath.fsPath}`, {
-      cwd: path.dirname(manifestPath.fsPath),
-      env: {
-        "OKTETO_ORIGIN":"vscode",
-        "OKTETO_LANGUAGE":choice
-        } 
-      });
-    if (r.failed) {
-      throw new Error(`okteto init failed: ${r.stdout}`);
-    }
-  } catch (err) {
-    throw new Error(`okteto init failed: ${err}`);
+  const r = await execa.command(`${getBinary()} init --overwrite --file=${manifestPath.fsPath}`, {
+    cwd: path.dirname(manifestPath.fsPath),
+    env: {
+      "OKTETO_ORIGIN":"vscode",
+      "OKTETO_LANGUAGE":choice
+      } 
+    });
+    
+  if (r.failed) {
+      throw new Error(r.stdout);
   }
 }
 
@@ -301,6 +302,6 @@ class RuntimeItem implements vscode.QuickPickItem {
 	label: string;
 	
 	constructor(private l: string, public description: string, public value: string) {
-		this.label = titlecase(l);
+		this.label = changeCase.pascalCase(l);
 	}
 }

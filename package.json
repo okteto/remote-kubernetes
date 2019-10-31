@@ -112,6 +112,7 @@
 		"@types/user-home": "^2.0.0",
 		"@types/yaml": "^1.2.0",
 		"bufferutil": "^4.0.1",
+		"change-case": "^3.1.0",
 		"command-exists": "^1.2.8",
 		"download": "^7.1.0",
 		"execa": "^2.1.0",
@@ -120,7 +121,6 @@
 		"mixpanel": "^0.10.3",
 		"semver": "^6.3.0",
 		"tcp-ping": "^0.1.1",
-		"title-case": "^2.1.1",
 		"user-home": "^2.0.0",
 		"utf-8-validate": "^5.0.2",
 		"yaml": "^1.7.2"
