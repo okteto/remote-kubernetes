@@ -55,7 +55,7 @@ export class Reporter {
 
         if (this.enabled) {
             let environment = 'prod';
-            if (process.env.DEBUG) {
+            if (process.env.ENV === 'dev') {
                 environment = 'dev';
             } 
 

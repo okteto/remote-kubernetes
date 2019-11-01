@@ -94,7 +94,7 @@ export async function install() {
       throw new Error(`failed to set exec permissions; ${r.stdout}`);  
     }
   } catch(err) {
-    throw new Error(`failed to download ${source}: ${err.Message}`);  
+    throw new Error(`failed to download ${source}: ${err.message}`);  
   }
 }
 
@@ -116,34 +116,30 @@ function downloadFile(source: string, destination: string) {
   });
 }
 
-export function start(manifest: string, namespace: string, name: string, port: number): Promise<string> {
+export function start(manifest: string, namespace: string, name: string, port: number) {
   console.log(`launching ${getBinary()} up -f ${manifest} --namespace ${namespace} --remote ${port}`);
-  return new Promise<string>((resolve, reject) => {
-    disposeTerminal();
-    cleanState(namespace, name);
-    const term = vscode.window.createTerminal({
-      name: terminalName,
-      hideFromUser: false,
-      cwd: path.dirname(manifest),
-      env: {
-        "OKTETO_AUTODEPLOY":"1",
-        "OKTETO_ORIGIN":"vscode"
-      }
-    });
-
-    try{
-      term.sendText(`${getBinary()} up -f ${manifest} --namespace ${namespace} --remote ${port}`, true);
-      resolve();
-    }catch(err) {
-      reject(err.message);
+  disposeTerminal();
+  cleanState(namespace, name);
+  const term = vscode.window.createTerminal({
+    name: terminalName,
+    hideFromUser: false,
+    cwd: path.dirname(manifest),
+    env: {
+      "OKTETO_AUTODEPLOY":"1",
+      "OKTETO_ORIGIN":"vscode"
     }
   });
+
+  term.sendText(`${getBinary()} up -f ${manifest} --namespace ${namespace} --remote ${port}`, true);
 }
 
-export function down(manifest: string, namespace: string, name:string): execa.ExecaChildProcess<string> {
+export async function down(manifest: string, namespace: string, name:string) {
   console.log(`launching okteto down -f ${manifest} --namespace ${namespace}`);
   disposeTerminal();
-  return execa(getBinary(), ['down', '-f', manifest, '--namespace', namespace]);
+  const r = await execa.command(`${getBinary()} down --file ${manifest} --namespace ${namespace}`);
+  if (r.failed) {
+    throw new Error(r.stdout);
+  }
 }
 
 export function getStateMessages(): Map<string, string> {

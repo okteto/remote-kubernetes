@@ -17,7 +17,7 @@
             ],
             "preLaunchTask": "npm: compile",
             "env": {
-                "DEBUG": "1"
+                "ENV": "dev"
             }
         }
 
