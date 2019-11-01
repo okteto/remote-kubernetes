@@ -4,6 +4,7 @@ import * as mixpanel from 'mixpanel';
 import * as vscode from 'vscode';
 import * as os from 'os';
 import * as sentry from '@sentry/node';
+import { resolve } from 'dns';
 
 const dsn = 'https://3becafe2cb9040fe9b43a353a1f524c6@sentry.io/1802969';
 const mp = '564133a36e3c39ecedf700669282c315';
@@ -74,32 +75,40 @@ export class Reporter {
 
     }
 
-    public track(event: string) {
-        if (!this.enabled) {
-            return;
-        }
-        
-        this.mp.track(event, {
+    public track(event: string): Promise<void> {
+      return new Promise<void>(resolve => {
+          if (!this.enabled) {
+              resolve();
+              return;
+          }
+          
+          this.mp.track(event, {
             distinct_id: this.distinctId,
             os: os.platform(),
             version: this.extensionVersion,
             vscodeversion: vscode.version,
             session: vscode.env.sessionId,
             machine_id: vscode.env.machineId,
-        }, (err)=> {
+         }, (err)=> {
             if (err) {
                 console.error(`failed to send telemetry: ${err}`);
                 sentry.captureException(err);
             }
-        });
+
+            resolve();
+         });
+      });
     }
 
-    public captureError(message: string, err: any) {
-        console.error(message);
-        
-        if (this.enabled) {
-            sentry.captureException(err);
-        }
+    public captureError(message: string, err: any): Promise<void> {
+        return new Promise<void>(resolve =>{
+            console.error(message);
+            if (this.enabled) {
+                sentry.captureException(err);
+            }
+
+            resolve();
+        });
     }
 
 }
