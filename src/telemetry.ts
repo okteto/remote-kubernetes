@@ -4,7 +4,6 @@ import * as mixpanel from 'mixpanel';
 import * as vscode from 'vscode';
 import * as os from 'os';
 import * as sentry from '@sentry/node';
-import { resolve } from 'dns';
 
 const dsn = 'https://3becafe2cb9040fe9b43a353a1f524c6@sentry.io/1802969';
 const mp = '564133a36e3c39ecedf700669282c315';
@@ -81,7 +80,7 @@ export class Reporter {
               resolve();
               return;
           }
-          
+
           this.mp.track(event, {
             distinct_id: this.distinctId,
             os: os.platform(),
