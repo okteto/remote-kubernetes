@@ -62,7 +62,7 @@ async function upCommand() {
     if (install) {
         try {
             await installCmd(upgrade);
-        }catch(err) {
+        } catch(err) {
             // error already handled on installCmd
             return;
         }

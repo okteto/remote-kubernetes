@@ -74,32 +74,40 @@ export class Reporter {
 
     }
 
-    public track(event: string) {
-        if (!this.enabled) {
-            return;
-        }
-        
-        this.mp.track(event, {
+    public track(event: string): Promise<void> {
+      return new Promise<void>(resolve => {
+          if (!this.enabled) {
+              resolve();
+              return;
+          }
+
+          this.mp.track(event, {
             distinct_id: this.distinctId,
             os: os.platform(),
             version: this.extensionVersion,
             vscodeversion: vscode.version,
             session: vscode.env.sessionId,
             machine_id: vscode.env.machineId,
-        }, (err)=> {
+         }, (err)=> {
             if (err) {
                 console.error(`failed to send telemetry: ${err}`);
                 sentry.captureException(err);
             }
-        });
+
+            resolve();
+         });
+      });
     }
 
-    public captureError(message: string, err: any) {
-        console.error(message);
-        
-        if (this.enabled) {
-            sentry.captureException(err);
-        }
+    public captureError(message: string, err: any): Promise<void> {
+        return new Promise<void>(resolve =>{
+            console.error(message);
+            if (this.enabled) {
+                sentry.captureException(err);
+            }
+
+            resolve();
+        });
     }
 
 }
