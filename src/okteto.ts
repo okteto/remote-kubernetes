@@ -71,7 +71,7 @@ export async function install() {
   switch(os.platform()){
     case 'win32':
       source = 'https://downloads.okteto.com/cli/okteto-Windows-x86_64';
-      destination = String.raw`c:\windows\system32\okteto.exe`;
+      destination = getWindowsInstallPath();
       chmod = false;
       break;
     case 'darwin':
@@ -212,15 +212,19 @@ export function cleanState(namespace: string, name:string) {
 
 function getBinary(): string {
   let binary = vscode.workspace.getConfiguration('okteto').get<string>('binary');
-  if (!binary) {
-    if (os.platform() === 'win32') {
-      binary = 'okteto.exe';
-    } else {
-      binary = 'okteto';
-    }
+  if (binary) {
+    return binary;
   }
 
-  return binary;
+  if (os.platform() === 'win32') {
+    return getWindowsInstallPath();
+  }
+  
+  return 'okteto';
+}
+
+function getWindowsInstallPath(): string {
+  return path.join(home, "AppData", "Local", "Programs", "okteto.exe");
 }
 
 function disposeTerminal(){
