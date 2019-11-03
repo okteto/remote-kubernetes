@@ -1,6 +1,7 @@
 'use strict';
 
 import * as fs from 'fs';
+import {promises} from 'fs';
 import * as execa from 'execa';
 import * as home from 'user-home';
 import * as path from 'path';
@@ -30,22 +31,35 @@ export const state = {
 
 export async function needsInstall(): Promise<{install: boolean, upgrade: boolean}>{
   const binary = getBinary();
-  
-  try {
-    await commandExists(binary);
-  } catch {
-      return {install: true, upgrade: false};
+
+  const installed = await isInstalled(binary);
+  if (!installed) {
+    return {install: true, upgrade: false};
   }
-    
+  
+
   try {
     const version =  await getVersion(binary);
     if (!version) {
       return {install: false, upgrade: false};
     }
-
     return {install: semver.lt(version, minimum), upgrade: true};  
   } catch {
     return {install: false, upgrade: false};
+  }
+}
+
+async function isInstalled(binaryPath: string): Promise<boolean> {
+  try {
+    if (path.isAbsolute(binaryPath)) {
+      await promises.access(binaryPath);
+    } else {
+      await commandExists(binaryPath);
+    }
+
+    return true;  
+  } catch {
+      return false;
   }
 }
 
