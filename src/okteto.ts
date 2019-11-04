@@ -1,6 +1,7 @@
 'use strict';
 
 import * as fs from 'fs';
+import {promises} from 'fs';
 import * as execa from 'execa';
 import * as home from 'user-home';
 import * as path from 'path';
@@ -13,7 +14,7 @@ import {pascalCase} from 'change-case';
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
-const minimum = '1.5.2';
+const minimum = '1.5.3';
 
 export const terminalName = `okteto`;
 
@@ -30,22 +31,35 @@ export const state = {
 
 export async function needsInstall(): Promise<{install: boolean, upgrade: boolean}>{
   const binary = getBinary();
-  
-  try {
-    await commandExists(binary);
-  } catch {
-      return {install: true, upgrade: false};
+
+  const installed = await isInstalled(binary);
+  if (!installed) {
+    return {install: true, upgrade: false};
   }
-    
+  
+
   try {
     const version =  await getVersion(binary);
     if (!version) {
       return {install: false, upgrade: false};
     }
-
     return {install: semver.lt(version, minimum), upgrade: true};  
   } catch {
     return {install: false, upgrade: false};
+  }
+}
+
+async function isInstalled(binaryPath: string): Promise<boolean> {
+  try {
+    if (path.isAbsolute(binaryPath)) {
+      await promises.access(binaryPath);
+    } else {
+      await commandExists(binaryPath);
+    }
+
+    return true;  
+  } catch {
+      return false;
   }
 }
 
@@ -71,7 +85,7 @@ export async function install() {
   switch(os.platform()){
     case 'win32':
       source = 'https://downloads.okteto.com/cli/okteto-Windows-x86_64';
-      destination = String.raw`c:\windows\system32\okteto.exe`;
+      destination = getWindowsInstallPath();
       chmod = false;
       break;
     case 'darwin':
@@ -212,15 +226,19 @@ export function cleanState(namespace: string, name:string) {
 
 function getBinary(): string {
   let binary = vscode.workspace.getConfiguration('okteto').get<string>('binary');
-  if (!binary) {
-    if (os.platform() === 'win32') {
-      binary = 'okteto.exe';
-    } else {
-      binary = 'okteto';
-    }
+  if (binary) {
+    return binary;
   }
 
-  return binary;
+  if (os.platform() === 'win32') {
+    return getWindowsInstallPath();
+  }
+  
+  return 'okteto';
+}
+
+function getWindowsInstallPath(): string {
+  return path.join(home, "AppData", "Local", "Programs", "okteto.exe");
 }
 
 function disposeTerminal(){
