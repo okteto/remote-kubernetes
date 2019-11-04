@@ -14,7 +14,7 @@ import {pascalCase} from 'change-case';
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
-const minimum = '1.5.2';
+const minimum = '1.5.3';
 
 export const terminalName = `okteto`;
 
