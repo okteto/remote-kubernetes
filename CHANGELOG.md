@@ -2,6 +2,8 @@
 
 ## 0.1.9
 - Capture errors if telemetry is enabled.
+- Require okteto 1.5.3.
+- Install the okteto binary in %LOCALAPPDATA% when in Windows.
 
 ## 0.1.8
 - Include path to subdirectory in the manifest dialog.

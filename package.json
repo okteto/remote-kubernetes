@@ -14,10 +14,11 @@
 		"gke",
 		"eks"
 	],
-	"version": "0.1.9-dev0",
+	"version": "0.1.9",
 	"icon": "media/icon.png",
 	"author": {
-		"name": "rberrelleza"
+		"name": "Ramiro Berrelleza",
+		"email": "ramiro@okteto.com"
 	},
 	"preview": true,
 	"homepage": "https://github.com/okteto/remote-kubernetes",
