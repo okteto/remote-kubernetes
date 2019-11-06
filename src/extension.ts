@@ -220,7 +220,7 @@ async function downCommand() {
     }
 
     try {
-        await okteto.down(manifestPath, ktx.namespace, name);
+        await okteto.down(manifestPath);
         activeManifest = '';
         vscode.window.showInformationMessage("Okteto environment deactivated");
         reporter.track(events.downFinished);

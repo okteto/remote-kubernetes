@@ -131,7 +131,7 @@ function downloadFile(source: string, destination: string) {
 }
 
 export function start(manifest: string, namespace: string, name: string, port: number) {
-  console.log(`launching ${getBinary()} up -f ${manifest} --namespace ${namespace} --remote ${port}`);
+  console.log(`launching ${getBinary()} up -f ${manifest} --remote ${port}`);
   disposeTerminal();
   cleanState(namespace, name);
   const term = vscode.window.createTerminal({
@@ -144,13 +144,13 @@ export function start(manifest: string, namespace: string, name: string, port: n
     }
   });
 
-  term.sendText(`${getBinary()} up -f ${manifest} --namespace ${namespace} --remote ${port}`, true);
+  term.sendText(`${getBinary()} up -f ${manifest} --remote ${port}`, true);
 }
 
-export async function down(manifest: string, namespace: string, name:string) {
-  console.log(`launching okteto down -f ${manifest} --namespace ${namespace}`);
+export async function down(manifest: string) {
+  console.log(`launching okteto down -f ${manifest}`);
   disposeTerminal();
-  const r = await execa.command(`${getBinary()} down --file ${manifest} --namespace ${namespace}`);
+  const r = await execa.command(`${getBinary()} down --file ${manifest}`);
   if (r.failed) {
     throw new Error(r.stdout);
   }
