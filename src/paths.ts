@@ -9,7 +9,7 @@ function forcePosixPath(): boolean {
     if (!config) {
       forcePosix = false;
     } else {
-      forcePosix = config.get<boolean>('posixPath') || false;
+      forcePosix = config.get<boolean>('posixPaths') || false;
     }
   }
   
