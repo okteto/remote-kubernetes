@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import {promises} from 'fs';
 import * as execa from 'execa';
 import * as home from 'user-home';
-import * as path from 'path';
+import * as paths from './paths';
 import * as commandExists from 'command-exists';
 import * as vscode from 'vscode';
 import * as os from 'os';
@@ -51,7 +51,7 @@ export async function needsInstall(): Promise<{install: boolean, upgrade: boolea
 
 async function isInstalled(binaryPath: string): Promise<boolean> {
   try {
-    if (path.isAbsolute(binaryPath)) {
+    if (paths.isAbsolute(binaryPath)) {
       await promises.access(binaryPath);
     } else {
       await commandExists(binaryPath);
@@ -137,7 +137,7 @@ export function start(manifest: string, namespace: string, name: string, port: n
   const term = vscode.window.createTerminal({
     name: terminalName,
     hideFromUser: false,
-    cwd: path.dirname(manifest),
+    cwd: paths.dirname(manifest),
     env: {
       "OKTETO_AUTODEPLOY":"1",
       "OKTETO_ORIGIN":"vscode"
@@ -168,7 +168,7 @@ export function getStateMessages(): Map<string, string> {
 }
 
 function getStateFile(namespace: string, name:string): string {
-  return path.join(home, oktetoFolder, namespace, name, stateFile);
+  return paths.join(home, oktetoFolder, namespace, name, stateFile);
 }
 
 export function getState(namespace: string, name: string): string {
@@ -238,7 +238,7 @@ function getBinary(): string {
 }
 
 function getWindowsInstallPath(): string {
-  return path.join(home, "AppData", "Local", "Programs", "okteto.exe");
+  return paths.join(home, "AppData", "Local", "Programs", "okteto.exe");
 }
 
 function disposeTerminal(){
@@ -258,7 +258,7 @@ export function showTerminal(){
 }
 
 export function getOktetoId(): string | undefined {
-  const tokenFile =  path.join(home, oktetoFolder, ".token.json");
+  const tokenFile =  paths.join(home, oktetoFolder, ".token.json");
   try {
     const c = fs.readFileSync(tokenFile, 'utf-8');
     const token = JSON.parse(c);
@@ -297,7 +297,7 @@ export function getLanguages(): RuntimeItem[] {
 
 export async function init(manifestPath: vscode.Uri, choice: string) {
   const r = await execa.command(`${getBinary()} init --overwrite --file=${manifestPath.fsPath}`, {
-    cwd: path.dirname(manifestPath.fsPath),
+    cwd: paths.dirname(manifestPath.fsPath),
     env: {
       "OKTETO_ORIGIN":"vscode",
       "OKTETO_LANGUAGE":choice

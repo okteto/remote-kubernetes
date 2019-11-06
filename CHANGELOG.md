@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.1.10
+- Add a setting to use OSX/Linux style file slashes in Windows.
+- Give the namespace in the manifest the highest priority.
+
 ## 0.1.9
 - Capture errors if telemetry is enabled.
 - Require okteto 1.5.3.

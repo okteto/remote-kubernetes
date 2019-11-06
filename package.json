@@ -14,7 +14,7 @@
 		"gke",
 		"eks"
 	],
-	"version": "0.1.9",
+	"version": "0.1.10-dev0",
 	"icon": "media/icon.png",
 	"author": {
 		"name": "Ramiro Berrelleza",
@@ -71,6 +71,11 @@
 					"type": "string",
 					"default": "",
 					"description": "An absolute path to the Okteto executable. When empty, it will use \"okteto\" on the path"
+				},
+				"okteto.posixPaths": {
+					"type": "boolean",
+					"default": false,
+					"description": "Use OSX/Linux style slashes in the file paths. Check this if you're on Windows but are using a *nix shell, like git bash"
 				},
 				"okteto.telemetry": {
 					"type": "boolean",

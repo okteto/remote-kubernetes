@@ -1,7 +1,8 @@
 import * as fs from 'fs';
 import * as yaml from 'yaml';
-import * as path from 'path';
 import * as vscode from 'vscode';
+
+import * as paths from './paths';
 
 export function getName(manifestPath: string): Promise<string> {
     return new Promise<string>((resolve, reject)=>{
@@ -24,7 +25,7 @@ export function getDefaultLocation(): vscode.Uri | undefined{
         return undefined;
     }
 
-    const p = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, 'okteto.yml');
+    const p = paths.join(vscode.workspace.workspaceFolders[0].uri.fsPath, 'okteto.yml');
     const loc = vscode.Uri.file(p);
     console.log(`default location: ${loc.fsPath.toString()}`);
     return loc;
