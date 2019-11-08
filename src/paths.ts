@@ -6,7 +6,7 @@ export function toGitBash(p: string): string {
   const split = p.split(path.win32.sep);
   console.log(split);
   const joined = path.posix.join(...split);
-  var regex = /^([A-Za-z0-9]:).*/;
+  let regex = /^([A-Za-z0-9]:).*/;
   
   const match = joined.match(regex);
   if (!match) {
