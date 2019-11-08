@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.1.10
+- Give the namespace in the manifest the highest priority.
+
 ## 0.1.9
 - Capture errors if telemetry is enabled.
 - Require okteto 1.5.3.
