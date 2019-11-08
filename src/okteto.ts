@@ -145,7 +145,7 @@ export function start(manifest: string, namespace: string, name: string, port: n
   });
 
   
-  var binary = getBinary();
+  let binary = getBinary();
   if (gitBashMode()){
     binary = paths.toGitBash(binary);
     manifest = paths.toGitBash(manifest);
