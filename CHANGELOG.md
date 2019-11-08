@@ -9,7 +9,7 @@
 ## 0.1.9
 - Capture errors if telemetry is enabled.
 - Require okteto 1.5.3.
-- Install the okteto binary in %LOCALAPPDATA% when in Windows.
+- Install the okteto binary in `%LOCALAPPDATA%` when in Windows.
 
 ## 0.1.8
 - Include path to subdirectory in the manifest dialog.
@@ -41,6 +41,6 @@
 ## 0.1.2
 
 - Initial release 🎉🎊.
-- Okteto: Install command to install the Okteto binaries.
-- Okteto: Up command to start a development environment in your Kubernetes cluster, create an entry in ssh-config and connect with the `Remote - SSH` extension.
-- Okteto: Down command to clean everything up.
+- `Okteto: Install` command to install the Okteto binaries.
+- `Okteto: Up command` to start a development environment in your Kubernetes cluster, create an entry in ssh-config and connect with the `Remote - SSH` extension.
+- `Okteto: Down` command to clean everything up.
