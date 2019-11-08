@@ -11,7 +11,7 @@ import * as os from 'os';
 import * as download from 'download';
 import * as semver from 'semver';
 import {pascalCase} from 'change-case';
-import *  as paths from './paths';
+import * as paths from './paths';
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
