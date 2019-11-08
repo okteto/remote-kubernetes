@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.1.11
+- `Git Bash mode` setting.
+
 ## 0.1.10
 - Give the namespace in the manifest the highest priority.
 
