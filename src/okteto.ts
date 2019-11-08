@@ -11,6 +11,7 @@ import * as os from 'os';
 import * as download from 'download';
 import * as semver from 'semver';
 import {pascalCase} from 'change-case';
+import *  as paths from './paths';
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
@@ -131,7 +132,6 @@ function downloadFile(source: string, destination: string) {
 }
 
 export function start(manifest: string, namespace: string, name: string, port: number) {
-  console.log(`launching ${getBinary()} up -f ${manifest} --remote ${port}`);
   disposeTerminal();
   cleanState(namespace, name);
   const term = vscode.window.createTerminal({
@@ -144,7 +144,14 @@ export function start(manifest: string, namespace: string, name: string, port: n
     }
   });
 
-  term.sendText(`${getBinary()} up -f ${manifest} --remote ${port}`, true);
+  
+  var binary = getBinary();
+  if (gitBashMode()){
+    binary = paths.toGitBash(binary);
+    manifest = paths.toGitBash(manifest);
+  }
+
+  term.sendText(`${binary} up -f ${manifest} --remote ${port}`, true);
 }
 
 export async function down(manifest: string) {
@@ -316,4 +323,13 @@ class RuntimeItem implements vscode.QuickPickItem {
 	constructor(private l: string, public description: string, public value: string) {
 		this.label = pascalCase(l);
 	}
+}
+
+export function gitBashMode(): boolean {
+  const config = vscode.workspace.getConfiguration('okteto');
+  if (!config) {
+    return false;
+  }
+  
+  return config.get<boolean>('gitBash') || true;
 }
