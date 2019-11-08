@@ -57,6 +57,7 @@ export class Reporter {
             let environment = 'prod';
             if (process.env.ENV === 'dev') {
                 environment = 'dev';
+                this.enabled = false;
             } 
 
             sentry.init({ dsn:  dsn, environment: environment});
