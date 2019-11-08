@@ -16,4 +16,10 @@ describe('toGitBash', () => {
     expect(result).to.equal('user/code');
   });
 
+  it('should return okteto', () => {
+    const url = 'okteto';
+    const result = paths.toGitBash(url);
+    expect(result).to.equal('okteto');
+  });
+
 });
