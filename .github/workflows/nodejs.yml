@@ -20,11 +20,12 @@ jobs:
     - name: npm install, build, and test
       run: |
         npm ci
+        npm run test
         npm run package
         mkdir -p artifacts
         mv remote-kubernetes-*.vsix artifacts/
       env:
-        CI: true
+        CI: "true"
     - uses: actions/upload-artifact@master
       with: 
         name: artifacts

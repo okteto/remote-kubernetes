@@ -14,7 +14,7 @@
 		"gke",
 		"eks"
 	],
-	"version": "0.1.10",
+	"version": "0.1.11",
 	"icon": "media/icon.png",
 	"author": {
 		"name": "Ramiro Berrelleza",
@@ -70,12 +70,17 @@
 				"okteto.binary": {
 					"type": "string",
 					"default": "",
-					"description": "An absolute path to the Okteto executable. When empty, it will use \"okteto\" on the path"
+					"description": "An absolute path to the Okteto executable. When empty, it will use \"okteto\" on the path."
 				},
 				"okteto.telemetry": {
 					"type": "boolean",
 					"default": true,
-					"description": "Enable data collection"
+					"description": "Enable data collection."
+				},
+				"okteto.gitBash": {
+					"type": "boolean",
+					"default": false,
+					"description": "Use Git Bash compatible file paths. Enable this if you're in Windows and Git Bash is your default shell."
 				}
 			}
 		}
@@ -86,17 +91,20 @@
 		"watch": "webpack --mode development --watch",
 		"package": "vsce package",
 		"pretest": "npm run compile",
-		"test": "node ./out/test/runTest.js",
+		"test": "mocha -r ts-node/register src/test/suite/*.test.ts",
 		"publish": "vsce publish -p $VSCE_TOKEN"
 	},
 	"devDependencies": {
+		"@types/chai": "^4.2.4",
 		"@types/glob": "^7.1.1",
-		"@types/mocha": "^5.2.6",
+		"@types/mocha": "^5.2.7",
 		"@types/node": "^10.17.0",
 		"@types/vscode": "^1.39.0",
+		"chai": "^4.2.0",
 		"glob": "^7.1.5",
 		"mocha": "^6.2.2",
 		"ts-loader": "^6.2.1",
+		"ts-node": "^8.4.1",
 		"tslint": "^5.20.0",
 		"typescript": "^3.6.4",
 		"vsce": "^1.68.0",
