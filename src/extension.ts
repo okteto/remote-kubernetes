@@ -175,13 +175,14 @@ async function finalizeUp(namespace: string, name: string) {
     
     try{
         await vscode.commands.executeCommand("opensshremotes.openEmptyWindow", {hostName: name});
-        reporter.track(events.upFinished);
-        okteto.notifyIfFailed(namespace, name, onOktetoFailed);
     } catch (err) {
-        reporter.captureError(`opensshremotes.openEmptyWindow failed: ${err.message}`, err);
+        reporter.captureError(`opensshremotes.openEmptyWindow failed: ${err}`, err);
         reporter.track(events.sshHostSelectionFailed);
-        return onOktetoFailed(`Okteto: Up failed to open the host selector: ${err.message}`);
+        return onOktetoFailed(`Okteto: Up failed to open the host selector: ${err}`);
     }
+
+    reporter.track(events.upFinished);
+    okteto.notifyIfFailed(namespace, name, onOktetoFailed);
 }
 
 async function downCommand() {
