@@ -84,19 +84,24 @@ export async function install() {
 
   switch(os.platform()){
     case 'win32':
-      source = 'https://downloads.okteto.com/cli/okteto-Windows-x86_64';
+      source = 'https://github.com/okteto/okteto/releases/latest/download/okteto-Windows-x86_64';
       chmod = false;
       break;
     case 'darwin':
-      source = 'https://downloads.okteto.com/cli/okteto-Darwin-x86_64';
+      source = 'https://github.com/okteto/okteto/releases/latest/download/okteto-Darwin-x86_64';
       break;
     default:
-        source = 'https://downloads.okteto.com/cli/okteto-Linux-x86_64';
+        source = 'https://github.com/okteto/okteto/releases/latest/download/okteto-Linux-x86_64';
+  }
+  
+  let destination = getInstallPath();
+  try {
+    await promises.mkdir(path.dirname(destination), 0o700);
+  } catch(err) {
+    console.log(`failed to create dir: ${err.message}`);
   }
 
-  try {
-    let destination = getInstallPath();
-    await promises.mkdir(path.dirname(destination), 0o700);
+  try {  
     await downloadFile(source, destination);
     if (!chmod) {
       return;
@@ -241,7 +246,7 @@ function getInstallPath(): string {
     return path.join(home, "AppData", "Local", "Programs", "okteto.exe");
   }
 
-  return path.join(home, ".okteto", "okteto");
+  return path.join(home, '.okteto-vscode', 'okteto');
 }
 
 function disposeTerminal(){
