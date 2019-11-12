@@ -21,6 +21,7 @@ export const terminalName = `okteto`;
 
 export const state = {
   activating: 'activating',
+  starting: 'starting',
   attaching: 'attaching',
   pulling: 'pulling',
   startingSync: 'startingSync',
@@ -132,9 +133,9 @@ function downloadFile(source: string, destination: string) {
   });
 }
 
-export function start(manifest: string, namespace: string, name: string, port: number) {
+export async function start(manifest: string, namespace: string, name: string, port: number) {
   disposeTerminal();
-  cleanState(namespace, name);
+  await cleanState(namespace, name);
   const term = vscode.window.createTerminal({
     name: terminalName,
     hideFromUser: false,
@@ -166,6 +167,7 @@ export async function down(manifest: string) {
 
 export function getStateMessages(): Map<string, string> {
   const messages = new Map<string, string>();
+  messages.set(state.starting, "Starting your development environment...");
   messages.set(state.activating, "Activating your development environment...");
   messages.set(state.attaching, "Attaching your persistent volume...");
   messages.set(state.pulling, "Pulling your image...");
@@ -179,27 +181,30 @@ function getStateFile(namespace: string, name:string): string {
   return path.join(home, oktetoFolder, namespace, name, stateFile);
 }
 
-export function getState(namespace: string, name: string): string {
+export async function getState(namespace: string, name: string): Promise<string> {
   const p = getStateFile(namespace, name);
 
-  if (!fs.existsSync(p)) {
-    // if it doesn't exist we just return the initial state
+  try {
+    await promises.access(p);
+  } catch {
     return state.activating;
   }
-
-  var c = state.activating;
+  
+  let c = state.activating;
   
   try {
-    c = fs.readFileSync(p, 'utf-8');
-  }catch(err) {
+    c = await promises.readFile(p, {encoding: 'utf8'});
+  } catch(err) {
     console.error(`failed to open ${p}: ${err}`);
     return state.unknown;
   }
 
   switch(c) {
+      case state.starting:
       case state.activating:
       case state.attaching:
       case state.pulling:
+      case state.startingSync:
       case state.synchronizing:
       case state.ready:
       case state.failed:
@@ -210,9 +215,9 @@ export function getState(namespace: string, name: string): string {
   }
 }
 
-export function notifyIfFailed(namespace: string, name:string, callback: (m: string) => void){
-  const id = setInterval(() => {
-    const c = getState(namespace, name);
+export async function notifyIfFailed(namespace: string, name:string, callback: (m: string) => void){
+  const id = setInterval(async () => {
+    const c = await getState(namespace, name);
     if (c === state.failed) {
       callback(`Okteto: Up command failed`);
       clearInterval(id);
@@ -220,11 +225,11 @@ export function notifyIfFailed(namespace: string, name:string, callback: (m: str
   }, 1000);
 }
 
-export function cleanState(namespace: string, name:string) {
+export async function cleanState(namespace: string, name:string) {
   const p = getStateFile(namespace, name);
   
   try{
-    fs.unlinkSync(p);
+    await promises.unlink(p);
   }catch(err) {
     if (err.code !== 'ENOENT'){
       console.error(`failed to delete ${p}: ${err}`);
@@ -266,9 +271,9 @@ export function showTerminal(){
 }
 
 export function getOktetoId(): string | undefined {
-  const tokenFile =  path.join(home, oktetoFolder, ".token.json");
+  const tokenFile =  path.join(home, oktetoFolder, '.token.json');
   try {
-    const c = fs.readFileSync(tokenFile, 'utf-8');
+    const c = fs.readFileSync(tokenFile, 'utf8');
     const token = JSON.parse(c);
     return token.ID;
   }catch(err) {

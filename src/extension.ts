@@ -105,7 +105,7 @@ async function upCommand() {
         return onOktetoFailed(`Okteto: Up failed to find an available port: ${err}`);
     }
 
-    okteto.start(manifestPath, ktx.namespace, name, port);
+    await okteto.start(manifestPath, ktx.namespace, name, port);
     activeManifest = manifestPath;
 
     try{
@@ -147,7 +147,7 @@ async function waitForFinalState(namespace: string, name:string, progress: vscod
     const messages = okteto.getStateMessages();
     progress.report({  message: "Launching your development environment..." });
     while (true) {
-        const state = okteto.getState(namespace, name);
+        const state = await okteto.getState(namespace, name);
         if (!seen.has(state)) {
             progress.report({ message: messages.get(state) });
             console.log(`okteto is ${state}`);
