@@ -31,7 +31,6 @@ The extension starts a development environment in your Kubernetes cluster by usi
 1. Start VS Code
 1. Run the `Okteto: Up` command to launch your development environment in Kubernetes. When prompted, pick the `okteto.yml` manifest. 
 1. After a few seconds, you'll be asked to select a host. Pick the `vscode-remote-go.okteto` entry from the dialog to launch your remote VS Code instance.
-1. Once connected, use `File > Open Folder` to open the `/okteto` folder on your remote development environment.
 1. Develop directly in Kubernetes from VS Code!
 
 ## Questions and Feedback

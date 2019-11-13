@@ -85,11 +85,14 @@ async function upCommand(selectedManifestUri: vscode.Uri) {
     const manifestPath = manifestUri.fsPath;
     console.log(`user selected: ${manifestPath}`);
 
-    let name: string;
+    let name: any;
+    let workdir: any;
     let port: number;
 
     try {
-        name = await manifest.getName(manifestPath);
+        const m = await manifest.getManifest(manifestPath);
+        name = m.name;
+        workdir = m.workdir;
     } catch (err) {
         reporter.track(events.manifestLoadFailed);
         reporter.captureError(`failed to load the manifest: ${err.message}`, err);
@@ -113,7 +116,7 @@ async function upCommand(selectedManifestUri: vscode.Uri) {
         return onOktetoFailed(err.message);
     }
 
-    await finalizeUp(ktx.namespace, name);
+    await finalizeUp(ktx.namespace, name, workdir);
 }
 
 async function waitForUp(namespace: string, name: string, port: number) {
@@ -168,12 +171,16 @@ async function sleep(ms: number) {
     return new Promise<void>(resolve =>  setTimeout(resolve, 1000));
 }
 
-async function finalizeUp(namespace: string, name: string) {
+async function finalizeUp(namespace: string, name: string, workdir: string) {
+    let folder = '/okteto';
+    if (workdir) {
+        folder = workdir;
+    }
+    
     reporter.track(events.upReady);
 
     try {
         const remote = `${name}.okteto`;
-        const folder = '/okteto';
         const uri = vscode.Uri.parse(`vscode-remote://ssh-remote+${remote}${folder}`);
         await vscode.commands.executeCommand('vscode.openFolder', uri, true);
         reporter.track(events.upFinished);
@@ -212,7 +219,8 @@ async function downCommand() {
     let name: string;
 
     try {
-        name = await manifest.getName(manifestPath);
+        const m = await manifest.getManifest(manifestPath);
+        name =  m.name;
     } catch (err) {
         reporter.track(events.manifestLoadFailed);
         reporter.captureError(err.message, err);
