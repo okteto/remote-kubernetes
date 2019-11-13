@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.1.12
+- Change dependency install location to `$HOME/.okteto` on OSX/Linux and `$HOME\AppData\Local\Programs`.
+- Download the binaries directly from Github.
+
 ## 0.1.11
 - `Git Bash mode` setting.
 

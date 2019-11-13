@@ -80,22 +80,25 @@ async function getVersion(binary: string): Promise<string | undefined> {
 
 export async function install() {
   let source = '';
-  let destination = '';
   let chmod = true;
 
   switch(os.platform()){
     case 'win32':
-      source = 'https://downloads.okteto.com/cli/okteto-Windows-x86_64';
-      destination = getWindowsInstallPath();
+      source = 'https://github.com/okteto/okteto/releases/latest/download/okteto-Windows-x86_64';
       chmod = false;
       break;
     case 'darwin':
-      source = 'https://downloads.okteto.com/cli/okteto-Darwin-x86_64';
-      destination = '/usr/local/bin/okteto';
+      source = 'https://github.com/okteto/okteto/releases/latest/download/okteto-Darwin-x86_64';
       break;
     default:
-        source = 'https://downloads.okteto.com/cli/okteto-Linux-x86_64';
-        destination = '/usr/local/bin/okteto';
+        source = 'https://github.com/okteto/okteto/releases/latest/download/okteto-Linux-x86_64';
+  }
+
+  let destination = getInstallPath();
+  try {
+    await promises.mkdir(path.dirname(destination), 0o700);
+  } catch(err) {
+    console.log(`failed to create dir: ${err.message}`);
   }
 
   try {
@@ -109,7 +112,7 @@ export async function install() {
       throw new Error(`failed to set exec permissions; ${r.stdout}`);
     }
   } catch(err) {
-    throw new Error(`failed to download ${source}: ${err.message}`);
+    throw new Error(`failed to install okteto: ${err.message}`);
   }
 }
 
@@ -122,12 +125,10 @@ function downloadFile(source: string, destination: string) {
       return;
     });
 
-  st.on('finish', () => {
+    st.on('finish', () => {
       resolve();
       return;
     });
-
-
   });
 }
 
@@ -237,15 +238,15 @@ function getBinary(): string {
     return binary;
   }
 
-  if (os.platform() === 'win32') {
-    return getWindowsInstallPath();
-  }
-
-  return 'okteto';
+  return getInstallPath();
 }
 
-function getWindowsInstallPath(): string {
-  return path.join(home, "AppData", "Local", "Programs", "okteto.exe");
+function getInstallPath(): string {
+  if (os.platform() === 'win32') {
+    return path.join(home, "AppData", "Local", "Programs", "okteto.exe");
+  }
+
+  return path.join(home, '.okteto-vscode', 'okteto');
 }
 
 function disposeTerminal(){
