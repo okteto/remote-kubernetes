@@ -181,19 +181,23 @@ function getStateFile(namespace: string, name:string): string {
   return path.join(home, oktetoFolder, namespace, name, stateFile);
 }
 
-export function getState(namespace: string, name: string): string {
+export async function getState(namespace: string, name: string): Promise<string> {
   const p = getStateFile(namespace, name);
 
-  if (!fs.existsSync(p)) {
-    // if it doesn't exist we just return the initial state
-    return state.activating;
+  
+  try{
+    await promises.access(p);
+  }catch (err) {
+    console.log(err);
+    return state.starting;
   }
 
   var c = state.activating;
 
   try {
-    c = fs.readFileSync(p, 'utf-8');
-  }catch(err) {
+    const buffer = await promises.readFile(p, {encoding: 'utf8'});
+    c = buffer.toString();
+  } catch(err) {
     console.error(`failed to open ${p}: ${err}`);
     return state.unknown;
   }
@@ -214,9 +218,9 @@ export function getState(namespace: string, name: string): string {
   }
 }
 
-export function notifyIfFailed(namespace: string, name:string, callback: (m: string) => void){
-  const id = setInterval(() => {
-    const c = getState(namespace, name);
+export async function notifyIfFailed(namespace: string, name:string, callback: (m: string) => void){
+  const id = setInterval(async () => {
+    const c = await getState(namespace, name);
     if (c === state.failed) {
       callback(`Okteto: Up command failed`);
       clearInterval(id);
@@ -272,7 +276,7 @@ export function showTerminal(){
 export function getOktetoId(): string | undefined {
   const tokenFile =  path.join(home, oktetoFolder, ".token.json");
   try {
-    const c = fs.readFileSync(tokenFile, 'utf-8');
+    const c = fs.readFileSync(tokenFile, {encoding: 'utf8'});
     const token = JSON.parse(c);
     return token.ID;
   }catch(err) {
