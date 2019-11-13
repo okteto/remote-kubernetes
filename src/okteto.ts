@@ -15,11 +15,12 @@ import * as paths from './paths';
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
-const minimum = '1.5.3';
+const minimum = '1.5.6';
 
 export const terminalName = `okteto`;
 
 export const state = {
+  starting: 'starting',
   activating: 'activating',
   attaching: 'attaching',
   pulling: 'pulling',
@@ -166,6 +167,7 @@ export async function down(manifest: string) {
 
 export function getStateMessages(): Map<string, string> {
   const messages = new Map<string, string>();
+  messages.set(state.activating, "Starting your development environment...");
   messages.set(state.activating, "Activating your development environment...");
   messages.set(state.attaching, "Attaching your persistent volume...");
   messages.set(state.pulling, "Pulling your image...");
@@ -197,9 +199,11 @@ export function getState(namespace: string, name: string): string {
   }
 
   switch(c) {
+      case state.starting:
       case state.activating:
       case state.attaching:
       case state.pulling:
+      case state.startingSync:
       case state.synchronizing:
       case state.ready:
       case state.failed:
