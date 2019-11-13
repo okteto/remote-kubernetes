@@ -37,14 +37,14 @@ export async function needsInstall(): Promise<{install: boolean, upgrade: boolea
   if (!installed) {
     return {install: true, upgrade: false};
   }
-  
+
 
   try {
     const version =  await getVersion(binary);
     if (!version) {
       return {install: false, upgrade: false};
     }
-    return {install: semver.lt(version, minimum), upgrade: true};  
+    return {install: semver.lt(version, minimum), upgrade: true};
   } catch {
     return {install: false, upgrade: false};
   }
@@ -58,7 +58,7 @@ async function isInstalled(binaryPath: string): Promise<boolean> {
       await commandExists(binaryPath);
     }
 
-    return true;  
+    return true;
   } catch {
       return false;
   }
@@ -69,7 +69,7 @@ async function getVersion(binary: string): Promise<string | undefined> {
   if (r.failed) {
     return undefined;
   }
-  
+
   const version = r.stdout.replace('okteto version ', '').trim();
   if (semver.valid(version)) {
     return version;
@@ -103,13 +103,13 @@ export async function install() {
     if (!chmod) {
       return;
     }
-  
+
     const r = await execa.command(`chmod +x ${destination}`);
     if (r.failed) {
-      throw new Error(`failed to set exec permissions; ${r.stdout}`);  
+      throw new Error(`failed to set exec permissions; ${r.stdout}`);
     }
   } catch(err) {
-    throw new Error(`failed to download ${source}: ${err.message}`);  
+    throw new Error(`failed to download ${source}: ${err.message}`);
   }
 }
 
@@ -126,8 +126,8 @@ function downloadFile(source: string, destination: string) {
       resolve();
       return;
     });
-    
-    
+
+
   });
 }
 
@@ -144,7 +144,7 @@ export function start(manifest: string, namespace: string, name: string, port: n
     }
   });
 
-  
+
   let binary = getBinary();
   if (gitBashMode()){
     binary = paths.toGitBash(binary);
@@ -171,7 +171,7 @@ export function getStateMessages(): Map<string, string> {
   messages.set(state.startingSync, "Starting the file synchronization service...");
   messages.set(state.synchronizing, "Synchronizing your files...");
   messages.set(state.ready, "Your development environment is ready...");
-  return messages;  
+  return messages;
 }
 
 function getStateFile(namespace: string, name:string): string {
@@ -187,7 +187,7 @@ export function getState(namespace: string, name: string): string {
   }
 
   var c = state.activating;
-  
+
   try {
     c = fs.readFileSync(p, 'utf-8');
   }catch(err) {
@@ -221,7 +221,7 @@ export function notifyIfFailed(namespace: string, name:string, callback: (m: str
 
 export function cleanState(namespace: string, name:string) {
   const p = getStateFile(namespace, name);
-  
+
   try{
     fs.unlinkSync(p);
   }catch(err) {
@@ -240,7 +240,7 @@ function getBinary(): string {
   if (os.platform() === 'win32') {
     return getWindowsInstallPath();
   }
-  
+
   return 'okteto';
 }
 
@@ -308,9 +308,9 @@ export async function init(manifestPath: vscode.Uri, choice: string) {
     env: {
       "OKTETO_ORIGIN":"vscode",
       "OKTETO_LANGUAGE":choice
-      } 
+      }
     });
-    
+
   if (r.failed) {
       throw new Error(r.stdout);
   }
@@ -319,7 +319,7 @@ export async function init(manifestPath: vscode.Uri, choice: string) {
 class RuntimeItem implements vscode.QuickPickItem {
 
 	label: string;
-	
+
 	constructor(private l: string, public description: string, public value: string) {
 		this.label = pascalCase(l);
 	}
@@ -330,6 +330,6 @@ export function gitBashMode(): boolean {
   if (!config) {
     return false;
   }
-  
+
   return config.get<boolean>('gitBash') || true;
 }

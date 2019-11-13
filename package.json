@@ -64,6 +64,15 @@
 				"title": "Okteto: Up"
 			}
 		],
+		"menus": {
+      "explorer/context": [
+        {
+					"when": "resourceFilename == okteto.yml",
+					"command": "okteto.up",
+					"group": "navigation"
+				}
+      ]
+    },
 		"configuration": {
 			"title": "Okteto",
 			"properties": {

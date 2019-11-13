@@ -47,8 +47,7 @@ async function installCmd(upgrade: boolean) {
             } else {
                 vscode.window.showInformationMessage(`Okteto was successfully installed`);
             }
-
-        }catch (err) {
+        } catch (err) {
             reporter.track(events.oktetoInstallFailed);
             reporter.captureError(err.message, err);
             vscode.window.showErrorMessage(`Okteto was not installed: ${err.message}`);
@@ -57,7 +56,7 @@ async function installCmd(upgrade: boolean) {
     );
 }
 
-async function upCommand() {
+async function upCommand(selectedManifestUri: vscode.Uri) {
     const { install, upgrade } = await okteto.needsInstall();
     if (install) {
         try {
@@ -76,7 +75,7 @@ async function upCommand() {
         return;
     }
 
-    const manifestUri = await showManifestPicker();
+    const manifestUri = selectedManifestUri || await showManifestPicker();
     if (!manifestUri) {
         reporter.track(events.manifestDismissed);
         return;
