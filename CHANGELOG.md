@@ -1,7 +1,11 @@
 # Change Log
 
+## 0.1.14
+- Fix missing status message
+
 ## 0.1.13
 - Automatically open the correct folder in the remote environment.
+- Run `okteto up` by right clicking on the `okteto.yml` file directly.
 
 ## 0.1.12
 - Change dependency install location to `$HOME/.okteto` on OSX/Linux and `$HOME\AppData\Local\Programs`.

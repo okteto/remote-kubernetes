@@ -167,7 +167,7 @@ export async function down(manifest: string) {
 
 export function getStateMessages(): Map<string, string> {
   const messages = new Map<string, string>();
-  messages.set(state.activating, "Starting your development environment...");
+  messages.set(state.starting, "Starting your development environment...");
   messages.set(state.activating, "Activating your development environment...");
   messages.set(state.attaching, "Attaching your persistent volume...");
   messages.set(state.pulling, "Pulling your image...");
