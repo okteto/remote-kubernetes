@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.1.13
+- Automatically open the correct folder in the remote environment.
+
 ## 0.1.12
 - Change dependency install location to `$HOME/.okteto` on OSX/Linux and `$HOME\AppData\Local\Programs`.
 - Download the binaries directly from Github.

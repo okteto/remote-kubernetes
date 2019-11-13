@@ -41,14 +41,13 @@ async function installCmd(upgrade: boolean) {
       {location: vscode.ProgressLocation.Notification, title: title},
       async () => {
         try {
-            await okteto.install(); 
+            await okteto.install();
             if (upgrade) {
                 vscode.window.showInformationMessage(`Okteto was successfully upgraded`);
             } else {
                 vscode.window.showInformationMessage(`Okteto was successfully installed`);
             }
-            
-        }catch (err) {
+        } catch (err) {
             reporter.track(events.oktetoInstallFailed);
             reporter.captureError(err.message, err);
             vscode.window.showErrorMessage(`Okteto was not installed: ${err.message}`);
@@ -57,7 +56,7 @@ async function installCmd(upgrade: boolean) {
     );
 }
 
-async function upCommand() {
+async function upCommand(selectedManifestUri: vscode.Uri) {
     const { install, upgrade } = await okteto.needsInstall();
     if (install) {
         try {
@@ -75,8 +74,8 @@ async function upCommand() {
         vscode.window.showErrorMessage("Couldn't detect your current Kubernetes context.");
         return;
     }
-    
-    const manifestUri = await showManifestPicker();
+
+    const manifestUri = selectedManifestUri || await showManifestPicker();
     if (!manifestUri) {
         reporter.track(events.manifestDismissed);
         return;
@@ -85,12 +84,15 @@ async function upCommand() {
     reporter.track(events.manifestSelected);
     const manifestPath = manifestUri.fsPath;
     console.log(`user selected: ${manifestPath}`);
-    
-    let name: string;
+
+    let name: any;
+    let workdir: any;
     let port: number;
 
     try {
-        name = await manifest.getName(manifestPath);
+        const m = await manifest.getManifest(manifestPath);
+        name = m.name;
+        workdir = m.workdir;
     } catch (err) {
         reporter.track(events.manifestLoadFailed);
         reporter.captureError(`failed to load the manifest: ${err.message}`, err);
@@ -113,8 +115,8 @@ async function upCommand() {
     } catch(err) {
         return onOktetoFailed(err.message);
     }
-    
-    await finalizeUp(ktx.namespace, name);
+
+    await finalizeUp(ktx.namespace, name, workdir);
 }
 
 async function waitForUp(namespace: string, name: string, port: number) {
@@ -125,13 +127,13 @@ async function waitForUp(namespace: string, name: string, port: number) {
                   reporter.track(events.upCancelled);
                   vscode.commands.executeCommand('okteto.down');
               });
-  
+
               const success = await waitForFinalState(namespace, name, progress);
               if (!success) {
                   reporter.track(events.oktetoUpFailed);
                   throw new Error(`Okteto: Up command failed to start your development environment`);
               }
-  
+
               try {
                   await ssh.isReady(port);
               } catch(err) {
@@ -139,7 +141,7 @@ async function waitForUp(namespace: string, name: string, port: number) {
                   reporter.captureError(`SSH wasn't available after 60 seconds: ${err.message}`, err);
                   throw new Error(`Okteto: Up command failed, SSH server wasn't available after 60 seconds`);
               }
-          }); 
+          });
 }
 
 async function waitForFinalState(namespace: string, name:string, progress: vscode.Progress<{message?: string | undefined; increment?: number | undefined}>): Promise<boolean> {
@@ -162,7 +164,6 @@ async function waitForFinalState(namespace: string, name:string, progress: vscod
         }
 
         await sleep(1000);
-        
     }
 }
 
@@ -170,11 +171,18 @@ async function sleep(ms: number) {
     return new Promise<void>(resolve =>  setTimeout(resolve, 1000));
 }
 
-async function finalizeUp(namespace: string, name: string) {
-    reporter.track(events.upReady);               
+async function finalizeUp(namespace: string, name: string, workdir: string) {
+    let folder = '/okteto';
+    if (workdir) {
+        folder = workdir;
+    }
     
-    try{
-        await vscode.commands.executeCommand("opensshremotes.openEmptyWindow", {hostName: name});
+    reporter.track(events.upReady);
+
+    try {
+        const remote = `${name}.okteto`;
+        const uri = vscode.Uri.parse(`vscode-remote://ssh-remote+${remote}${folder}`);
+        await vscode.commands.executeCommand('vscode.openFolder', uri, true);
         reporter.track(events.upFinished);
         okteto.notifyIfFailed(namespace, name, onOktetoFailed);
     } catch (err) {
@@ -207,11 +215,12 @@ async function downCommand() {
         return;
     }
 
-    
+
     let name: string;
 
     try {
-        name = await manifest.getName(manifestPath);
+        const m = await manifest.getManifest(manifestPath);
+        name =  m.name;
     } catch (err) {
         reporter.track(events.manifestLoadFailed);
         reporter.captureError(err.message, err);

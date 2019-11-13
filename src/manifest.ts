@@ -1,22 +1,12 @@
-import * as fs from 'fs';
+import {promises} from 'fs';
 import * as yaml from 'yaml';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
-export function getName(manifestPath: string): Promise<string> {
-    return new Promise<string>((resolve, reject)=>{
-        fs.readFile(manifestPath, {encoding:'utf-8' }, (err, data)=>{
-            if (err) {
-                reject(err.message);
-                return;
-            }
-
-            const doc = yaml.parseDocument(data).toJSON();
-            resolve(doc.name);
-        });
-    });
-    
-    
+export async function getManifest(manifestPath: string): Promise<any> {
+    const data = await promises.readFile(manifestPath, {encoding: 'utf8'});
+    const doc = yaml.parseDocument(data).toJSON();
+    return doc;
 }
 
 export function getDefaultLocation(): vscode.Uri | undefined{
