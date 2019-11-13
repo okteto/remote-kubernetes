@@ -65,14 +65,14 @@
 			}
 		],
 		"menus": {
-      "explorer/context": [
-        {
+			"explorer/context": [
+				{
 					"when": "resourceFilename == okteto.yml",
 					"command": "okteto.up",
 					"group": "navigation"
 				}
-      ]
-    },
+			]
+		},
 		"configuration": {
 			"title": "Okteto",
 			"properties": {
