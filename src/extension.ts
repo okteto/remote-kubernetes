@@ -176,7 +176,6 @@ async function finalizeUp(namespace: string, name: string, workdir: string) {
     if (workdir) {
         folder = workdir;
     }
-    
     reporter.track(events.upReady);
 
     try {

@@ -41,7 +41,8 @@
 		"onCommand:okteto.install",
 		"onCommand:okteto.up",
 		"onCommand:okteto.down",
-		"onCommand:okteto.create"
+		"onCommand:okteto.create",
+		"onResolveRemoteAuthority:okteto"
 	],
 	"main": "./dist/extension",
 	"contributes": {
