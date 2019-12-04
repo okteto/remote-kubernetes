@@ -15,7 +15,7 @@ import * as paths from './paths';
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
-const minimum = '1.5.6';
+const minimum = '1.6.0';
 
 export const terminalName = `okteto`;
 

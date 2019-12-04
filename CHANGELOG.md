@@ -1,7 +1,12 @@
 # Change Log
 
+## 0.1.15
+- Calculate the correct paths when the namespace is defined in the manifest.
+- Support `okteto.yml` and `okteto.yaml`.
+- Require okteto `1.6.0`.
+
 ## 0.1.14
-- Fix missing status message
+- Fix missing status message.
 
 ## 0.1.13
 - Automatically open the correct folder in the remote environment.
