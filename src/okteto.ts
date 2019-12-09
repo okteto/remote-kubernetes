@@ -6,12 +6,15 @@ import * as execa from 'execa';
 import * as home from 'user-home';
 import * as path from 'path';
 import * as commandExists from 'command-exists';
+import {protect} from './machineid';
 import * as vscode from 'vscode';
 import * as os from 'os';
 import * as download from 'download';
 import * as semver from 'semver';
 import {pascalCase} from 'change-case';
 import * as paths from './paths';
+import {createHmac} from 'crypto';
+
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
@@ -273,17 +276,28 @@ export function showTerminal(){
   });
 }
 
-export function getOktetoId(): string | undefined {
+export function getOktetoId(): {id: string, machineId: string} {
   const tokenFile =  path.join(home, oktetoFolder, ".token.json");
+  let oktetoId: string ;
+  let machineId: string;
+
   try {
     const c = fs.readFileSync(tokenFile, {encoding: 'utf8'});
     const token = JSON.parse(c);
-    return token.ID;
+    oktetoId = token.ID;
+    machineId = token.MachineID;
   }catch(err) {
     console.error(`failed to open ${tokenFile}: ${err}`);
+    oktetoId = "";
+    machineId = "";
   }
 
-  return undefined;
+  if (!machineId) {
+    machineId = protect();
+
+  }
+
+  return {id: oktetoId, machineId: machineId};
 }
 
 export function getLanguages(): RuntimeItem[] {

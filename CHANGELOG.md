@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.1.16
+- Update dependencies
+
 ## 0.1.15
 - Calculate the correct paths when the namespace is defined in the manifest.
 - Support `okteto.yml` and `okteto.yaml`.

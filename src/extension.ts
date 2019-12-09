@@ -20,8 +20,8 @@ export function activate(context: vscode.ExtensionContext) {
 
     console.log(`okteto.remote-kubernetes ${version} activated`);
 
-    const oktetoID = okteto.getOktetoId() || "";
-    reporter = new Reporter(version, oktetoID);
+    const ids = okteto.getOktetoId();
+    reporter = new Reporter(version, ids.id, ids.machineId);
     reporter.track(events.activated);
 
     context.subscriptions.push(vscode.commands.registerCommand('okteto.up', upCommand));
