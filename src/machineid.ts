@@ -1,6 +1,6 @@
 'use strict';
 
-import {execSync} from 'child_process';
+import {commandSync} from 'execa';
 import {createHmac} from 'crypto';
 import * as os from 'os';
 
@@ -34,9 +34,16 @@ function getWin32RegBinPath(): string {
 }
 
 export function protect(): string {
-  let cmd = getCommand();
-  let result = execSync(cmd, {encoding: 'utf8'});
-  let id: string = expose(result).toString();
+  let result = commandSync(getCommand(), {encoding: 'utf8'});
+  if (result.failed) {
+    return "na";
+  }
+
+  let id = expose(result.stdout);
+  return hash(id);
+}
+
+export function hash(id: string): string {
   return createHmac('sha256', id).update("okteto").digest('hex');
 }
 
