@@ -39,7 +39,7 @@ export function protect(): string {
     return "na";
   }
 
-  let id = expose(result.stdout);
+  const id = expose(result.stdout);
   return hash(id);
 }
 
