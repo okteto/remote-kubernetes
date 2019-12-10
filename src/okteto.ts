@@ -286,7 +286,7 @@ export function getOktetoId(): {id: string, machineId: string} {
     const token = JSON.parse(c);
     oktetoId = token.ID;
     machineId = token.MachineID;
-  }catch(err) {
+  } catch(err) {
     console.error(`failed to open ${tokenFile}: ${err}`);
     oktetoId = "";
     machineId = "";
