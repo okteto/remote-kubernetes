@@ -34,7 +34,7 @@ function getWin32RegBinPath(): string {
 }
 
 export function protect(): string {
-  let result = commandSync(getCommand(), {encoding: 'utf8'});
+  const result = commandSync(getCommand(), {encoding: 'utf8'});
   if (result.failed) {
     return "na";
   }
