@@ -278,7 +278,7 @@ export function showTerminal(){
 
 export function getOktetoId(): {id: string, machineId: string} {
   const tokenFile =  path.join(home, oktetoFolder, ".token.json");
-  let oktetoId: string ;
+  let oktetoId: string;
   let machineId: string;
 
   try {
