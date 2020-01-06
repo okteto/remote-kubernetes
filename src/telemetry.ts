@@ -64,7 +64,11 @@ export class Reporter {
                 this.enabled = false;
             } 
 
-            sentry.init({ dsn:  dsn, environment: environment});
+            sentry.init({ 
+                dsn:  dsn, 
+                environment: environment,
+                release: `remote-kubernetes-vscode@${this.extensionVersion}`});
+
             sentry.configureScope(scope =>{
                 scope.setUser({"id": this.distinctId});
                 scope.setTags({

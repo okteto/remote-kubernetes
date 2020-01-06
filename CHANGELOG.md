@@ -1,6 +1,7 @@
 # Change Log
 
-## 0.1.16
+## 0.1.17
+- Require Okteto 1.6.3
 - Update dependencies
 
 ## 0.1.15

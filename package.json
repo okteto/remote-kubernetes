@@ -14,7 +14,7 @@
 		"gke",
 		"eks"
 	],
-	"version": "0.1.16",
+	"version": "0.1.17",
 	"icon": "media/icon.png",
 	"author": {
 		"name": "Ramiro Berrelleza",
@@ -123,6 +123,7 @@
 	},
 	"dependencies": {
 		"@kubernetes/client-node": "^0.10.3",
+		"@sentry/cli": "^1.49.0",
 		"@sentry/node": "^5.10.2",
 		"@types/command-exists": "^1.2.0",
 		"@types/download": "^6.2.4",
