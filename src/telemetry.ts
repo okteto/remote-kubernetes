@@ -64,8 +64,6 @@ export class Reporter {
                 this.enabled = false;
             } 
 
-            
-
             sentry.init({ 
                 dsn:  dsn, 
                 environment: environment,
