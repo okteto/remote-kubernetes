@@ -18,7 +18,7 @@ import {createHmac} from 'crypto';
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
-const minimum = '1.6.0';
+const minimum = '1.6.3';
 
 export const terminalName = `okteto`;
 
