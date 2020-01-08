@@ -13,7 +13,7 @@ jobs:
     - uses: actions/checkout@v1
     - name: get tag
       id: vars
-      run: echo ::set-output name=tag::$(echo ${GITHUB_REF:10})
+      run: echo ::set-output name=tag::$(echo ${GITHUB_REF:11})
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
@@ -25,7 +25,7 @@ jobs:
           VSCE_TOKEN: ${{secrets.VSCE_TOKEN}}
     - run: npm run publish-sentry 
       env:
-          VERSION: ${{ steps.vars.outputs.tag }}
+          VERSION: remote-kubernetes@${{ steps.vars.outputs.tag }}
           SENTRY_AUTH_TOKEN: ${{secrets.SENTRY_AUTH_TOKEN}}
           SENTRY_ORG: okteto-analytics
           SENTRY_PROJECT: remote-kubernetes-vscode
