@@ -25,7 +25,7 @@ jobs:
           VSCE_TOKEN: ${{secrets.VSCE_TOKEN}}
     - run: npm run publish-sentry 
       env:
-          VERSION: remote-kubernetes@${{ steps.vars.outputs.tag }}
+          VERSION: remote-kubernetes-code@${{ steps.vars.outputs.tag }}
           SENTRY_AUTH_TOKEN: ${{secrets.SENTRY_AUTH_TOKEN}}
           SENTRY_ORG: okteto-analytics
           SENTRY_PROJECT: remote-kubernetes-vscode
