@@ -102,7 +102,7 @@
 		"pretest": "npm run compile",
 		"test": "mocha -r ts-node/register src/test/suite/*.test.ts",
 		"publish": "vsce publish -p $VSCE_TOKEN",
-		"publish-sentry": "sentry-cli releases new $VERSION && sentry-cli releases set-commits --auto $VERSION && sentry-cli releases files $VERSION upload-sourcemaps dist && sentry-cli releases finalize $VERSION"
+		"publish-sentry": "sentry-cli releases new $VERSION && sentry-cli releases set-commits --auto $VERSION && sentry-cli releases files $VERSION upload-sourcemaps --rewrite dist && sentry-cli releases finalize $VERSION"
 	},
 	"devDependencies": {
 		"@types/chai": "^4.2.7",
