@@ -18,7 +18,7 @@ import {createHmac} from 'crypto';
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
-const minimum = '1.6.3';
+const minimum = '1.6.5';
 
 export const terminalName = `okteto`;
 
@@ -88,7 +88,7 @@ export async function install() {
 
   switch(os.platform()){
     case 'win32':
-      source = 'https://github.com/okteto/okteto/releases/latest/download/okteto-Windows-x86_64';
+      source = 'https://github.com/okteto/okteto/releases/latest/download/okteto.exe';
       chmod = false;
       break;
     case 'darwin':
