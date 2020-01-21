@@ -12,7 +12,7 @@ export function getKubeconfig(): string {
         return env;
     }
 
-    return "";
+    return '';
 }
 
 export function getCurrentNamespace(kubeconfig: string): string {
