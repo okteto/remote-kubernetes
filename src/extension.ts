@@ -95,14 +95,17 @@ async function upCommand(selectedManifestUri: vscode.Uri) {
         return onOktetoFailed(`Okteto: Up failed to load your Okteto manifest: ${err.message}`);
     }
 
+    const kubeconfig = kubernetes.getKubeconfig();
+
+
     if (!namespace) {
-        const ktx = kubernetes.getCurrentContext();
-        if (!ktx) {
+        const ns = kubernetes.getCurrentNamespace(kubeconfig);
+        if (!ns) {
             vscode.window.showErrorMessage("Couldn't detect your current Kubernetes context.");
             return;
         }
     
-        namespace = ktx.namespace;
+        namespace = ns;
     }
 
     try {
@@ -113,7 +116,7 @@ async function upCommand(selectedManifestUri: vscode.Uri) {
         return onOktetoFailed(`Okteto: Up failed to find an available port: ${err}`);
     }
 
-    okteto.start(manifestPath, namespace, name, port);
+    okteto.start(manifestPath, namespace, name, port, kubeconfig);
     activeManifest = manifestPath;
 
     try{
@@ -215,8 +218,31 @@ async function downCommand() {
         return;
     }
 
+    let namespace: string;
+
     try {
-        await okteto.down(manifestPath);
+        const m = await manifest.getManifest(manifestPath);
+        namespace = m.namespace;
+    } catch (err) {
+        reporter.track(events.manifestLoadFailed);
+        reporter.captureError(`failed to load the manifest: ${err.message}`, err);
+        return onOktetoFailed(`Okteto: Down failed to load your Okteto manifest: ${err.message}`);
+    }
+
+    const kubeconfig = kubernetes.getKubeconfig();
+
+    if (!namespace) {
+        const ns = kubernetes.getCurrentNamespace(kubeconfig);
+        if (!ns) {
+            vscode.window.showErrorMessage("Couldn't detect your current Kubernetes context.");
+            return;
+        }
+    
+        namespace = ns;
+    }
+
+    try {
+        await okteto.down(manifestPath, namespace, kubeconfig);
         activeManifest = '';
         vscode.window.showInformationMessage("Okteto environment deactivated");
         reporter.track(events.downFinished);

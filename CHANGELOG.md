@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.1.18
+- Require Okteto 1.6.5
+- Customize the path to the kubeconfig if needed
+
 ## 0.1.17
 - Require Okteto 1.6.3
 - Update dependencies

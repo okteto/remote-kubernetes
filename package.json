@@ -90,6 +90,11 @@
 					"type": "boolean",
 					"default": false,
 					"description": "Use Git Bash compatible file paths. Enable this if you're in Windows and Git Bash is your default shell."
+				},
+				"okteto.kubeconfig": {
+					"type": "string",
+					"default": "",
+					"description": "Absolute path to your kubeconfig file. When empty, it will fall back to KUBECONFIG and then to the default path"
 				}
 			}
 		}
