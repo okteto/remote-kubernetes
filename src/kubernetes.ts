@@ -1,20 +1,39 @@
 import * as k8s from '@kubernetes/client-node';
+import * as vscode from 'vscode';
 
+export function getKubeconfig(): string {
+    const k = vscode.workspace.getConfiguration('okteto').get<string>('kubeconfig');
+    if (k) {
+        return k;
+    }
 
-export function getCurrentContext(): {context: string, namespace:string} | undefined {
+    const env = process.env.KUBECONFIG;
+    if (env) {
+        return env;
+    }
+
+    return "";
+}
+
+export function getCurrentNamespace(kubeconfig: string): string {
     try{
         const kc = new k8s.KubeConfig();
-        kc.loadFromDefault();
-    
+        if (kubeconfig) {
+            kc.loadFromFile(kubeconfig);
+        } else {
+            kc.loadFromDefault();
+        }
+        
         const current = kc.getCurrentContext();
         const ctx = kc.getContextObject(current);
         const ns =  ctx ? ctx.namespace : '';
-        return {
-            context: current,
-            namespace: ns ? ns : 'default',
-        };
+        if (ns){
+            return ns;
+        }
+        
+        return 'default';
     } catch(err) {
         console.error(`failed to get the context: ${err}`);
-        return undefined;
+        return 'default';
     }
 }

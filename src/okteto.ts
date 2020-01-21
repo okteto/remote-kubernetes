@@ -136,7 +136,7 @@ function downloadFile(source: string, destination: string) {
   });
 }
 
-export function start(manifest: string, namespace: string, name: string, port: number) {
+export function start(manifest: string, namespace: string, name: string, port: number, kubeconfig: string) {
   disposeTerminal();
   cleanState(namespace, name);
   const term = vscode.window.createTerminal({
@@ -145,7 +145,8 @@ export function start(manifest: string, namespace: string, name: string, port: n
     cwd: path.dirname(manifest),
     env: {
       "OKTETO_AUTODEPLOY":"1",
-      "OKTETO_ORIGIN":"vscode"
+      "OKTETO_ORIGIN":"vscode",
+      "KUBECONFIG": kubeconfig,
     }
   });
 
@@ -159,10 +160,10 @@ export function start(manifest: string, namespace: string, name: string, port: n
   term.sendText(`${binary} up -f ${manifest} --remote ${port}`, true);
 }
 
-export async function down(manifest: string) {
+export async function down(manifest: string, namespace: string, kubeconfig: string) {
   console.log(`launching okteto down -f ${manifest}`);
   disposeTerminal();
-  const r = await execa.command(`${getBinary()} down --file ${manifest}`);
+  const r = await execa.command(`${getBinary()} down --file ${manifest} --namespace ${namespace}`, {env: {"KUBECONFIG": kubeconfig}});
   if (r.failed) {
     throw new Error(r.stdout);
   }
