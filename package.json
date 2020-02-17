@@ -147,7 +147,6 @@
 		"node-machine-id": "^1.1.12",
 		"semver": "^6.3.0",
 		"tcp-ping": "^0.1.1",
-		"user-home": "^2.0.0",
 		"utf-8-validate": "^5.0.2",
 		"yaml": "^1.7.2"
 	}
