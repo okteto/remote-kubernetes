@@ -13,12 +13,11 @@ import * as download from 'download';
 import * as semver from 'semver';
 import {pascalCase} from 'change-case';
 import * as paths from './paths';
-import {createHmac} from 'crypto';
 
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
-const minimum = '1.6.5';
+const minimum = '1.7.1';
 
 export const terminalName = `okteto`;
 
