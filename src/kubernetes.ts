@@ -2,6 +2,8 @@ import * as k8s from '@kubernetes/client-node';
 import * as vscode from 'vscode';
 import * as path from 'path';
 
+const notFound = 'Kubeconfig not found';
+
 export function getKubeconfig(): string {
     const k = vscode.workspace.getConfiguration('okteto').get<string>('kubeconfig');
     if (k) {
@@ -31,18 +33,28 @@ export function getCurrentNamespace(kubeconfig: string): string {
             kc = getDefault();
         } catch(err) {
             console.error(`failed to read the default configuration: ${err}`);
-            throw new Error(`kubeconfig is not found`);
+            throw new Error(notFound);
         }
     }
     
     try{
         const current = kc.getCurrentContext();
         const ctx = kc.getContextObject(current);
-        const ns =  ctx ? ctx.namespace : '';
+        if (!ctx) {
+            console.error(`fail to load context`);
+            throw new Error(notFound);
+        }
+        
+        const ns =  ctx.namespace ? ctx.namespace : '';
         if (ns){
             return ns;
         }
-        
+
+        if (ctx.cluster === 'cluster' && ctx.name === 'loaded-context' && ctx.user === 'user') {
+            console.error(`empty kubeconfig ${ctx}`);
+            throw new Error(notFound);
+        }
+
         return 'default';
     } catch(err) {
         console.error(`failed to get the context: ${err}`);
