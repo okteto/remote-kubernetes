@@ -158,7 +158,7 @@ async function waitForFinalState(namespace: string, name:string, progress: vscod
     const messages = okteto.getStateMessages();
     progress.report({  message: "Launching your development environment..." });
     var counter = 0;
-    var timeout = 5 * 60 * 1000; // 5 minutes
+    var timeout = 5 * 60; // 5 minutes
     while (true) {
         const state = await okteto.getState(namespace, name);
         if (!seen.has(state)) {
