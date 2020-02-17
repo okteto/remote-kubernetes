@@ -17,21 +17,25 @@ export function getKubeconfig(): string {
 }
 
 export function getCurrentNamespace(kubeconfig: string): string {
-    try{
-        const kc = new k8s.KubeConfig();
-        if (kubeconfig) {
-            console.log(`loading kubeconfig from files: ${kubeconfig}`);
-            const files = kubeconfig.split(path.delimiter);
-            kc.loadFromFile(files[0]);
-            for (let i = 1; i < files.length; i++) {
-                const tmp = new k8s.KubeConfig();
-                tmp.loadFromFile(files[i]);
-                kc.mergeConfig(tmp);
-            }
-        } else {
-            kc.loadFromDefault();
+    var kc : k8s.KubeConfig;
+    if (kubeconfig) {
+        console.log(`loading kubeconfig from files: ${kubeconfig}`);
+        try{
+            kc = getFromFiles(kubeconfig);
+        } catch(err) {
+            console.error(`failed to read the configuration: ${err}`);
+            throw new Error(`${kubeconfig} is not a valid kubernetes configuration file`);
         }
-        
+    } else {
+        try{
+            kc = getDefault();
+        } catch(err) {
+            console.error(`failed to read the default configuration: ${err}`);
+            throw new Error(`kubeconfig is not found`);
+        }
+    }
+    
+    try{
         const current = kc.getCurrentContext();
         const ctx = kc.getContextObject(current);
         const ns =  ctx ? ctx.namespace : '';
@@ -42,6 +46,24 @@ export function getCurrentNamespace(kubeconfig: string): string {
         return 'default';
     } catch(err) {
         console.error(`failed to get the context: ${err}`);
-        return 'default';
+        throw new Error(err.message);
     }
+}
+
+function getDefault() : k8s.KubeConfig {
+    const kc = new k8s.KubeConfig();
+    kc.loadFromDefault();
+    return kc;
+}
+
+function getFromFiles(file: string) : k8s.KubeConfig {
+    const kc = new k8s.KubeConfig();
+    const files = file.split(path.delimiter);
+    kc.loadFromFile(files[0]);
+    for (let i = 1; i < files.length; i++) {
+        const tmp = new k8s.KubeConfig();
+        tmp.loadFromFile(files[i]);
+        kc.mergeConfig(tmp);
+    }
+    return kc;
 }
