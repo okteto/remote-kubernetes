@@ -3,7 +3,6 @@
 import * as fs from 'fs';
 import {promises} from 'fs';
 import * as execa from 'execa';
-import * as home from 'user-home';
 import * as path from 'path';
 import * as commandExists from 'command-exists';
 import {protect} from './machineid';
@@ -181,7 +180,7 @@ export function getStateMessages(): Map<string, string> {
 }
 
 function getStateFile(namespace: string, name:string): string {
-  return path.join(home, oktetoFolder, namespace, name, stateFile);
+  return path.join(os.homedir(), oktetoFolder, namespace, name, stateFile);
 }
 
 export async function getState(namespace: string, name: string): Promise<string> {
@@ -256,10 +255,10 @@ function getBinary(): string {
 
 function getInstallPath(): string {
   if (os.platform() === 'win32') {
-    return path.join(home, "AppData", "Local", "Programs", "okteto.exe");
+    return path.join(os.homedir(), "AppData", "Local", "Programs", "okteto.exe");
   }
 
-  return path.join(home, '.okteto-vscode', 'okteto');
+  return path.join(os.homedir(), '.okteto-vscode', 'okteto');
 }
 
 function disposeTerminal(){
@@ -279,7 +278,7 @@ export function showTerminal(){
 }
 
 export function getOktetoId(): {id: string, machineId: string} {
-  const tokenFile =  path.join(home, oktetoFolder, ".token.json");
+  const tokenFile =  path.join(os.homedir(), oktetoFolder, ".token.json");
   let oktetoId: string;
   let machineId: string;
 
