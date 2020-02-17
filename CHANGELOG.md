@@ -1,12 +1,20 @@
 # Change Log
 
+## 0.1.19
+- Require Okteto `1.7.1`.
+- Handle malformed kubeconfig files.
+- Don't fail to load extension if machine ID can't be generated.
+- Add timeout to long running tasks.
+- Update dependencies.
+ 
+
 ## 0.1.18
-- Require Okteto 1.6.5
-- Customize the path to the kubeconfig if needed
+- Require Okteto `1.6.5`.
+- Customize the path to the kubeconfig if needed.
 
 ## 0.1.17
-- Require Okteto 1.6.3
-- Update dependencies
+- Require Okteto `1.6.3`.
+- Update dependencies.
 
 ## 0.1.15
 - Calculate the correct paths when the namespace is defined in the manifest.
