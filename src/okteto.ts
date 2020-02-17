@@ -13,12 +13,11 @@ import * as download from 'download';
 import * as semver from 'semver';
 import {pascalCase} from 'change-case';
 import * as paths from './paths';
-import {createHmac} from 'crypto';
 
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
-const minimum = '1.6.5';
+const minimum = '1.7.1';
 
 export const terminalName = `okteto`;
 
@@ -192,7 +191,7 @@ export async function getState(namespace: string, name: string): Promise<string>
   try{
     await promises.access(p);
   }catch (err) {
-    console.log(err);
+    console.log(`failed to read state file: ${err}`);
     return state.starting;
   }
 
@@ -247,7 +246,9 @@ export function cleanState(namespace: string, name:string) {
 function getBinary(): string {
   let binary = vscode.workspace.getConfiguration('okteto').get<string>('binary');
   if (binary) {
-    return binary;
+    if (binary.trim().length > 0) {
+      return binary;
+    }
   }
 
   return getInstallPath();
@@ -336,7 +337,8 @@ export async function init(manifestPath: vscode.Uri, choice: string) {
     });
 
   if (r.failed) {
-      throw new Error(r.stdout);
+    console.log(`init command failed: ${r.stdout}, ${r.stderr}`);
+    throw new Error(r.stdout);
   }
 }
 
