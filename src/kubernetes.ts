@@ -1,5 +1,6 @@
 import * as k8s from '@kubernetes/client-node';
 import * as vscode from 'vscode';
+import * as path from 'path';
 
 export function getKubeconfig(): string {
     const k = vscode.workspace.getConfiguration('okteto').get<string>('kubeconfig');
@@ -19,7 +20,14 @@ export function getCurrentNamespace(kubeconfig: string): string {
     try{
         const kc = new k8s.KubeConfig();
         if (kubeconfig) {
-            kc.loadFromFile(kubeconfig);
+            console.log(`loading kubeconfig from files: ${kubeconfig}`);
+            const files = kubeconfig.split(path.delimiter);
+            kc.loadFromFile(files[0]);
+            for (let i = 1; i < files.length; i++) {
+                const tmp = new k8s.KubeConfig();
+                tmp.loadFromFile(files[i]);
+                kc.mergeConfig(tmp);
+            }
         } else {
             kc.loadFromDefault();
         }
