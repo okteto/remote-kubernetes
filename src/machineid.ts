@@ -34,13 +34,18 @@ function getWin32RegBinPath(): string {
 }
 
 export function protect(): string {
-  const result = commandSync(getCommand(), {encoding: 'utf8'});
-  if (result.failed) {
-    return "na";
-  }
+  try{
+    const result = commandSync(getCommand(), {encoding: 'utf8'});
+    if (result.failed) {
+      return 'na';
+    }
 
-  const id = expose(result.stdout);
-  return hash(id);
+    const id = expose(result.stdout);
+    return hash(id);
+  }catch(err){
+    console.log(`failed to generate machineid: ${err}`);
+    return 'na';
+  }
 }
 
 export function hash(id: string): string {
