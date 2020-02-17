@@ -157,6 +157,8 @@ async function waitForFinalState(namespace: string, name:string, progress: vscod
     const seen = new Map<string, boolean>();
     const messages = okteto.getStateMessages();
     progress.report({  message: "Launching your development environment..." });
+    var counter = 0;
+    var timeout = 5 * 60 * 1000; // 5 minutes
     while (true) {
         const state = await okteto.getState(namespace, name);
         if (!seen.has(state)) {
@@ -172,6 +174,12 @@ async function waitForFinalState(namespace: string, name:string, progress: vscod
             return false;
         }
 
+        counter++;
+        if (counter === timeout) {
+            console.log(`task didn't finish in 5 minutes`);
+            return false;
+        }
+        
         await sleep(1000);
     }
 }

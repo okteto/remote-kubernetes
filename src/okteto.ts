@@ -191,7 +191,7 @@ export async function getState(namespace: string, name: string): Promise<string>
   try{
     await promises.access(p);
   }catch (err) {
-    console.log(err);
+    console.log(`failed to read state file: ${err}`);
     return state.starting;
   }
 
