@@ -247,7 +247,9 @@ export function cleanState(namespace: string, name:string) {
 function getBinary(): string {
   let binary = vscode.workspace.getConfiguration('okteto').get<string>('binary');
   if (binary) {
-    return binary;
+    if (binary.trim().length > 0) {
+      return binary;
+    }
   }
 
   return getInstallPath();
@@ -336,7 +338,8 @@ export async function init(manifestPath: vscode.Uri, choice: string) {
     });
 
   if (r.failed) {
-      throw new Error(r.stdout);
+    console.log(`init command failed: ${r.stdout}, ${r.stderr}`);
+    throw new Error(r.stdout);
   }
 }
 
