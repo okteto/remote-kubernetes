@@ -69,6 +69,7 @@ async function isInstalled(binaryPath: string): Promise<boolean> {
 async function getVersion(binary: string): Promise<string | undefined> {
   const r = await execa.command(`${binary} version`);
   if (r.failed) {
+    console.error(`okteto version failed: ${r.stdout} ${r.stderr}`);
     return undefined;
   }
 
@@ -111,6 +112,7 @@ export async function install() {
 
     const r = await execa.command(`chmod +x ${destination}`);
     if (r.failed) {
+      console.error(`chmod +x ${destination} failed: ${r.stdout} ${r.stderr}`);
       throw new Error(`failed to set exec permissions; ${r.stdout}`);
     }
   } catch(err) {
@@ -163,6 +165,7 @@ export async function down(manifest: string, namespace: string, kubeconfig: stri
   disposeTerminal();
   const r = await execa.command(`${getBinary()} down --file ${manifest} --namespace ${namespace}`, {env: {"KUBECONFIG": kubeconfig}});
   if (r.failed) {
+    console.error(`okteto down failed: ${r.stdout} ${r.stderr}`);
     throw new Error(r.stdout);
   }
 }
