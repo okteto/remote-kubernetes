@@ -79,16 +79,10 @@ async function upCommand(selectedManifestUri: vscode.Uri) {
     const manifestPath = manifestUri.fsPath;
     console.log(`user selected: ${manifestPath}`);
 
-    let name: any;
-    let namespace: any;
-    let workdir: any;
-    let port: number;
+    let m: manifest.Manifest;
 
     try {
-        const m = await manifest.getManifest(manifestPath);
-        name = m.name;
-        namespace = m.namespace;
-        workdir = m.workdir;
+        m = await manifest.getManifest(manifestPath);
     } catch (err) {
         reporter.track(events.manifestLoadFailed);
         reporter.captureError(`failed to load the manifest: ${err.message}`, err);
@@ -98,16 +92,17 @@ async function upCommand(selectedManifestUri: vscode.Uri) {
     const kubeconfig = kubernetes.getKubeconfig();
 
 
-    if (!namespace) {
+    if (!m.namespace) {
         const ns = kubernetes.getCurrentNamespace(kubeconfig);
         if (!ns) {
             vscode.window.showErrorMessage("Couldn't detect your current Kubernetes context.");
             return;
         }
     
-        namespace = ns;
+        m.namespace = ns;
     }
 
+    let port: number;
     try {
         port = await ssh.getPort();
     } catch (err) {
@@ -116,16 +111,16 @@ async function upCommand(selectedManifestUri: vscode.Uri) {
         return onOktetoFailed(`Okteto: Up failed to find an available port: ${err}`);
     }
 
-    okteto.start(manifestPath, namespace, name, port, kubeconfig);
+    okteto.start(manifestPath, m.namespace, m.name, port, kubeconfig);
     activeManifest = manifestPath;
 
     try{
-        await waitForUp(namespace, name, port);
+        await waitForUp(m.namespace, m.name, port);
     } catch(err) {
         return onOktetoFailed(err.message);
     }
 
-    await finalizeUp(namespace, name, workdir);
+    await finalizeUp(m.namespace,m.name, m.workdir);
 }
 
 async function waitForUp(namespace: string, name: string, port: number) {
@@ -226,11 +221,10 @@ async function downCommand() {
         return;
     }
 
-    let namespace: string;
+    let m: manifest.Manifest;
 
     try {
-        const m = await manifest.getManifest(manifestPath);
-        namespace = m.namespace;
+        m = await manifest.getManifest(manifestPath);
     } catch (err) {
         reporter.track(events.manifestLoadFailed);
         reporter.captureError(`failed to load the manifest: ${err.message}`, err);
@@ -239,18 +233,18 @@ async function downCommand() {
 
     const kubeconfig = kubernetes.getKubeconfig();
 
-    if (!namespace) {
+    if (!m.namespace) {
         const ns = kubernetes.getCurrentNamespace(kubeconfig);
         if (!ns) {
             vscode.window.showErrorMessage("Couldn't detect your current Kubernetes context.");
             return;
         }
     
-        namespace = ns;
+        m.namespace = ns;
     }
 
     try {
-        await okteto.down(manifestPath, namespace, kubeconfig);
+        await okteto.down(manifestPath, m.namespace, kubeconfig);
         activeManifest = '';
         vscode.window.showInformationMessage("Okteto environment deactivated");
         reporter.track(events.downFinished);

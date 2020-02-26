@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.1.20
+- Fix issue with invalid yaml in the okteto manifest.
+
 ## 0.1.19
 - Require Okteto `1.7.1`.
 - Handle malformed kubeconfig files.
