@@ -41,6 +41,7 @@ async function installCmd(upgrade: boolean) {
       {location: vscode.ProgressLocation.Notification, title: title},
       async () => {
         try {
+            console.log('installing okteto');
             await okteto.install();
             if (upgrade) {
                 vscode.window.showInformationMessage(`Okteto was successfully upgraded`);
