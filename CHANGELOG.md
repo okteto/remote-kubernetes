@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.1.21
+- Update to okteto 1.7.4 to solve sync issues with okteto down
+
 ## 0.1.20
 - Fix issue with invalid yaml in the okteto manifest.
 
