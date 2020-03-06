@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.1.22
+- Update to okteto `1.8.0` to upgrade to syncthing `1.3.4` and improved monitoring
+
 ## 0.1.21
 - Update to okteto 1.7.4 to solve sync issues with okteto down
 
