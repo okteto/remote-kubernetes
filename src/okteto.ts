@@ -136,7 +136,7 @@ function downloadFile(source: string, destination: string) {
   });
 }
 
-export function start(manifest: string, namespace: string, name: string, port: number, kubeconfig: string) {
+export function up(manifest: string, namespace: string, name: string, port: number, kubeconfig: string) {
   console.log(`okteto up ${manifest}`);
   disposeTerminal();
   cleanState(namespace, name);

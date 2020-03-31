@@ -112,7 +112,7 @@ async function upCommand(selectedManifestUri: vscode.Uri) {
         return onOktetoFailed(`Okteto: Up failed to find an available port: ${err}`);
     }
 
-    okteto.start(manifestPath, m.namespace, m.name, port, kubeconfig);
+    okteto.up(manifestPath, m.namespace, m.name, port, kubeconfig);
     activeManifest = manifestPath;
 
     try{
