@@ -16,7 +16,7 @@ import * as paths from './paths';
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
-const minimum = '1.8.0';
+const minimum = '1.8.2';
 
 export const terminalName = `okteto`;
 
@@ -154,6 +154,7 @@ export function start(manifest: string, namespace: string, name: string, port: n
 
   let binary = getBinary();
   if (gitBashMode()){
+    console.log('using gitbash style paths');
     binary = paths.toGitBash(binary);
     manifest = paths.toGitBash(manifest);
   }
