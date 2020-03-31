@@ -159,13 +159,17 @@ export function start(manifest: string, namespace: string, name: string, port: n
     manifest = paths.toGitBash(manifest);
   }
 
-  term.sendText(`${binary} up -f ${manifest} --remote ${port}`, true);
+  const cmd = `${binary} up -f ${manifest} --remote ${port}`;
+  console.log(cmd);
+  term.sendText(cmd, true);
 }
 
 export async function down(manifest: string, namespace: string, kubeconfig: string) {
   console.log(`launching okteto down -f ${manifest}`);
   disposeTerminal();
-  const r = await execa.command(`${getBinary()} down --file ${manifest} --namespace ${namespace}`, {env: {"KUBECONFIG": kubeconfig}});
+  const cmd = `${getBinary()} down --file ${manifest} --namespace ${namespace}`;
+  console.log(cmd);
+  const r = await execa.command(cmd, {env: {"KUBECONFIG": kubeconfig}});
   if (r.failed) {
     console.error(`okteto down failed: ${r.stdout} ${r.stderr}`);
     throw new Error(r.stdout);
