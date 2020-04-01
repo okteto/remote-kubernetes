@@ -16,7 +16,7 @@ import * as paths from './paths';
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
-const minimum = '1.8.0';
+const minimum = '1.8.2';
 
 export const terminalName = `okteto`;
 
@@ -136,7 +136,7 @@ function downloadFile(source: string, destination: string) {
   });
 }
 
-export function start(manifest: string, namespace: string, name: string, port: number, kubeconfig: string) {
+export function up(manifest: string, namespace: string, name: string, port: number, kubeconfig: string) {
   console.log(`okteto up ${manifest}`);
   disposeTerminal();
   cleanState(namespace, name);
@@ -154,17 +154,22 @@ export function start(manifest: string, namespace: string, name: string, port: n
 
   let binary = getBinary();
   if (gitBashMode()){
+    console.log('using gitbash style paths');
     binary = paths.toGitBash(binary);
     manifest = paths.toGitBash(manifest);
   }
 
-  term.sendText(`${binary} up -f ${manifest} --remote ${port}`, true);
+  const cmd = `${binary} up -f ${manifest} --remote ${port}`;
+  console.log(cmd);
+  term.sendText(cmd, true);
 }
 
 export async function down(manifest: string, namespace: string, kubeconfig: string) {
   console.log(`launching okteto down -f ${manifest}`);
   disposeTerminal();
-  const r = await execa.command(`${getBinary()} down --file ${manifest} --namespace ${namespace}`, {env: {"KUBECONFIG": kubeconfig}});
+  const cmd = `${getBinary()} down --file ${manifest} --namespace ${namespace}`;
+  console.log(cmd);
+  const r = await execa.command(cmd, {env: {"KUBECONFIG": kubeconfig}});
   if (r.failed) {
     console.error(`okteto down failed: ${r.stdout} ${r.stderr}`);
     throw new Error(r.stdout);
