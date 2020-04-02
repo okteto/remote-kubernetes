@@ -1,13 +1,15 @@
 # Change Log
 
 ## 0.1.23
-- Update to okteto `1.8.2` to upgrade to syncthing `1.4.0`
+- Update to okteto `1.8.2` to upgrade to syncthing `1.4.0`.
+- Fix issue with Windows install path.
+- Update `webpack`.
 
 ## 0.1.22
-- Update to okteto `1.8.0` to upgrade to syncthing `1.3.4` and improved monitoring
+- Update to okteto `1.8.0` to upgrade to syncthing `1.3.4` and improved monitoring.
 
 ## 0.1.21
-- Update to okteto 1.7.4 to solve sync issues with okteto down
+- Update to okteto 1.7.4 to solve sync issues with okteto down.
 
 ## 0.1.20
 - Fix issue with invalid yaml in the okteto manifest.
