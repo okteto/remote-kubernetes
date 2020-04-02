@@ -365,5 +365,5 @@ export function gitBashMode(): boolean {
     return false;
   }
 
-  return config.get<boolean>('gitBash') || true;
+  return config.get<boolean>('gitBash') || false;
 }
