@@ -27,7 +27,7 @@ The extension starts a development environment in your Kubernetes cluster by usi
 
 ## Getting started
 
-There is a complete tutorial [here](https://okteto.com/blog/remote-kubernetes-development/). A summary of the steps is:
+There is a complete tutorial [here](https://okteto.com/blog/remote-kubernetes-development/). The steps can be summarized as follows:
 
 1. Clone https://github.com/okteto/vscode-remote-go
 1. Start VS Code
