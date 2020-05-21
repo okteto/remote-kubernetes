@@ -12,13 +12,13 @@ import * as download from 'download';
 import * as semver from 'semver';
 import {pascalCase} from 'change-case';
 import * as paths from './paths';
+import { clearInterval } from 'timers';
 
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
 const minimum = '1.8.9';
-
-export const terminalName = `okteto`;
+const terminalName = `okteto`;
 
 export const state = {
   starting: 'starting',
@@ -31,6 +31,8 @@ export const state = {
   unknown: 'unknown',
   failed: 'failed',
 };
+
+var isActive = false;
 
 export async function needsInstall(): Promise<{install: boolean, upgrade: boolean}>{
   const binary = getBinary();
@@ -129,6 +131,7 @@ export async function install() {
 
 export function up(manifest: string, namespace: string, name: string, port: number, kubeconfig: string) {
   console.log(`okteto up ${manifest}`);
+  isActive = false;
   disposeTerminal();
   cleanState(namespace, name);
   const term = vscode.window.createTerminal({
@@ -150,6 +153,7 @@ export function up(manifest: string, namespace: string, name: string, port: numb
     manifest = paths.toGitBash(manifest);
   }
 
+  isActive = true;
   const cmd = `${binary} up -f ${manifest} --remote ${port}`;
   console.log(cmd);
   term.sendText(cmd, true);
@@ -157,6 +161,7 @@ export function up(manifest: string, namespace: string, name: string, port: numb
 
 export async function down(manifest: string, namespace: string, kubeconfig: string) {
   console.log(`launching okteto down -f ${manifest}`);
+  isActive = false;
   disposeTerminal();
   const cmd = `${getBinary()} down --file ${manifest} --namespace ${namespace}`;
   console.log(cmd);
@@ -186,15 +191,17 @@ function getStateFile(namespace: string, name:string): string {
 export async function getState(namespace: string, name: string): Promise<string> {
   const p = getStateFile(namespace, name);
 
-  
   try{
     await promises.access(p);
-  }catch (err) {
-    console.log(`failed to read state file: ${err}`);
+  } catch (err) {
+    if (err.code !== 'ENOENT') {
+      console.log(`failed to read state file: ${err}`);
+    }
+
     return state.starting;
   }
 
-  var c = state.activating;
+  var c = '';
 
   try {
     const buffer = await promises.readFile(p, {encoding: 'utf8'});
@@ -223,10 +230,16 @@ export async function getState(namespace: string, name: string): Promise<string>
 export async function notifyIfFailed(namespace: string, name:string, callback: (m: string) => void){
   const id = setInterval(async () => {
     const c = await getState(namespace, name);
+    if (!isActive) {
+      clearInterval(id);
+      return;
+    }
+    
     if (c === state.failed) {
       callback(`Okteto: Up command failed`);
       clearInterval(id);
     }
+
   }, 1000);
 }
 
