@@ -12,7 +12,7 @@ import * as download from 'download';
 import * as semver from 'semver';
 import {pascalCase} from 'change-case';
 import * as paths from './paths';
-import { clearInterval } from 'timers';
+import { clearInterval, setInterval } from 'timers';
 
 
 const oktetoFolder = '.okteto';
@@ -160,15 +160,18 @@ export function up(manifest: string, namespace: string, name: string, port: numb
 }
 
 export async function down(manifest: string, namespace: string, kubeconfig: string) {
-  console.log(`launching okteto down -f ${manifest}`);
+  const cmd = `${getBinary()} down --file ${manifest} --namespace ${namespace}`;
+  console.log(`${cmd}`);
   isActive = false;
   disposeTerminal();
-  const cmd = `${getBinary()} down --file ${manifest} --namespace ${namespace}`;
-  console.log(cmd);
-  const r = await execa.command(cmd, {env: {"KUBECONFIG": kubeconfig}});
-  if (r.failed) {
-    console.error(`okteto down failed: ${r.stdout} ${r.stderr}`);
-    throw new Error(r.stdout);
+  
+  const r =  execa(getBinary(), ['down', '--file', manifest, '--namespace', namespace], {env: {"KUBECONFIG": kubeconfig}});
+  
+  try{
+    await r;
+  } catch (err) {
+    console.error(`okteto down failed: ${r.stdout} ${r.stderr}: ${err}`);
+    throw err;
   }
 }
 
