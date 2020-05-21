@@ -16,7 +16,7 @@ import * as paths from './paths';
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
-const minimum = '1.8.2';
+const minimum = '1.8.9';
 
 export const terminalName = `okteto`;
 
@@ -87,53 +87,40 @@ export async function install() {
 
   switch(os.platform()){
     case 'win32':
-      source = 'https://github.com/okteto/okteto/releases/latest/download/okteto.exe';
+      source = `https://github.com/okteto/okteto/releases/${minimum}/download/okteto.exe`;
       chmod = false;
       break;
     case 'darwin':
-      source = 'https://github.com/okteto/okteto/releases/latest/download/okteto-Darwin-x86_64';
+      source = `https://github.com/okteto/okteto/releases/${minimum}/download/okteto-Darwin-x86_64`;
       break;
     default:
-        source = 'https://github.com/okteto/okteto/releases/latest/download/okteto-Linux-x86_64';
+        source = `https://github.com/okteto/okteto/releases/${minimum}/download/okteto-Linux-x86_64`;
   }
 
-  let destination = getInstallPath();
+  const installPath = getInstallPath();
+  const folder = path.dirname(installPath);
+  const filename = path.basename(installPath);
+  
   try {
-    await promises.mkdir(path.dirname(destination), 0o700);
+    await promises.mkdir(path.dirname(folder), 0o700);
   } catch(err) {
     console.log(`failed to create dir: ${err.message}`);
   }
 
   try {
-    await downloadFile(source, destination);
-    if (!chmod) {
-      return;
+    await download(source, folder, {filename: filename});
+    if (chmod) {
+      await execa('chmod', ['a+x', installPath]);
     }
 
-    const r = await execa.command(`chmod +x ${destination}`);
-    if (r.failed) {
-      console.error(`chmod +x ${destination} failed: ${r.stdout} ${r.stderr}`);
-      throw new Error(`failed to set exec permissions; ${r.stdout}`);
+    const version = getVersion(installPath);
+    if (!version) {
+      throw new Error(`${installPath} wasn't correctly installed`);
     }
+    
   } catch(err) {
     throw new Error(`failed to install okteto: ${err.message}`);
   }
-}
-
-function downloadFile(source: string, destination: string) {
-  return new Promise<string>((resolve, reject) => {
-    const st = fs.createWriteStream(destination);
-    download(source).pipe(st);
-    st.on('error', (err, body, response) =>  {
-      reject(err);
-      return;
-    });
-
-    st.on('finish', () => {
-      resolve();
-      return;
-    });
-  });
 }
 
 export function up(manifest: string, namespace: string, name: string, port: number, kubeconfig: string) {
