@@ -292,7 +292,7 @@ async function createCmd(){
     const manifestPath = manifest.getDefaultLocation();
     if (!manifestPath) {
         reporter.track(events.createFailed);
-        vscode.window.showErrorMessage("Couldn't detect your project's path.");
+        vscode.window.showErrorMessage(`Okteto: Create failed: Couldn't detect your project's path`);
         return;
     }
 
@@ -306,7 +306,7 @@ async function createCmd(){
     } catch (err) {
         reporter.track(events.oktetoInitFailed);
         reporter.captureError(`okteto init failed: ${err.message}`, err);
-        vscode.window.showErrorMessage("Couldn't generate your manifest file.");
+        vscode.window.showErrorMessage(`Okteto: Create failed: ${err}`);
         return;
     }
 
@@ -315,7 +315,7 @@ async function createCmd(){
     } catch (err) {
         reporter.track(events.createOpenFailed);
         reporter.captureError(`open folder failed ${err.message}`, err);
-        vscode.window.showErrorMessage(`Couldn't open ${manifestPath}: ${err}.`);
+        vscode.window.showErrorMessage(`Okteto: Create failed: Couldn't open ${manifestPath}`);
         return;
     }
 }

@@ -169,12 +169,10 @@ export function up(manifest: string, namespace: string, name: string, port: numb
 }
 
 export async function down(manifest: string, namespace: string, kubeconfig: string) {
-  const cmd = `${getBinary()} down --file '${manifest}' --namespace '${namespace}'`;
-  console.log(`${cmd}`);
   isActive = false;
   disposeTerminal();
   
-  const r =  execa(getBinary(), ['down', '--file', `'${manifest}'`, '--namespace', `'${namespace}'`], {
+  const r =  execa(getBinary(), ['down', '--file', `${manifest}`, '--namespace', `${namespace}`], {
     env: {
       "KUBECONFIG": kubeconfig,
       "OKTETO_ORIGIN":"vscode"
@@ -185,11 +183,30 @@ export async function down(manifest: string, namespace: string, kubeconfig: stri
   try{
     await r;
   } catch (err) {
-    console.error(`okteto down failed: ${r.stdout} ${r.stderr}: ${err}`);
-    throw err;
+    console.error(`${err}: ${err.stdout}`);
+    const message = extractMessage(err.stdout);    
+    throw new Error(message);
   }
 
   console.log('okteto down completed');
+}
+
+export async function init(manifestPath: vscode.Uri, choice: string) {
+  const r = execa(getBinary(),['init', '--overwrite', '--file', `${manifestPath.fsPath}`], {
+    cwd: path.dirname(manifestPath.fsPath),
+    env: {
+      "OKTETO_ORIGIN":"vscode",
+      "OKTETO_LANGUAGE":choice
+      }
+    }); 
+    
+  try{
+    await r;
+  } catch (err) {
+    console.error(`${err}: ${err.stdout}`);
+    const message = extractMessage(err.stdout);
+    throw new Error(message);
+  }
 }
 
 export function getStateMessages(): Map<string, string> {
@@ -263,7 +280,7 @@ export async function notifyIfFailed(namespace: string, name:string, callback: (
   }, 1000);
 }
 
-export function cleanState(namespace: string, name:string) {
+function cleanState(namespace: string, name:string) {
   const p = getStateFile(namespace, name);
 
   try{
@@ -359,22 +376,6 @@ export function getLanguages(): RuntimeItem[] {
 
 }
 
-export async function init(manifestPath: vscode.Uri, choice: string) {
-  const r = execa(getBinary(),['init', '--overwrite', '--file', `'${manifestPath}'`], {
-    cwd: path.dirname(manifestPath.fsPath),
-    env: {
-      "OKTETO_ORIGIN":"vscode",
-      "OKTETO_LANGUAGE":choice
-      }
-    }); 
-    
-  try{
-    await r;
-  } catch (err) {
-    console.error(`init command failed: ${r.stdout}, ${r.stderr}`);
-    throw new Error(err);
-  }
-}
 
 class RuntimeItem implements vscode.QuickPickItem {
 
@@ -392,4 +393,17 @@ export function gitBashMode(): boolean {
   }
 
   return config.get<boolean>('gitBash') || false;
+}
+
+function extractMessage(error :string):string {
+  const parts = error.split(':');
+  let message = '';
+  if (parts.length === 1) {
+    message = parts[0];
+  } else {
+    message = parts[1];
+  }
+
+  message = message.replace('x  ', '');  
+  return message;
 }
