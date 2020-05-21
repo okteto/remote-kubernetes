@@ -50,7 +50,7 @@ async function installCmd(upgrade: boolean) {
             }
         } catch (err) {
             reporter.track(events.oktetoInstallFailed);
-            reporter.captureError(err.message, err);
+            reporter.captureError(`okteto install failed: ${err.message}`, err);
             vscode.window.showErrorMessage(`Okteto was not installed: ${err.message}`);
         }
       },
@@ -86,7 +86,7 @@ async function upCommand(selectedManifestUri: vscode.Uri) {
         m = await manifest.getManifest(manifestPath);
     } catch (err) {
         reporter.track(events.manifestLoadFailed);
-        reporter.captureError(`failed to load the manifest: ${err.message}`, err);
+        reporter.captureError(`load manifest failed: ${err.message}`, err);
         return onOktetoFailed(`Okteto: Up failed to load your Okteto manifest: ${err.message}`);
     }
 
@@ -118,6 +118,7 @@ async function upCommand(selectedManifestUri: vscode.Uri) {
     try{
         await waitForUp(m.namespace, m.name, port);
     } catch(err) {
+        reporter.captureError(`okteto up failed: ${err.message}`, err);
         return onOktetoFailed(err.message);
     }
 
@@ -228,7 +229,7 @@ async function downCommand() {
         m = await manifest.getManifest(manifestPath);
     } catch (err) {
         reporter.track(events.manifestLoadFailed);
-        reporter.captureError(`failed to load the manifest: ${err.message}`, err);
+        reporter.captureError(`load manifest failed: ${err.message}`, err);
         return onOktetoFailed(`Okteto: Down failed to load your Okteto manifest: ${err.message}`);
     }
 
@@ -251,7 +252,7 @@ async function downCommand() {
         reporter.track(events.downFinished);
     } catch (err) {
         reporter.track(events.oktetoDownFailed);
-        reporter.captureError(err.message, err);
+        reporter.captureError(`okteto down failed: ${err.message}`, err);
         vscode.window.showErrorMessage(`Okteto: Down failed: ${err.message}`);
     }
 }
@@ -299,7 +300,7 @@ async function createCmd(){
         await okteto.init(manifestPath, choice.value);
     } catch (err) {
         reporter.track(events.oktetoInitFailed);
-        reporter.captureError(err.message, err);
+        reporter.captureError(`okteto init failed: ${err.message}`, err);
         vscode.window.showErrorMessage("Couldn't generate your manifest file.");
         return;
     }
@@ -308,7 +309,7 @@ async function createCmd(){
         await vscode.commands.executeCommand('vscode.openFolder', manifestPath);
     } catch (err) {
         reporter.track(events.createOpenFailed);
-        reporter.captureError(err.message, err);
+        reporter.captureError(`open folder failed ${err.message}`, err);
         vscode.window.showErrorMessage(`Couldn't open ${manifestPath}: ${err}.`);
         return;
     }
