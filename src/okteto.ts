@@ -113,13 +113,17 @@ export async function install() {
       await execa('chmod', ['a+x', installPath]);
     }
 
+  } catch(err) {
+    throw new Error(`failed to download ${source}: ${err.message}`);
+  }
+
+  try {
     const version = await getVersion(installPath);
     if (!version) {
       throw new Error(`${installPath} wasn't correctly installed`);
     }
-    
   } catch(err) {
-    throw new Error(`failed to install okteto: ${err.message}`);
+    throw err;
   }
 }
 
