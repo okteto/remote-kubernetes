@@ -87,14 +87,14 @@ export async function install() {
 
   switch(os.platform()){
     case 'win32':
-      source = `https://github.com/okteto/okteto/releases/${minimum}/download/okteto.exe`;
+      source = `https://github.com/okteto/okteto/releases/download/${minimum}/okteto.exe`;
       chmod = false;
       break;
     case 'darwin':
-      source = `https://github.com/okteto/okteto/releases/${minimum}/download/okteto-Darwin-x86_64`;
+      source = `https://github.com/okteto/okteto/releases/download/${minimum}/okteto-Darwin-x86_64`;
       break;
     default:
-        source = `https://github.com/okteto/okteto/releases/${minimum}/download/okteto-Linux-x86_64`;
+        source = `https://github.com/okteto/okteto/releases/download/${minimum}/okteto-Linux-x86_64`;
   }
 
   const installPath = getInstallPath();
@@ -102,7 +102,7 @@ export async function install() {
   const filename = path.basename(installPath);
   
   try {
-    await promises.mkdir(path.dirname(folder), 0o700);
+    await promises.mkdir(path.dirname(folder), {mode: 0o700, recursive: true});
   } catch(err) {
     console.log(`failed to create dir: ${err.message}`);
   }
@@ -113,7 +113,7 @@ export async function install() {
       await execa('chmod', ['a+x', installPath]);
     }
 
-    const version = getVersion(installPath);
+    const version = await getVersion(installPath);
     if (!version) {
       throw new Error(`${installPath} wasn't correctly installed`);
     }
