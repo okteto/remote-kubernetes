@@ -207,6 +207,8 @@ export async function init(manifestPath: vscode.Uri, choice: string) {
     const message = extractMessage(err.stdout);
     throw new Error(message);
   }
+
+  console.log('okteto init completed');
 }
 
 export function getStateMessages(): Map<string, string> {
