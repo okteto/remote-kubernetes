@@ -386,7 +386,7 @@ class RuntimeItem implements vscode.QuickPickItem {
 	}
 }
 
-export function gitBashMode(): boolean {
+function gitBashMode(): boolean {
   const config = vscode.workspace.getConfiguration('okteto');
   if (!config) {
     return false;
