@@ -106,17 +106,26 @@ export async function install() {
   try {
     await promises.mkdir(path.dirname(folder), {mode: 0o700, recursive: true});
   } catch(err) {
-    console.log(`failed to create dir: ${err.message}`);
+    console.error(`failed to create dir: ${err.message}`);
   }
 
   try {
     await download(source, folder, {filename: filename});
-    if (chmod) {
-      await execa('chmod', ['a+x', installPath]);
+  } catch(err) {
+    console.error(`download fail: ${err}`);
+    if (err.code === 'EBUSY'){
+      throw new Error(`failed to install okteto, ${installPath} is in use`);
     }
 
-  } catch(err) {
-    throw new Error(`failed to download ${source}: ${err.message}`);
+    throw new Error(`failed to download ${source} into ${installPath}: ${err.message}`);
+  }
+
+  if (chmod) {
+    try {
+      await execa('chmod', ['a+x', installPath]);
+    } catch(err) {
+      throw new Error(`failed to chmod ${installPath}: ${err.message}`);
+    }
   }
 
   try {
@@ -154,25 +163,52 @@ export function up(manifest: string, namespace: string, name: string, port: numb
   }
 
   isActive = true;
-  const cmd = `${binary} up -f ${manifest} --remote ${port}`;
+  const cmd = `${binary} up -f '${manifest}' --remote '${port}'`;
   console.log(cmd);
   term.sendText(cmd, true);
 }
 
 export async function down(manifest: string, namespace: string, kubeconfig: string) {
-  const cmd = `${getBinary()} down --file ${manifest} --namespace ${namespace}`;
-  console.log(`${cmd}`);
   isActive = false;
   disposeTerminal();
   
-  const r =  execa(getBinary(), ['down', '--file', manifest, '--namespace', namespace], {env: {"KUBECONFIG": kubeconfig}});
+  const r =  execa(getBinary(), ['down', '--file', `${manifest}`, '--namespace', `${namespace}`], {
+    env: {
+      "KUBECONFIG": kubeconfig,
+      "OKTETO_ORIGIN":"vscode"
+    },
+    cwd: path.dirname(manifest),
+  });
   
   try{
     await r;
   } catch (err) {
-    console.error(`okteto down failed: ${r.stdout} ${r.stderr}: ${err}`);
-    throw err;
+    console.error(`${err}: ${err.stdout}`);
+    const message = extractMessage(err.stdout);    
+    throw new Error(message);
   }
+
+  console.log('okteto down completed');
+}
+
+export async function init(manifestPath: vscode.Uri, choice: string) {
+  const r = execa(getBinary(),['init', '--overwrite', '--file', `${manifestPath.fsPath}`], {
+    cwd: path.dirname(manifestPath.fsPath),
+    env: {
+      "OKTETO_ORIGIN":"vscode",
+      "OKTETO_LANGUAGE":choice
+      }
+    }); 
+    
+  try{
+    await r;
+  } catch (err) {
+    console.error(`${err}: ${err.stdout}`);
+    const message = extractMessage(err.stdout);
+    throw new Error(message);
+  }
+
+  console.log('okteto init completed');
 }
 
 export function getStateMessages(): Map<string, string> {
@@ -246,7 +282,7 @@ export async function notifyIfFailed(namespace: string, name:string, callback: (
   }, 1000);
 }
 
-export function cleanState(namespace: string, name:string) {
+function cleanState(namespace: string, name:string) {
   const p = getStateFile(namespace, name);
 
   try{
@@ -342,20 +378,6 @@ export function getLanguages(): RuntimeItem[] {
 
 }
 
-export async function init(manifestPath: vscode.Uri, choice: string) {
-  const r = await execa.command(`${getBinary()} init --overwrite --file=${manifestPath.fsPath}`, {
-    cwd: path.dirname(manifestPath.fsPath),
-    env: {
-      "OKTETO_ORIGIN":"vscode",
-      "OKTETO_LANGUAGE":choice
-      }
-    });
-
-  if (r.failed) {
-    console.log(`init command failed: ${r.stdout}, ${r.stderr}`);
-    throw new Error(r.stdout);
-  }
-}
 
 class RuntimeItem implements vscode.QuickPickItem {
 
@@ -366,11 +388,24 @@ class RuntimeItem implements vscode.QuickPickItem {
 	}
 }
 
-export function gitBashMode(): boolean {
+function gitBashMode(): boolean {
   const config = vscode.workspace.getConfiguration('okteto');
   if (!config) {
     return false;
   }
 
   return config.get<boolean>('gitBash') || false;
+}
+
+function extractMessage(error :string):string {
+  const parts = error.split(':');
+  let message = '';
+  if (parts.length === 1) {
+    message = parts[0];
+  } else {
+    message = parts[1];
+  }
+
+  message = message.replace('x  ', '');  
+  return message;
 }

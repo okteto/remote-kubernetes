@@ -94,6 +94,8 @@ export class Reporter {
           this.mp.track(event, {
             distinct_id: this.distinctId,
             os: os.platform(),
+            arch: os.arch(),
+            release: os.release(),
             version: this.extensionVersion,
             vscodeversion: vscode.version,
             session: vscode.env.sessionId,

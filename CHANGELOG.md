@@ -3,6 +3,8 @@
 ## 0.1.24
 - Update to okteto `1.8.9`.
 - Update dependencies to next major version.
+- `okteto down` won't show an error if there's an `up` active.
+- Improved error reporting.
 
 ## 0.1.23
 - Update to okteto `1.8.2` to upgrade to syncthing `1.4.0`.

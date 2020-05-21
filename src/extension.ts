@@ -30,40 +30,45 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('okteto.create', createCmd));
 }
 
-async function installCmd(upgrade: boolean) {
+async function installCmd(upgrade: boolean, handleErr: boolean) {
     let title = "Installing Okteto";
+    let success = `Okteto was successfully installed`;
+    
     if (upgrade) {
         title = "Okteto is out of date, upgrading";
+        success = `Okteto was successfully upgraded`;
     }
 
+    console.log('installing okteto');
     reporter.track(events.install);
     await vscode.window.withProgress(
       {location: vscode.ProgressLocation.Notification, title: title},
       async () => {
         try {
-            console.log('installing okteto');
             await okteto.install();
-            if (upgrade) {
-                vscode.window.showInformationMessage(`Okteto was successfully upgraded`);
-            } else {
-                vscode.window.showInformationMessage(`Okteto was successfully installed`);
-            }
         } catch (err) {
             reporter.track(events.oktetoInstallFailed);
             reporter.captureError(`okteto install failed: ${err.message}`, err);
-            vscode.window.showErrorMessage(`Okteto was not installed: ${err.message}`);
+            if (handleErr) {
+                vscode.window.showErrorMessage(`Okteto was not installed: ${err.message}`);
+            } else {
+                throw new Error(`Okteto was not installed: ${err.message}`);
+            }
+            
         }
       },
     );
+
+    vscode.window.showInformationMessage(success);
 }
 
 async function upCommand(selectedManifestUri: vscode.Uri) {
     const { install, upgrade } = await okteto.needsInstall();
     if (install) {
         try {
-            await installCmd(upgrade);
+            await installCmd(upgrade, false);
         } catch(err) {
-            // error already handled on installCmd
+            vscode.window.showErrorMessage(err.message);
             return;
         }
     }
@@ -210,9 +215,9 @@ async function downCommand() {
     const { install, upgrade } = await okteto.needsInstall();
     if (install){
         try {
-            await installCmd(upgrade);
-        } catch {
-            // error already handled on installCmd
+            await installCmd(upgrade, false);
+        } catch (err){
+            vscode.window.showErrorMessage(err.message);
             return;
         }
     }
@@ -277,9 +282,9 @@ async function createCmd(){
     const { install, upgrade } = await okteto.needsInstall();
     if (install) {
         try {
-            await installCmd(upgrade);
+            await installCmd(upgrade, false);
         } catch(err) {
-            // error already handled on installCmd
+            vscode.window.showErrorMessage(err.message);
             return;
         }
     }
@@ -287,7 +292,7 @@ async function createCmd(){
     const manifestPath = manifest.getDefaultLocation();
     if (!manifestPath) {
         reporter.track(events.createFailed);
-        vscode.window.showErrorMessage("Couldn't detect your project's path.");
+        vscode.window.showErrorMessage(`Okteto: Create failed: Couldn't detect your project's path`);
         return;
     }
 
@@ -301,7 +306,7 @@ async function createCmd(){
     } catch (err) {
         reporter.track(events.oktetoInitFailed);
         reporter.captureError(`okteto init failed: ${err.message}`, err);
-        vscode.window.showErrorMessage("Couldn't generate your manifest file.");
+        vscode.window.showErrorMessage(`Okteto: Create failed: ${err}`);
         return;
     }
 
@@ -310,7 +315,7 @@ async function createCmd(){
     } catch (err) {
         reporter.track(events.createOpenFailed);
         reporter.captureError(`open folder failed ${err.message}`, err);
-        vscode.window.showErrorMessage(`Couldn't open ${manifestPath}: ${err}.`);
+        vscode.window.showErrorMessage(`Okteto: Create failed: Couldn't open ${manifestPath}`);
         return;
     }
 }
