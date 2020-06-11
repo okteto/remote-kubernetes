@@ -17,7 +17,7 @@ import { clearInterval, setInterval } from 'timers';
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
-const minimum = '1.8.9';
+const minimum = '1.8.11';
 const terminalName = `okteto`;
 
 export const state = {
