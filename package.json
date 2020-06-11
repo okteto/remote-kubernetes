@@ -1,153 +1,157 @@
 {
-	"name": "remote-kubernetes",
-	"publisher": "Okteto",
-	"displayName": "Remote - Kubernetes",
-	"description": "Remote Kubernetes Development in VS Code with Okteto",
-	"keywords": [
-		"kubernetes",
-		"docker",
-		"remote",
-		"remote development",
-		"ssh",
-		"containers",
-		"aks",
-		"gke",
-		"eks"
-	],
-	"version": "0.1.24",
-	"icon": "media/icon.png",
-	"author": {
-		"name": "Ramiro Berrelleza",
-		"email": "ramiro@okteto.com"
-	},
-	"preview": true,
-	"homepage": "https://github.com/okteto/remote-kubernetes",
-	"bugs": {
-		"url": "https://github.com/okteto/remote-kubernetes/issues"
-	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/okteto/remote-kubernetes.git"
-	},
-	"license": "SEE LICENSE IN LICENSE",
-	"engines": {
-		"vscode": "^1.45.1"
-	},
-	"categories": [
-		"Other",
-		"Azure"
-	],
-	"activationEvents": [
-		"onCommand:okteto.install",
-		"onCommand:okteto.up",
-		"onCommand:okteto.down",
-		"onCommand:okteto.create"
-	],
-	"main": "./dist/extension",
-	"contributes": {
-		"commands": [
-			{
-				"command": "okteto.create",
-				"title": "Okteto: Create Manifest",
-				"enablement": "workspaceFolderCount != 0"
-			},
-			{
-				"command": "okteto.down",
-				"title": "Okteto: Down"
-			},
-			{
-				"command": "okteto.install",
-				"title": "Okteto: Install"
-			},
-			{
-				"command": "okteto.up",
-				"title": "Okteto: Up"
-			}
-		],
-		"menus": {
-			"explorer/context": [
-				{
-					"when": "resourceFilename == okteto.yml",
-					"command": "okteto.up",
-					"group": "navigation"
-				}
-			]
-		},
-		"configuration": {
-			"title": "Okteto",
-			"properties": {
-				"okteto.binary": {
-					"type": "string",
-					"default": "",
-					"description": "An absolute path to the Okteto executable. When empty, it will use \"okteto\" on the path."
-				},
-				"okteto.telemetry": {
-					"type": "boolean",
-					"default": true,
-					"description": "Enable data collection."
-				},
-				"okteto.gitBash": {
-					"type": "boolean",
-					"default": false,
-					"description": "Use Git Bash compatible file paths. Enable this if you're in Windows and Git Bash is your default shell."
-				},
-				"okteto.kubeconfig": {
-					"type": "string",
-					"default": "",
-					"description": "Absolute path to your kubeconfig file. When empty, it will fall back to KUBECONFIG and then to the default path"
-				}
-			}
-		}
-	},
-	"scripts": {
-		"vscode:prepublish": "webpack --mode production",
-		"compile": "webpack --mode development",
-		"watch": "webpack --mode development --watch",
-		"package": "vsce package",
-		"pretest": "npm run compile",
-		"test": "mocha -r ts-node/register src/test/suite/*.test.ts",
-		"publish": "vsce publish -p $VSCE_TOKEN",
-		"publish-sentry": "sentry-cli releases new $VERSION && sentry-cli releases set-commits --auto $VERSION && sentry-cli releases files $VERSION upload-sourcemaps --rewrite dist && sentry-cli releases finalize $VERSION"
-	},
-	"devDependencies": {
-		"@types/chai": "^4.2.11",
-		"@types/glob": "^7.1.1",
-		"@types/mocha": "^7.0.2",
-		"@types/node": "^14.0.4",
-		"@types/vscode": "^1.45.1",
-		"chai": "^4.2.0",
-		"glob": "^7.1.6",
-		"mocha": "^7.1.2",
-		"ts-loader": "^7.0.4",
-		"ts-node": "^8.10.1",
-		"tslint": "^6.1.2",
-		"typescript": "^3.9.3",
-		"vsce": "^1.75.0",
-		"vscode-test": "^1.3.0",
-		"webpack": "^4.43.0",
-		"webpack-cli": "^3.3.11"
-	},
-	"dependencies": {
-		"@kubernetes/client-node": "^0.12.0",
-		"@sentry/cli": "^1.53.0",
-		"@sentry/node": "^5.15.5",
-		"@types/command-exists": "^1.2.0",
-		"@types/download": "^6.2.4",
-		"@types/semver": "^7.2.0",
-		"@types/user-home": "^2.0.0",
-		"@types/yaml": "^1.9.7",
-		"bufferutil": "^4.0.1",
-		"change-case": "^4.1.1",
-		"command-exists": "^1.2.9",
-		"download": "^8.0.0",
-		"execa": "^4.0.1",
-		"fs": "^0.0.1-security",
-		"get-port": "^5.1.1",
-		"mixpanel": "^0.11.0",
-		"node-machine-id": "^1.1.12",
-		"semver": "^7.3.2",
-		"tcp-ping": "^0.1.1",
-		"utf-8-validate": "^5.0.2",
-		"yaml": "^1.10.0"
-	}
+  "name": "remote-kubernetes",
+  "publisher": "Okteto",
+  "displayName": "Remote - Kubernetes",
+  "description": "Remote Kubernetes Development in VS Code with Okteto",
+  "keywords": [
+    "kubernetes",
+    "docker",
+    "remote",
+    "remote development",
+    "ssh",
+    "containers",
+    "aks",
+    "gke",
+    "eks"
+  ],
+  "version": "0.1.24",
+  "icon": "media/icon.png",
+  "author": {
+    "name": "Ramiro Berrelleza",
+    "email": "ramiro@okteto.com"
+  },
+  "preview": true,
+  "homepage": "https://github.com/okteto/remote-kubernetes",
+  "bugs": {
+    "url": "https://github.com/okteto/remote-kubernetes/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/okteto/remote-kubernetes.git"
+  },
+  "license": "SEE LICENSE IN LICENSE",
+  "engines": {
+    "vscode": "^1.45.1"
+  },
+  "categories": [
+    "Other",
+    "Azure"
+  ],
+  "activationEvents": [
+    "onCommand:okteto.install",
+    "onCommand:okteto.up",
+    "onCommand:okteto.down",
+    "onCommand:okteto.create"
+  ],
+  "main": "./dist/extension",
+  "contributes": {
+    "commands": [
+      {
+        "command": "okteto.create",
+        "title": "Okteto: Create Manifest",
+        "enablement": "workspaceFolderCount != 0"
+      },
+      {
+        "command": "okteto.down",
+        "title": "Okteto: Down"
+      },
+      {
+        "command": "okteto.install",
+        "title": "Okteto: Install"
+      },
+      {
+        "command": "okteto.up",
+        "title": "Okteto: Up"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "when": "resourceFilename == okteto.yml",
+          "command": "okteto.up",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Okteto",
+      "properties": {
+        "okteto.binary": {
+          "type": "string",
+          "default": "",
+          "description": "An absolute path to the Okteto executable. When empty, it will use \"okteto\" on the path."
+        },
+        "okteto.telemetry": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable data collection."
+        },
+        "okteto.gitBash": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use Git Bash compatible file paths. Enable this if you're in Windows and Git Bash is your default shell."
+        },
+        "okteto.kubeconfig": {
+          "type": "string",
+          "default": "",
+          "description": "Absolute path to your kubeconfig file. When empty, it will fall back to KUBECONFIG and then to the default path"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "webpack --mode production",
+    "compile": "webpack --mode development",
+    "watch": "webpack --mode development --watch",
+    "package": "vsce package",
+    "pretest": "npm run compile",
+    "test": "mocha -r ts-node/register src/test/suite/*.test.ts",
+    "publish": "vsce publish -p $VSCE_TOKEN",
+    "publish-sentry": "sentry-cli releases new $VERSION && sentry-cli releases set-commits --auto $VERSION && sentry-cli releases files $VERSION upload-sourcemaps --rewrite dist && sentry-cli releases finalize $VERSION",
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.2.11",
+    "@types/glob": "^7.1.1",
+    "@types/mocha": "^7.0.2",
+    "@types/node": "^14.0.4",
+    "@types/vscode": "^1.45.1",
+    "chai": "^4.2.0",
+    "glob": "^7.1.6",
+    "mocha": "^7.1.2",
+    "ts-loader": "^7.0.4",
+    "ts-node": "^8.10.1",
+    "tslint": "^6.1.2",
+    "typescript": "^3.9.3",
+    "vsce": "^1.75.0",
+    "vscode-test": "^1.3.0",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.11"
+  },
+  "dependencies": {
+    "@kubernetes/client-node": "^0.12.0",
+    "@sentry/cli": "^1.53.0",
+    "@sentry/node": "^5.15.5",
+    "@types/command-exists": "^1.2.0",
+    "@types/download": "^6.2.4",
+    "@types/semver": "^7.2.0",
+    "@types/user-home": "^2.0.0",
+    "@types/yaml": "^1.9.7",
+    "bufferutil": "^4.0.1",
+    "change-case": "^4.1.1",
+    "command-exists": "^1.2.9",
+    "download": "^8.0.0",
+    "execa": "^4.0.1",
+    "fs": "^0.0.1-security",
+    "get-port": "^5.1.1",
+    "mixpanel": "^0.11.0",
+    "node-machine-id": "^1.1.12",
+    "semver": "^7.3.2",
+    "tcp-ping": "^0.1.1",
+    "utf-8-validate": "^5.0.2",
+    "yaml": "^1.10.0",
+    "snyk": "^1.339.1"
+  },
+  "snyk": true
 }
