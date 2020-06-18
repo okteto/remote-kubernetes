@@ -162,17 +162,18 @@ async function waitForFinalState(namespace: string, name:string, progress: vscod
     var counter = 0;
     var timeout = 5 * 60; // 5 minutes
     while (true) {
-        const state = await okteto.getState(namespace, name);
-        if (!seen.has(state)) {
-            progress.report({ message: messages.get(state) });
-            console.log(`okteto is ${state}`);
+        const res = await okteto.getState(namespace, name);
+        if (!seen.has(res.state)) {
+            progress.report({ message: messages.get(res.state) });
+            console.log(`okteto is ${res.state}`);
         }
 
-        seen.set(state, true);
+        seen.set(res.state, true);
 
-        if (okteto.state.ready === state) {
+        if (okteto.state.ready === res.state) {
             return true;
-        } else if(okteto.state.failed === state) {
+        } else if(okteto.state.failed === res.state) {
+            console.error(`okteto up failed: ${res.message}`);
             return false;
         }
 
