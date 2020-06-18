@@ -17,7 +17,7 @@ import { clearInterval, setInterval } from 'timers';
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
-const minimum = '1.8.11';
+const minimum = '1.8.12';
 const terminalName = `okteto`;
 
 export const state = {
@@ -227,7 +227,7 @@ function getStateFile(namespace: string, name:string): string {
   return path.join(os.homedir(), oktetoFolder, namespace, name, stateFile);
 }
 
-export async function getState(namespace: string, name: string): Promise<string> {
+export async function getState(namespace: string, name: string): Promise<{state: string, message: string}> {
   const p = getStateFile(namespace, name);
 
   try{
@@ -237,7 +237,7 @@ export async function getState(namespace: string, name: string): Promise<string>
       console.log(`failed to read state file: ${err}`);
     }
 
-    return state.starting;
+    return {state: state.starting, message: ""};
   }
 
   var c = '';
@@ -247,10 +247,17 @@ export async function getState(namespace: string, name: string): Promise<string>
     c = buffer.toString();
   } catch(err) {
     console.error(`failed to open ${p}: ${err}`);
-    return state.unknown;
+    return {state: state.unknown, message: ""};
   }
 
-  switch(c) {
+  const splitted = c.split(':', 1);
+  const st = splitted[0];
+  var msg = '';
+  if (splitted.length > 1) {
+    msg = splitted[1];
+  }
+
+  switch(st) {
       case state.starting:
       case state.activating:
       case state.attaching:
@@ -259,10 +266,10 @@ export async function getState(namespace: string, name: string): Promise<string>
       case state.synchronizing:
       case state.ready:
       case state.failed:
-        return c;
+        return {state: st, message: msg};
       default:
         console.error(`received unknown state: '${c}'`);
-        return state.unknown;
+        return {state: state.unknown, message: ''};
   }
 }
 
@@ -274,7 +281,8 @@ export async function notifyIfFailed(namespace: string, name:string, callback: (
       return;
     }
     
-    if (c === state.failed) {
+    if (c.state === state.failed) {
+      console.error(`okteto up failed: ${c.message}`);
       callback(`Okteto: Up command failed`);
       clearInterval(id);
     }
