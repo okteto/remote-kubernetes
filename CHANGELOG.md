@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.1.26
+- Update to okteto `1.8.12`.
+- Support for development containers with non-root users.
+
 ## 0.1.25
 - Update to okteto `1.8.11`.
 - Correctly calculate $HOME for windows users with more than one drive.
