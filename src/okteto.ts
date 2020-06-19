@@ -291,8 +291,12 @@ export async function notifyIfFailed(namespace: string, name:string, callback: (
     
     if (c.state === state.failed) {
       console.error(`okteto up failed: ${c.message}`);
-      callback(`Okteto: Up command failed: ${c.message}`);
       clearInterval(id);
+      if (c.message) {
+        callback(`Okteto: Up command failed: ${c.message}`);
+      } else {
+        callback(`Okteto: Up command failed`);
+      }
     }
 
   }, 1000);
