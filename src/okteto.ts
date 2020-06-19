@@ -250,14 +250,9 @@ export async function getState(namespace: string, name: string): Promise<{state:
     return {state: state.unknown, message: ""};
   }
 
-  const splitted = c.split(':', 1);
-  const st = splitted[0];
-  var msg = '';
-  if (splitted.length > 1) {
-    msg = splitted[1];
-  }
+  const st = splitStateError(c);
 
-  switch(st) {
+  switch(st.state) {
       case state.starting:
       case state.activating:
       case state.attaching:
@@ -266,11 +261,24 @@ export async function getState(namespace: string, name: string): Promise<{state:
       case state.synchronizing:
       case state.ready:
       case state.failed:
-        return {state: st, message: msg};
+        return st;
       default:
         console.error(`received unknown state: '${c}'`);
         return {state: state.unknown, message: ''};
   }
+}
+
+function splitStateError(state: string): {state: string, message: string} {
+  const splitted = state.split(':');
+
+  const st = splitted.shift() || '';
+  var msg = '';
+
+  if (splitted.length > 0) {
+    msg = splitted.join();
+  }
+
+  return {state: st, message: msg};
 }
 
 export async function notifyIfFailed(namespace: string, name:string, callback: (m: string) => void){
