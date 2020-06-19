@@ -2,7 +2,7 @@
 
 ## 0.1.26
 - Update to okteto `1.8.12`.
-- Support for development containers with non-root users.
+- Show more detail when `okteto up` fails.
 
 ## 0.1.25
 - Update to okteto `1.8.11`.

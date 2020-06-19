@@ -139,10 +139,11 @@ async function waitForUp(namespace: string, name: string, port: number) {
                   vscode.commands.executeCommand('okteto.down');
               });
 
-              const success = await waitForFinalState(namespace, name, progress);
-              if (!success) {
+              const result = await waitForFinalState(namespace, name, progress);
+              if (!result.result) {
                   reporter.track(events.oktetoUpFailed);
-                  throw new Error(`Okteto: Up command failed to start your development environment`);
+                  console.error(result.message);
+                  throw new Error(`Okteto: Up command failed: ${result.message}`);
               }
 
               try {
@@ -155,7 +156,7 @@ async function waitForUp(namespace: string, name: string, port: number) {
           });
 }
 
-async function waitForFinalState(namespace: string, name:string, progress: vscode.Progress<{message?: string | undefined; increment?: number | undefined}>): Promise<boolean> {
+async function waitForFinalState(namespace: string, name:string, progress: vscode.Progress<{message?: string | undefined; increment?: number | undefined}>): Promise<{result: boolean, message: string}> {
     const seen = new Map<string, boolean>();
     const messages = okteto.getStateMessages();
     progress.report({  message: "Launching your development environment..." });
@@ -171,16 +172,14 @@ async function waitForFinalState(namespace: string, name:string, progress: vscod
         seen.set(res.state, true);
 
         if (okteto.state.ready === res.state) {
-            return true;
+            return {result: true, message: ''};
         } else if(okteto.state.failed === res.state) {
-            console.error(`okteto up failed: ${res.message}`);
-            return false;
+            return {result: false, message: res.message};
         }
 
         counter++;
         if (counter === timeout) {
-            console.log(`task didn't finish in 5 minutes`);
-            return false;
+            return {result: false, message: `task didn't finish in 5 minutes`};
         }
         
         await sleep(1000);
