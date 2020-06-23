@@ -39,9 +39,9 @@ There is a complete tutorial [here](https://okteto.com/blog/remote-kubernetes-de
 
 Got questions? Have feedback? 
 
-1. See [the documentation](https://github.com/okteto/remote-kubernetes/tree/master/docs/index.md)
+1. See [the documentation](docs/index.md)
 1. [Request features](https://github.com/okteto/remote-kubernetes/labels/enhancement), [upvote existing issues](https://github.com/okteto/remote-kubernetes/issues) or [report a problem](https://github.com/okteto/remote-kubernetes/issues/new?template=bug_report.md&title=).
-1. Contribute to [our documentation](https://github.com/okteto/remote-kubernetes/tree/master/docs/index.md).
+1. Contribute to [our documentation](docs/index.md).
 1. Submit a [pull request](https://github.com/okteto/remote-kubernetes/pulls) 😎
 
 

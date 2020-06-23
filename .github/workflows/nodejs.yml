@@ -26,7 +26,7 @@ jobs:
         mv remote-kubernetes-*.vsix artifacts/
       env:
         CI: "true"
-    - uses: actions/upload-artifact@master
+    - uses: actions/upload-artifact@v2
       with: 
         name: artifacts
         path: artifacts
