@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.1.27
+- Update to okteto `1.8.13`.
+- Clean leftover syncthing processes
+
 ## 0.1.26
 - Update to okteto `1.8.12`.
 - Show more detail when `okteto up` fails.
