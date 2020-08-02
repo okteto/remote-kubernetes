@@ -1,23 +1,25 @@
 import * as fs from 'fs';
 import {promises} from 'fs';
 import * as execa from 'execa';
-import * as home from 'user-home';
 import * as path from 'path';
 import * as commandExists from 'command-exists';
+import {protect} from './machineid';
 import * as vscode from 'vscode';
 import * as os from 'os';
 import * as download from 'download';
 import * as semver from 'semver';
 import {pascalCase} from 'change-case';
 import * as paths from './paths';
+import { clearInterval, setInterval } from 'timers';
+
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
-const minimum = '1.5.3';
-
-export const terminalName = `okteto`;
+const minimum = '1.8.13';
+const terminalName = `okteto`;
 
 export const state = {
+  starting: 'starting',
   activating: 'activating',
   attaching: 'attaching',
   pulling: 'pulling',
@@ -27,6 +29,8 @@ export const state = {
   unknown: 'unknown',
   failed: 'failed',
 };
+
+var isActive = false;
 
 export async function needsInstall(): Promise<{install: boolean, upgrade: boolean}>{
   const binary = getBinary();
@@ -65,6 +69,7 @@ async function isInstalled(binaryPath: string): Promise<boolean> {
 async function getVersion(binary: string): Promise<string | undefined> {
   const r = await execa.command(`${binary} version`);
   if (r.failed) {
+    console.error(`okteto version failed: ${r.stdout} ${r.stderr}`);
     return undefined;
   }
 
@@ -82,55 +87,60 @@ export async function install() {
 
   switch(os.platform()){
     case 'win32':
-      source = 'https://github.com/okteto/okteto/releases/latest/download/okteto-Windows-x86_64';
+      source = `https://github.com/okteto/okteto/releases/download/${minimum}/okteto.exe`;
       chmod = false;
       break;
     case 'darwin':
-      source = 'https://github.com/okteto/okteto/releases/latest/download/okteto-Darwin-x86_64';
+      source = `https://github.com/okteto/okteto/releases/download/${minimum}/okteto-Darwin-x86_64`;
       break;
     default:
-        source = 'https://github.com/okteto/okteto/releases/latest/download/okteto-Linux-x86_64';
+        source = `https://github.com/okteto/okteto/releases/download/${minimum}/okteto-Linux-x86_64`;
   }
 
-  let destination = getInstallPath();
+  const installPath = getInstallPath();
+  const folder = path.dirname(installPath);
+  const filename = path.basename(installPath);
+
   try {
-    await promises.mkdir(path.dirname(destination), 0o700);
+    await promises.mkdir(path.dirname(folder), {mode: 0o700, recursive: true});
   } catch(err) {
-    console.log(`failed to create dir: ${err.message}`);
+    console.error(`failed to create dir: ${err.message}`);
   }
 
   try {
-    await downloadFile(source, destination);
-    if (!chmod) {
-      return;
+    await download(source, folder, {filename: filename});
+  } catch(err) {
+    console.error(`download fail: ${err}`);
+    if (err.code === 'EBUSY'){
+      throw new Error(`failed to install okteto, ${installPath} is in use`);
     }
 
-    const r = await execa.command(`chmod +x ${destination}`);
-    if (r.failed) {
-      throw new Error(`failed to set exec permissions; ${r.stdout}`);
+    throw new Error(`failed to download ${source} into ${installPath}: ${err.message}`);
+  }
+
+  if (chmod) {
+    try {
+      await execa('chmod', ['a+x', installPath]);
+    } catch(err) {
+      throw new Error(`failed to chmod ${installPath}: ${err.message}`);
+    }
+  }
+
+  try {
+    const version = await getVersion(installPath);
+    if (!version) {
+      throw new Error(`${installPath} wasn't correctly installed`);
     }
   } catch(err) {
-    throw new Error(`failed to install okteto: ${err.message}`);
+    throw err;
   }
 }
 
-function downloadFile(source: string, destination: string) {
-  return new Promise<string>((resolve, reject) => {
-    const st = fs.createWriteStream(destination);
-    download(source).pipe(st);
-    st.on('error', (err, body, response) =>  {
-      reject(err);
-      return;
-    });
-
-    st.on('finish', () => {
-      resolve();
-      return;
-    });
-  });
-}
-
-export function start(manifest: string, namespace: string, name: string, port: number|null = null) {
+export function up(
+  manifest: string, namespace: string, name: string, kubeconfig: string, port: number|null = null
+) {
+  console.log(`okteto up ${manifest}`);
+  isActive = false;
   disposeTerminal();
   cleanState(namespace, name);
   const term = vscode.window.createTerminal({
@@ -139,16 +149,19 @@ export function start(manifest: string, namespace: string, name: string, port: n
     cwd: path.dirname(manifest),
     env: {
       "OKTETO_AUTODEPLOY":"1",
-      "OKTETO_ORIGIN":"vscode"
+      "OKTETO_ORIGIN":"vscode",
+      "KUBECONFIG": kubeconfig,
     }
   });
 
   let binary = getBinary();
   if (gitBashMode()){
+    console.log('using gitbash style paths');
     binary = paths.toGitBash(binary);
     manifest = paths.toGitBash(manifest);
   }
 
+  isActive = true;
   const cmd = [
     `${binary} up`,
     `-f ${manifest}`,
@@ -157,17 +170,52 @@ export function start(manifest: string, namespace: string, name: string, port: n
   term.sendText(cmd.join(' '), true);
 }
 
-export async function down(manifest: string) {
-  console.log(`launching okteto down -f ${manifest}`);
+export async function down(manifest: string, namespace: string, kubeconfig: string) {
+  isActive = false;
   disposeTerminal();
-  const r = await execa.command(`${getBinary()} down --file ${manifest}`);
-  if (r.failed) {
-    throw new Error(r.stdout);
+
+  const r =  execa(getBinary(), ['down', '--file', `${manifest}`, '--namespace', `${namespace}`], {
+    env: {
+      "KUBECONFIG": kubeconfig,
+      "OKTETO_ORIGIN":"vscode"
+    },
+    cwd: path.dirname(manifest),
+  });
+
+  try{
+    await r;
+  } catch (err) {
+    console.error(`${err}: ${err.stdout}`);
+    const message = extractMessage(err.stdout);
+    throw new Error(message);
   }
+
+  console.log('okteto down completed');
+}
+
+export async function init(manifestPath: vscode.Uri, choice: string) {
+  const r = execa(getBinary(),['init', '--overwrite', '--file', `${manifestPath.fsPath}`], {
+    cwd: path.dirname(manifestPath.fsPath),
+    env: {
+      "OKTETO_ORIGIN":"vscode",
+      "OKTETO_LANGUAGE":choice
+      }
+    });
+
+  try{
+    await r;
+  } catch (err) {
+    console.error(`${err}: ${err.stdout}`);
+    const message = extractMessage(err.stdout);
+    throw new Error(message);
+  }
+
+  console.log('okteto init completed');
 }
 
 export function getStateMessages(): Map<string, string> {
   const messages = new Map<string, string>();
+  messages.set(state.starting, "Starting your development environment...");
   messages.set(state.activating, "Activating your development environment...");
   messages.set(state.attaching, "Attaching your persistent volume...");
   messages.set(state.pulling, "Pulling your image...");
@@ -178,51 +226,93 @@ export function getStateMessages(): Map<string, string> {
 }
 
 function getStateFile(namespace: string, name:string): string {
-  return path.join(home, oktetoFolder, namespace, name, stateFile);
+  return path.join(os.homedir(), oktetoFolder, namespace, name, stateFile);
 }
 
-export function getState(namespace: string, name: string): string {
+export async function getState(namespace: string, name: string): Promise<{state: string, message: string}> {
   const p = getStateFile(namespace, name);
 
-  if (!fs.existsSync(p)) {
-    // if it doesn't exist we just return the initial state
-    return state.activating;
+  try{
+    await promises.access(p);
+  } catch (err) {
+    if (err.code !== 'ENOENT') {
+      console.log(`failed to read state file: ${err}`);
+    }
+
+    return {state: state.starting, message: ""};
   }
 
-  var c = state.activating;
+  var c = '';
 
   try {
-    c = fs.readFileSync(p, 'utf-8');
-  }catch(err) {
+    const buffer = await promises.readFile(p, {encoding: 'utf8'});
+    c = buffer.toString();
+  } catch(err) {
     console.error(`failed to open ${p}: ${err}`);
-    return state.unknown;
+    return {state: state.unknown, message: ""};
   }
 
-  switch(c) {
+  const st = splitStateError(c);
+
+  switch(st.state) {
+      case state.starting:
       case state.activating:
       case state.attaching:
       case state.pulling:
+      case state.startingSync:
       case state.synchronizing:
       case state.ready:
       case state.failed:
-        return c;
+        return st;
       default:
         console.error(`received unknown state: '${c}'`);
-        return state.unknown;
+        return {state: state.unknown, message: ''};
   }
 }
 
+<<<<<<< HEAD
 export function notifyIfFailed(namespace: string, name:string, callback: (m: string) => void) {
   const id = setInterval(() => {
     const c = getState(namespace, name);
     if (c === state.failed) {
       callback(`Okteto: Up command failed`);
+=======
+function splitStateError(state: string): {state: string, message: string} {
+  const splitted = state.split(':');
+
+  const st = splitted.shift() || '';
+  var msg = '';
+
+  if (splitted.length > 0) {
+    msg = splitted.join();
+  }
+
+  return {state: st, message: msg};
+}
+
+export async function notifyIfFailed(namespace: string, name:string, callback: (m: string) => void){
+  const id = setInterval(async () => {
+    const c = await getState(namespace, name);
+    if (!isActive) {
+>>>>>>> 02924be2b19be6cfbc0978241aafa3bf12db3090
       clearInterval(id);
+      return;
     }
+
+    if (c.state === state.failed) {
+      console.error(`okteto up failed: ${c.message}`);
+      clearInterval(id);
+      if (c.message) {
+        callback(`Okteto: Up command failed: ${c.message}`);
+      } else {
+        callback(`Okteto: Up command failed`);
+      }
+    }
+
   }, 1000);
 }
 
-export function cleanState(namespace: string, name:string) {
+function cleanState(namespace: string, name:string) {
   const p = getStateFile(namespace, name);
 
   try{
@@ -237,7 +327,9 @@ export function cleanState(namespace: string, name:string) {
 function getBinary(): string {
   let binary = vscode.workspace.getConfiguration('okteto').get<string>('binary');
   if (binary) {
-    return binary;
+    if (binary.trim().length > 0) {
+      return binary;
+    }
   }
 
   return getInstallPath();
@@ -245,10 +337,10 @@ function getBinary(): string {
 
 function getInstallPath(): string {
   if (os.platform() === 'win32') {
-    return path.join(home, "AppData", "Local", "Programs", "okteto.exe");
+    return path.join(os.homedir(), "AppData", "Local", "Programs", "okteto.exe");
   }
 
-  return path.join(home, '.okteto-vscode', 'okteto');
+  return path.join(os.homedir(), '.okteto-vscode', 'okteto');
 }
 
 function disposeTerminal(){
@@ -267,17 +359,28 @@ export function showTerminal(){
   });
 }
 
-export function getOktetoId(): string | undefined {
-  const tokenFile =  path.join(home, oktetoFolder, ".token.json");
+export function getOktetoId(): {id: string, machineId: string} {
+  const tokenFile =  path.join(os.homedir(), oktetoFolder, ".token.json");
+  let oktetoId: string;
+  let machineId: string;
+
   try {
-    const c = fs.readFileSync(tokenFile, 'utf-8');
+    const c = fs.readFileSync(tokenFile, {encoding: 'utf8'});
     const token = JSON.parse(c);
-    return token.ID;
-  }catch(err) {
+    oktetoId = token.ID;
+    machineId = token.MachineID;
+  } catch(err) {
     console.error(`failed to open ${tokenFile}: ${err}`);
+    oktetoId = "";
+    machineId = "";
   }
 
-  return undefined;
+  if (!machineId) {
+    machineId = protect();
+
+  }
+
+  return {id: oktetoId, machineId: machineId};
 }
 
 export function getLanguages(): RuntimeItem[] {
@@ -305,19 +408,6 @@ export function getLanguages(): RuntimeItem[] {
 
 }
 
-export async function init(manifestPath: vscode.Uri, choice: string) {
-  const r = await execa.command(`${getBinary()} init --overwrite --file=${manifestPath.fsPath}`, {
-    cwd: path.dirname(manifestPath.fsPath),
-    env: {
-      "OKTETO_ORIGIN":"vscode",
-      "OKTETO_LANGUAGE":choice
-      }
-    });
-
-  if (r.failed) {
-      throw new Error(r.stdout);
-  }
-}
 
 class RuntimeItem implements vscode.QuickPickItem {
 
@@ -328,11 +418,24 @@ class RuntimeItem implements vscode.QuickPickItem {
 	}
 }
 
-export function gitBashMode(): boolean {
+function gitBashMode(): boolean {
   const config = vscode.workspace.getConfiguration('okteto');
   if (!config) {
     return false;
   }
 
-  return config.get<boolean>('gitBash') || true;
+  return config.get<boolean>('gitBash') || false;
+}
+
+function extractMessage(error :string):string {
+  const parts = error.split(':');
+  let message = '';
+  if (parts.length === 1) {
+    message = parts[0];
+  } else {
+    message = parts[1];
+  }
+
+  message = message.replace('x  ', '');
+  return message;
 }

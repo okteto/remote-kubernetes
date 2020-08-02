@@ -1,5 +1,5 @@
 name: vscode
-image: okteto/desk:latest
+image: okteto/dev:latest
 command:
 - bash
 workdir: /usr/src/app

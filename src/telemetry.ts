@@ -37,10 +37,12 @@ export const events = {
 export class Reporter {
     private enabled: boolean = true;
     private distinctId: string;
+    private machineId: string;
     private mp: mixpanel.Mixpanel;
 
-    constructor(private extensionVersion: string, oktetoId: string) {
+    constructor(private extensionVersion: string, oktetoId: string, machineId: string) {
         this.mp = mixpanel.init(mp, {});
+        this.machineId = machineId;
         
         const config = vscode.workspace.getConfiguration('okteto');
         if (config) {
@@ -49,6 +51,8 @@ export class Reporter {
 
         if (oktetoId) {
             this.distinctId = oktetoId;
+        } else if (machineId) {
+            this.distinctId = machineId;
         } else {
             this.distinctId = vscode.env.machineId;
         }
@@ -60,7 +64,11 @@ export class Reporter {
                 this.enabled = false;
             } 
 
-            sentry.init({ dsn:  dsn, environment: environment});
+            sentry.init({ 
+                dsn:  dsn, 
+                environment: environment,
+                release: `remote-kubernetes-vscode@${this.extensionVersion}`});
+
             sentry.configureScope(scope =>{
                 scope.setUser({"id": this.distinctId});
                 scope.setTags({
@@ -68,7 +76,8 @@ export class Reporter {
                     'version': this.extensionVersion,
                     'vscodeversion': vscode.version,
                     'session': vscode.env.sessionId,
-                    'machine_id': vscode.env.machineId,
+                    'vscode_machine_id': vscode.env.machineId,
+                    'machineId': machineId,
                 });
             });
         }
@@ -85,10 +94,13 @@ export class Reporter {
           this.mp.track(event, {
             distinct_id: this.distinctId,
             os: os.platform(),
+            arch: os.arch(),
+            release: os.release(),
             version: this.extensionVersion,
             vscodeversion: vscode.version,
             session: vscode.env.sessionId,
-            machine_id: vscode.env.machineId,
+            vscode_machine_id: vscode.env.machineId,
+            machine_id: this.machineId,
          }, (err)=> {
             if (err) {
                 console.error(`failed to send telemetry: ${err}`);
@@ -110,5 +122,4 @@ export class Reporter {
             resolve();
         });
     }
-
 }

@@ -1,7 +1,64 @@
 # Change Log
 
+## 0.1.27
+- Update to okteto `1.8.13`.
+- Clean leftover syncthing processes
+
+## 0.1.26
+- Update to okteto `1.8.12`.
+- Show more detail when `okteto up` fails.
+
+## 0.1.25
+- Update to okteto `1.8.11`.
+- Correctly calculate $HOME for windows users with more than one drive.
+
+## 0.1.24
+- Update to okteto `1.8.9`.
+- Update dependencies to next major version.
+- `okteto down` won't show an error if there's an `up` active.
+- Improved error reporting.
+
+## 0.1.23
+- Update to okteto `1.8.2` to upgrade to syncthing `1.4.0`.
+- Fix issue with Windows install path.
+- Update `webpack`.
+
+## 0.1.22
+- Update to okteto `1.8.0` to upgrade to syncthing `1.3.4` and improved monitoring.
+
+## 0.1.21
+- Update to okteto 1.7.4 to solve sync issues with okteto down.
+
+## 0.1.20
+- Fix issue with invalid yaml in the okteto manifest.
+
+## 0.1.19
+- Require Okteto `1.7.1`.
+- Handle malformed kubeconfig files.
+- Don't fail to load extension if machine ID can't be generated.
+- Add timeout to long running tasks.
+- Update dependencies.
+ 
+
+## 0.1.18
+- Require Okteto `1.6.5`.
+- Customize the path to the kubeconfig if needed.
+
+## 0.1.17
+- Require Okteto `1.6.3`.
+- Update dependencies.
+
+## 0.1.15
+- Calculate the correct paths when the namespace is defined in the manifest.
+- Support `okteto.yml` and `okteto.yaml`.
+- Require okteto `1.6.0`.
+
+## 0.1.14
+- Fix missing status message.
+
 ## 0.1.13
 - Automatically open the correct folder in the remote environment.
+- Run `okteto up` by right clicking on the `okteto.yml` file directly.
 
 ## 0.1.12
 - Change dependency install location to `$HOME/.okteto` on OSX/Linux and `$HOME\AppData\Local\Programs`.

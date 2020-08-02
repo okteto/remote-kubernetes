@@ -27,6 +27,8 @@ The extension starts a development environment in your Kubernetes cluster by usi
 
 ## Getting started
 
+There is a complete tutorial [here](https://okteto.com/blog/remote-kubernetes-development/). The steps can be summarized as follows:
+
 1. Clone https://github.com/okteto/vscode-remote-go
 1. Start VS Code
 1. Run the `Okteto: Up` command to launch your development environment in Kubernetes. When prompted, pick the `okteto.yml` manifest. 
@@ -37,9 +39,9 @@ The extension starts a development environment in your Kubernetes cluster by usi
 
 Got questions? Have feedback? 
 
-1. See [the documentation](https://github.com/okteto/remote-kubernetes/tree/master/docs/index.md)
+1. See [the documentation](docs/index.md)
 1. [Request features](https://github.com/okteto/remote-kubernetes/labels/enhancement), [upvote existing issues](https://github.com/okteto/remote-kubernetes/issues) or [report a problem](https://github.com/okteto/remote-kubernetes/issues/new?template=bug_report.md&title=).
-1. Contribute to [our documentation](https://github.com/okteto/remote-kubernetes/tree/master/docs/index.md).
+1. Contribute to [our documentation](docs/index.md).
 1. Submit a [pull request](https://github.com/okteto/remote-kubernetes/pulls) 😎
 
 
