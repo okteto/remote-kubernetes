@@ -22,7 +22,7 @@ export function getCurrentNamespace(kubeconfig: string): string {
     var kc : k8s.KubeConfig;
     if (kubeconfig) {
         console.log(`loading kubeconfig from files: ${kubeconfig}`);
-        try{
+        try {
             kc = getFromFiles(kubeconfig);
         } catch(err) {
             console.error(`failed to read the configuration: ${err}`);
@@ -36,7 +36,7 @@ export function getCurrentNamespace(kubeconfig: string): string {
             throw new Error(notFound);
         }
     }
-    
+
     try{
         const current = kc.getCurrentContext();
         const ctx = kc.getContextObject(current);
@@ -44,7 +44,7 @@ export function getCurrentNamespace(kubeconfig: string): string {
             console.error(`fail to load context`);
             throw new Error(notFound);
         }
-        
+
         const ns =  ctx.namespace ? ctx.namespace : '';
         if (ns){
             return ns;

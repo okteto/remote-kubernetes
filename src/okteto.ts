@@ -2,13 +2,13 @@
 
 import * as fs from 'fs';
 import {promises} from 'fs';
-import * as execa from 'execa';
+import execa from 'execa';
 import * as path from 'path';
-import * as commandExists from 'command-exists';
+import commandExists from 'command-exists';
 import {protect} from './machineid';
 import * as vscode from 'vscode';
 import * as os from 'os';
-import * as download from 'download';
+import download from 'download';
 import * as semver from 'semver';
 import {pascalCase} from 'change-case';
 import * as paths from './paths';

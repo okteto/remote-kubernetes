@@ -1,5 +1,3 @@
-'use strict';
-
 import * as vscode from 'vscode';
 import * as queryString from 'query-string';
 
@@ -8,7 +6,7 @@ import * as ssh from './ssh';
 import * as okteto from './okteto';
 import * as kubernetes from './kubernetes';
 import { Reporter, events } from './telemetry';
-
+import { getCurrentRepo } from './git';
 
 let activeManifest: string;
 let reporter: Reporter;
@@ -78,62 +76,63 @@ async function installCmd(upgrade: boolean, handleErr: boolean) {
 }
 
 async function upCommand(selectedManifestUri: vscode.Uri) {
-    const { install, upgrade } = await okteto.needsInstall();
-    if (install) {
-        try {
-            await installCmd(upgrade, false);
-        } catch(err) {
-            vscode.window.showErrorMessage(err.message);
-            return;
-        }
-    }
+    console.log(await getCurrentRepo());
+    // const { install, upgrade } = await okteto.needsInstall();
+    // if (install) {
+    //     try {
+    //         await installCmd(upgrade, false);
+    //     } catch(err) {
+    //         vscode.window.showErrorMessage(err.message);
+    //         return;
+    //     }
+    // }
 
-    reporter.track(events.up);
+    // reporter.track(events.up);
 
-    const manifestUri = selectedManifestUri || await showManifestPicker();
-    if (!manifestUri) {
-        reporter.track(events.manifestDismissed);
-        return;
-    }
+    // const manifestUri = selectedManifestUri || await showManifestPicker();
+    // if (!manifestUri) {
+    //     reporter.track(events.manifestDismissed);
+    //     return;
+    // }
 
-    reporter.track(events.manifestSelected);
-    const manifestPath = manifestUri.fsPath;
-    console.log(`user selected: ${manifestPath}`);
+    // reporter.track(events.manifestSelected);
+    // const manifestPath = manifestUri.fsPath;
+    // console.log(`user selected: ${manifestPath}`);
 
-    let m: manifest.Manifest;
+    // let m: manifest.Manifest;
 
-    try {
-        m = await manifest.getManifest(manifestPath);
-    } catch (err) {
-        reporter.track(events.manifestLoadFailed);
-        reporter.captureError(`load manifest failed: ${err.message}`, err);
-        return onOktetoFailed(`Okteto: Up failed to load your Okteto manifest: ${err.message}`);
-    }
+    // try {
+    //     m = await manifest.getManifest(manifestPath);
+    // } catch (err) {
+    //     reporter.track(events.manifestLoadFailed);
+    //     reporter.captureError(`load manifest failed: ${err.message}`, err);
+    //     return onOktetoFailed(`Okteto: Up failed to load your Okteto manifest: ${err.message}`);
+    // }
 
-    const kubeconfig = kubernetes.getKubeconfig();
+    // const kubeconfig = kubernetes.getKubeconfig();
 
 
-    if (!m.namespace) {
-        const ns = kubernetes.getCurrentNamespace(kubeconfig);
-        if (!ns) {
-            vscode.window.showErrorMessage("Couldn't detect your current Kubernetes context.");
-            return;
-        }
+    // if (!m.namespace) {
+    //     const ns = kubernetes.getCurrentNamespace(kubeconfig);
+    //     if (!ns) {
+    //         vscode.window.showErrorMessage("Couldn't detect your current Kubernetes context.");
+    //         return;
+    //     }
 
-        m.namespace = ns;
-    }
+    //     m.namespace = ns;
+    // }
 
-    okteto.up(manifestPath, m.namespace, m.name, kubeconfig);
-    activeManifest = manifestPath;
+    // okteto.up(manifestPath, m.namespace, m.name, kubeconfig);
+    // activeManifest = manifestPath;
 
-    try{
-        await waitForUp(m.namespace, m.name);
-    } catch(err) {
-        reporter.captureError(`okteto up failed: ${err.message}`, err);
-        return onOktetoFailed(err.message);
-    }
+    // try{
+    //     await waitForUp(m.namespace, m.name);
+    // } catch(err) {
+    //     reporter.captureError(`okteto up failed: ${err.message}`, err);
+    //     return onOktetoFailed(err.message);
+    // }
 
-    await finalizeUp(m.namespace, m.name, m.workdir);
+    // await finalizeUp(m.namespace, m.name, m.workdir);
 }
 
 async function waitForUp(namespace: string, name: string) {

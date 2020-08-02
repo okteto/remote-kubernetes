@@ -1,6 +1,4 @@
-'use strict';
-
-import * as gp from 'get-port';
+import gp from 'get-port';
 import * as net from 'net';
 
 export function getPort(): Promise<number> {
