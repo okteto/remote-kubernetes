@@ -2,11 +2,13 @@ import * as vscode from 'vscode';
 import * as manifest from './manifest';
 import * as okteto from './okteto';
 import * as kubernetes from './kubernetes';
-import {Reporter, events} from './telemetry';
+import { Reporter, events } from './telemetry';
 
 
 let activeManifest: string;
 let reporter: Reporter;
+
+console.log('Hellouuu!!!');
 
 export function activate(context: vscode.ExtensionContext) {
     let version = "0.0.0";
@@ -14,6 +16,7 @@ export function activate(context: vscode.ExtensionContext) {
     if (ex) {
         version = ex.packageJSON.version;
     }
+    console.log('Hello!!!');
 
     console.log(`okteto.remote-kubernetes ${version} activated`);
 
@@ -28,12 +31,14 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Register URI.
     // vscode://okteto.remote-kubernetes/connect?host=localhost&port=22000&name=frontend
+    // vscode://undefined_publisher.remote-kubernetes/connect?host=localhost&port=22000&name=frontend
     vscode.window.registerUriHandler({
       async handleUri(uri: vscode.Uri) {
         const { path, query } = uri;
         const [ command ] = path.split('/').filter(Boolean);
         console.log('Call from outside!');
         if (command === 'connect') {
+          debugger;
           // const { host, port, name } = querystring.parse(query);
           // if (host) {
           //   await addNewHost(<string>host, <string>port, <string>name);

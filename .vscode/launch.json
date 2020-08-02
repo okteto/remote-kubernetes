@@ -16,6 +16,7 @@
                 "${workspaceFolder}/dist/**/*.js"
             ],
             "preLaunchTask": "npm: compile",
+            "internalConsoleOptions": "openOnSessionStart",
             "env": {
                 "ENV": "dev"
             }
