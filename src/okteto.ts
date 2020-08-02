@@ -1,5 +1,3 @@
-'use strict';
-
 import * as fs from 'fs';
 import {promises} from 'fs';
 import * as execa from 'execa';
@@ -132,7 +130,7 @@ function downloadFile(source: string, destination: string) {
   });
 }
 
-export function start(manifest: string, namespace: string, name: string, port: number) {
+export function start(manifest: string, namespace: string, name: string, port: number|null = null) {
   disposeTerminal();
   cleanState(namespace, name);
   const term = vscode.window.createTerminal({
@@ -145,14 +143,18 @@ export function start(manifest: string, namespace: string, name: string, port: n
     }
   });
 
-
   let binary = getBinary();
   if (gitBashMode()){
     binary = paths.toGitBash(binary);
     manifest = paths.toGitBash(manifest);
   }
 
-  term.sendText(`${binary} up -f ${manifest} --remote ${port}`, true);
+  const cmd = [
+    `${binary} up`,
+    `-f ${manifest}`,
+    port ? `--remote ${port}` : ''
+  ];
+  term.sendText(cmd.join(' '), true);
 }
 
 export async function down(manifest: string) {
@@ -210,7 +212,7 @@ export function getState(namespace: string, name: string): string {
   }
 }
 
-export function notifyIfFailed(namespace: string, name:string, callback: (m: string) => void){
+export function notifyIfFailed(namespace: string, name:string, callback: (m: string) => void) {
   const id = setInterval(() => {
     const c = getState(namespace, name);
     if (c === state.failed) {
