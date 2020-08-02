@@ -41,7 +41,8 @@
     "onCommand:okteto.install",
     "onCommand:okteto.up",
     "onCommand:okteto.down",
-    "onCommand:okteto.create"
+    "onCommand:okteto.create",
+    "onUri"
   ],
   "main": "./dist/extension",
   "contributes": {
@@ -147,11 +148,12 @@
     "get-port": "^5.1.1",
     "mixpanel": "^0.11.0",
     "node-machine-id": "^1.1.12",
+    "query-string": "^6.13.1",
     "semver": "^7.3.2",
+    "snyk": "^1.339.1",
     "tcp-ping": "^0.1.1",
     "utf-8-validate": "^5.0.2",
-    "yaml": "^1.10.0",
-    "snyk": "^1.339.1"
+    "yaml": "^1.10.0"
   },
   "snyk": true
 }

@@ -1,11 +1,13 @@
 'use strict';
 
 import * as vscode from 'vscode';
+import * as queryString from 'query-string';
+
 import * as manifest from './manifest';
 import * as ssh from './ssh';
 import * as okteto from './okteto';
 import * as kubernetes from './kubernetes';
-import {Reporter, events} from './telemetry';
+import { Reporter, events } from './telemetry';
 
 
 let activeManifest: string;
@@ -30,23 +32,14 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('okteto.create', createCmd));
 
     // Register URI.
-    // vscode://okteto.remote-kubernetes/connect?host=localhost&port=22000&name=frontend
-    // vscode://undefined_publisher.remote-kubernetes/connect?host=localhost&port=22000&name=frontend
+    // vscode://okteto.remote-kubernetes/up?repository=localhost&manifest=frontend/okteto.yml
     vscode.window.registerUriHandler({
       async handleUri(uri: vscode.Uri) {
         const { path, query } = uri;
         const [ command ] = path.split('/').filter(Boolean);
-        console.log('Call from outside!');
-        if (command === 'connect') {
-          debugger;
-          // const { host, port, name } = querystring.parse(query);
-          // if (host) {
-          //   await addNewHost(<string>host, <string>port, <string>name);
-          //   vscode.commands.executeCommand("opensshremotes.openEmptyWindow", {
-          //     host: name
-          //   });
-          // }
-          console.log('Connected!');
+        if (command === 'up') {
+          const { repository, manifest } = queryString.parse(query);
+          console.log(`Will do UP of ${repository} and ${manifest}`);
         }
       }
     });
