@@ -102,7 +102,7 @@ export async function install() {
   const installPath = getInstallPath();
   const folder = path.dirname(installPath);
   const filename = path.basename(installPath);
-  
+
   try {
     await promises.mkdir(path.dirname(folder), {mode: 0o700, recursive: true});
   } catch(err) {
@@ -138,7 +138,7 @@ export async function install() {
   }
 }
 
-export function up(manifest: string, namespace: string, name: string, port: number, kubeconfig: string) {
+export function up(manifest: string, namespace: string, name: string, kubeconfig: string, port: number|null = null) {
   console.log(`okteto up ${manifest}`);
   isActive = false;
   disposeTerminal();
@@ -154,7 +154,6 @@ export function up(manifest: string, namespace: string, name: string, port: numb
     }
   });
 
-
   let binary = getBinary();
   if (gitBashMode()){
     console.log('using gitbash style paths');
@@ -163,7 +162,11 @@ export function up(manifest: string, namespace: string, name: string, port: numb
   }
 
   isActive = true;
-  const cmd = `${binary} up -f '${manifest}' --remote '${port}'`;
+  const cmd = [
+    `${binary} up`,
+    `-f '${manifest}'`,
+    port ? `--remote '${port}'` : ''
+  ].join(' ');
   console.log(cmd);
   term.sendText(cmd, true);
 }
@@ -171,7 +174,7 @@ export function up(manifest: string, namespace: string, name: string, port: numb
 export async function down(manifest: string, namespace: string, kubeconfig: string) {
   isActive = false;
   disposeTerminal();
-  
+
   const r =  execa(getBinary(), ['down', '--file', `${manifest}`, '--namespace', `${namespace}`], {
     env: {
       "KUBECONFIG": kubeconfig,
@@ -179,12 +182,12 @@ export async function down(manifest: string, namespace: string, kubeconfig: stri
     },
     cwd: path.dirname(manifest),
   });
-  
+
   try{
     await r;
   } catch (err) {
     console.error(`${err}: ${err.stdout}`);
-    const message = extractMessage(err.stdout);    
+    const message = extractMessage(err.stdout);
     throw new Error(message);
   }
 
@@ -198,8 +201,8 @@ export async function init(manifestPath: vscode.Uri, choice: string) {
       "OKTETO_ORIGIN":"vscode",
       "OKTETO_LANGUAGE":choice
       }
-    }); 
-    
+    });
+
   try{
     await r;
   } catch (err) {
@@ -288,7 +291,7 @@ export async function notifyIfFailed(namespace: string, name:string, callback: (
       clearInterval(id);
       return;
     }
-    
+
     if (c.state === state.failed) {
       console.error(`okteto up failed: ${c.message}`);
       clearInterval(id);
@@ -426,6 +429,6 @@ function extractMessage(error :string):string {
     message = parts[1];
   }
 
-  message = message.replace('x  ', '');  
+  message = message.replace('x  ', '');
   return message;
 }
