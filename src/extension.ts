@@ -36,8 +36,11 @@ export function activate(context: vscode.ExtensionContext) {
         const { path, query } = uri;
         const [ command ] = path.split('/').filter(Boolean);
         if (command === 'up') {
-          const { repository, manifest } = queryString.parse(query);
-          console.log(`Will do UP of ${repository} and ${manifest}`);
+          const { repository = null, manifest = null } = queryString.parse(query);
+          upCommand(
+            Array.isArray(repository) ? repository.join() : repository,
+            Array.isArray(manifest) ? manifest.join() : manifest
+          );
         }
       }
     });
@@ -75,64 +78,83 @@ async function installCmd(upgrade: boolean, handleErr: boolean) {
     vscode.window.showInformationMessage(success);
 }
 
-async function upCommand(selectedManifestUri: vscode.Uri) {
-    console.log(await getCurrentRepo());
-    // const { install, upgrade } = await okteto.needsInstall();
-    // if (install) {
-    //     try {
-    //         await installCmd(upgrade, false);
-    //     } catch(err) {
-    //         vscode.window.showErrorMessage(err.message);
-    //         return;
-    //     }
-    // }
+async function upCommand(repository: string|null = null, path: string|null = null) {
+    // console.log(await getCurrentRepo());
+
+    // 1. Select workspace.
+    if (!vscode.workspace.name) {
+      console.log(`Select workspace. Repo: `, repository);
+      await showWorkspacePicker(repository);
+    }
+
+    // 2. Install or upgrade okteto cli.
+    const { install, upgrade } = await okteto.needsInstall();
+    if (install) {
+        try {
+            await installCmd(upgrade, false);
+        } catch(err) {
+            vscode.window.showErrorMessage(err.message);
+            return;
+        }
+    }
 
     // reporter.track(events.up);
 
-    // const manifestUri = selectedManifestUri || await showManifestPicker();
-    // if (!manifestUri) {
-    //     reporter.track(events.manifestDismissed);
-    //     return;
-    // }
+    // 3. Select okteto manifest.
+    let manifestUri;
+    if (path) {
+        const files = await vscode.workspace.findFiles(path);
+        if (files.length === 0) {
+            manifestUri = await showManifestPicker();
+        }
+    } else {
+        manifestUri = await showManifestPicker();
+    }
 
-    // reporter.track(events.manifestSelected);
-    // const manifestPath = manifestUri.fsPath;
-    // console.log(`user selected: ${manifestPath}`);
+    if (!manifestUri) {
+        reporter.track(events.manifestDismissed);
+        return;
+    }
 
-    // let m: manifest.Manifest;
+    reporter.track(events.manifestSelected);
+    const manifestPath = manifestUri.fsPath;
+    console.log(`manifest selected: ${manifestPath}`);
 
-    // try {
-    //     m = await manifest.getManifest(manifestPath);
-    // } catch (err) {
-    //     reporter.track(events.manifestLoadFailed);
-    //     reporter.captureError(`load manifest failed: ${err.message}`, err);
-    //     return onOktetoFailed(`Okteto: Up failed to load your Okteto manifest: ${err.message}`);
-    // }
+    let m: manifest.Manifest;
 
-    // const kubeconfig = kubernetes.getKubeconfig();
+    try {
+        m = await manifest.getManifest(manifestPath);
+    } catch (err) {
+        reporter.track(events.manifestLoadFailed);
+        reporter.captureError(`load manifest failed: ${err.message}`, err);
+        return onOktetoFailed(`Okteto: Up failed to load your Okteto manifest: ${err.message}`);
+    }
 
+    // 4. Get kubernetes context.
+    const kubeconfig = kubernetes.getKubeconfig();
 
-    // if (!m.namespace) {
-    //     const ns = kubernetes.getCurrentNamespace(kubeconfig);
-    //     if (!ns) {
-    //         vscode.window.showErrorMessage("Couldn't detect your current Kubernetes context.");
-    //         return;
-    //     }
+    if (!m.namespace) {
+        const ns = kubernetes.getCurrentNamespace(kubeconfig);
+        if (!ns) {
+            vscode.window.showErrorMessage("Couldn't detect your current Kubernetes context.");
+            return;
+        }
 
-    //     m.namespace = ns;
-    // }
+        m.namespace = ns;
+    }
 
-    // okteto.up(manifestPath, m.namespace, m.name, kubeconfig);
-    // activeManifest = manifestPath;
+    // 5. Set up developer container.
+    okteto.up(manifestPath, m.namespace, m.name, kubeconfig);
+    activeManifest = manifestPath;
 
-    // try{
-    //     await waitForUp(m.namespace, m.name);
-    // } catch(err) {
-    //     reporter.captureError(`okteto up failed: ${err.message}`, err);
-    //     return onOktetoFailed(err.message);
-    // }
+    try{
+        await waitForUp(m.namespace, m.name);
+    } catch(err) {
+        reporter.captureError(`okteto up failed: ${err.message}`, err);
+        return onOktetoFailed(err.message);
+    }
 
-    // await finalizeUp(m.namespace, m.name, m.workdir);
+    await finalizeUp(m.namespace, m.name);
 }
 
 async function waitForUp(namespace: string, name: string) {
@@ -184,15 +206,10 @@ async function waitForFinalState(namespace: string, name:string, progress: vscod
 }
 
 async function sleep(ms: number) {
-    return new Promise<void>(resolve =>  setTimeout(resolve, 1000));
+    return new Promise<void>(resolve => setTimeout(resolve, 1000));
 }
 
-async function finalizeUp(namespace: string, name: string, workdir: string) {
-    let folder = '/okteto';
-    if (workdir) {
-        folder = workdir;
-    }
-
+async function finalizeUp(namespace: string, name: string) {
     reporter.track(events.upReady);
     reporter.track(events.upFinished);
     okteto.notifyIfFailed(namespace, name, onOktetoFailed);
@@ -333,4 +350,62 @@ Please run the 'Okteto: Create Manifest' command to create it and then try again
         placeHolder: 'Select your okteto manifest'
     });
     return manifestItem ? manifestItem.uri : undefined;
+}
+
+async function showWorkspacePicker(repository: string|null = null) : Promise<boolean> {
+    // Current git repo === repo up? => showpicker
+    // List recent workspaces that can be the one we want
+    // Show option to Clone repository...
+    // Select directory where to clone.
+    // open directory that we just cloned.
+    //updateWorkspaceFolders
+    const items = [];
+    if (repository) {
+      items.push({
+          label: `Clone repository "${repository}" and open folder...`,
+          option: 'clone'
+      });
+    }
+
+    items.push({
+        label: `Open existing folder...`,
+        option: 'open'
+    });
+
+    const selectedItem = await vscode.window.showQuickPick(items, {
+        canPickMany: false,
+        placeHolder: 'Choose your application\'s workspace'
+    });
+
+    if (selectedItem?.option === 'clone') {
+      await vscode.window.withProgress(
+        {
+            location: vscode.ProgressLocation.Notification,
+            title: `Cloning repository "${repository}"...`
+        },
+        async () => {
+            return await sleep(3000);
+        },
+      );
+    } else if (selectedItem?.option === 'open') {
+        const uri = await vscode.window.showOpenDialog({
+            canSelectFolders: true,
+            canSelectFiles: false,
+            canSelectMany: false
+        });
+        if (uri && uri.length > 0) {
+            const path = uri[0].path.split('/');
+            const name = path.length > 0 ? path[path.length - 1] : uri[0].path;
+            console.log('Name: ', name);
+            const success = vscode.workspace.updateWorkspaceFolders(
+              vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders.length : 0,
+              null, {
+                name,
+                uri: uri[0]
+              });
+              await sleep(1000);
+              return success;
+        }
+    }
+    return false;
 }
