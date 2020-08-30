@@ -3,6 +3,7 @@
 ## 0.1.28
 - Update to okteto `1.8.17`.
 - Update to syncthing `1.8.0`.
+- Update dependencies to next major version.
 
 ## 0.1.27
 - Update to okteto `1.8.13`.
