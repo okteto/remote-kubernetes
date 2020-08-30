@@ -31,7 +31,7 @@
   },
   "license": "SEE LICENSE IN LICENSE",
   "engines": {
-    "vscode": "^1.45.1"
+    "vscode": "^1.48"
   },
   "categories": [
     "Other",
