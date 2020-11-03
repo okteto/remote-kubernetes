@@ -95,6 +95,11 @@
           "type": "string",
           "default": "",
           "description": "Absolute path to your kubeconfig file. When empty, it will fall back to KUBECONFIG and then to the default path"
+        },
+        "okteto.upArgs": {
+          "type": "string",
+          "default": "--loglevel=warn",
+          "description": "Extra arguments to pass to okteto up. You can use it to get debug logs, force a build before the up command, etc..."
         }
       }
     }
