@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.1.30
+- Update to okteto `1.9.4`.
+- Update to syncthing `1.10.0`.
+- Update dependencies to next major version.
+
 ## 0.1.29
 - Update to okteto `1.8.21` to fix synchronization issues reported by our users.
 
