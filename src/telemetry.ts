@@ -65,7 +65,8 @@ export class Reporter {
             } 
 
             sentry.init({ 
-                dsn:  dsn, 
+                dsn:  dsn,
+                integrations: defaults => defaults.filter(integration => (integration.name !== 'OnUncaughtException') && (integration.name !== 'OnUnhandledRejection')),
                 environment: environment,
                 release: `remote-kubernetes-vscode@${this.extensionVersion}`});
 
