@@ -163,7 +163,7 @@ export function up(manifest: string, namespace: string, name: string, port: numb
   }
 
   isActive = true;
-  var cmd = `${binary} up -f '${manifest}' --remote '${port}'`;
+  let cmd = `${binary} up -f '${manifest}' --remote '${port}'`;
 
   const config = vscode.workspace.getConfiguration('okteto');
   if (config) {
