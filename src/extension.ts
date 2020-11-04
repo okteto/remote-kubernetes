@@ -191,7 +191,7 @@ async function sleep(ms: number) {
 }
 
 async function finalizeUp(namespace: string, name: string, workdir: string) {
-    let folder = '/okteto';
+    let folder = '/usr/src/app';
     if (workdir) {
         folder = workdir;
     }
