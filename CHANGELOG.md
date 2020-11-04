@@ -1,6 +1,7 @@
 # Change Log
 
 ## 0.1.30
+- Change the log level (and add other flags) to the `okteto up` via the `Up Flags` setting.
 - Update to okteto `1.9.4`.
 - Update to syncthing `1.10.0`.
 - Update dependencies to next major version.
