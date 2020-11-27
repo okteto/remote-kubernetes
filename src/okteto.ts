@@ -144,7 +144,7 @@ export function up(manifest: string, namespace: string, name: string, port: numb
   disposeTerminal();
   cleanState(namespace, name);
   const term = vscode.window.createTerminal({
-    name: terminalName,
+    name: terminalName+"-"+port,
     hideFromUser: false,
     cwd: path.dirname(manifest),
     env: {
