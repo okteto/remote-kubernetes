@@ -92,7 +92,7 @@ async function upCommand(selectedManifestUri: vscode.Uri) {
     } catch (err) {
         reporter.track(events.manifestLoadFailed);
         reporter.captureError(`load manifest failed: ${err.message}`, err);
-        return onOktetoFailed('', `Okteto: Up failed to load your Okteto manifest: ${err.message}`);
+        return onOktetoFailed(`Okteto: Up failed to load your Okteto manifest: ${err.message}`);
     }
 
     const kubeconfig = kubernetes.getKubeconfig();
@@ -114,7 +114,7 @@ async function upCommand(selectedManifestUri: vscode.Uri) {
     } catch (err) {
         reporter.track(events.sshPortFailed);
         reporter.captureError(`ssh.getPort failed: ${err.message}`, err);
-        return onOktetoFailed(m.namespace, `Okteto: Up failed to find an available port: ${err}`);
+        return onOktetoFailed(`Okteto: Up failed to find an available port: ${err}`, m.namespace);
     }
 
     okteto.up(manifestPath, m.namespace, m.name, port, kubeconfig);
@@ -124,7 +124,7 @@ async function upCommand(selectedManifestUri: vscode.Uri) {
         await waitForUp(m.namespace, m.name, port);
     } catch(err) {
         reporter.captureError(`okteto up failed: ${err.message}`, err);
-        return onOktetoFailed(m.namespace, err.message);
+        return onOktetoFailed(err.message, m.namespace);
     }
 
     await finalizeUp(m.namespace,m.name, m.workdir);
@@ -207,7 +207,7 @@ async function finalizeUp(namespace: string, name: string, workdir: string) {
     } catch (err) {
         reporter.captureError(`opensshremotes.openEmptyWindow failed: ${err.message}`, err);
         reporter.track(events.sshHostSelectionFailed);
-        return onOktetoFailed(namespace, `Okteto: Up failed to open the host selector: ${err.message}`);
+        return onOktetoFailed(`Okteto: Up failed to open the host selector: ${err.message}`, namespace);
     }
 }
 
@@ -235,7 +235,7 @@ async function downCommand() {
     } catch (err) {
         reporter.track(events.manifestLoadFailed);
         reporter.captureError(`load manifest failed: ${err.message}`, err);
-        return onOktetoFailed('', `Okteto: Down failed to load your Okteto manifest: ${err.message}`);
+        return onOktetoFailed(`Okteto: Down failed to load your Okteto manifest: ${err.message}`);
     }
 
     const kubeconfig = kubernetes.getKubeconfig();
@@ -326,9 +326,11 @@ async function createCmd(){
     }
 }
 
-function onOktetoFailed(namespace: string, message: string) {
+function onOktetoFailed(message: string, namespace: string | null = null) {
     vscode.window.showErrorMessage(message);
-    okteto.showTerminal(namespace);
+    if (namespace) {
+        okteto.showTerminal(namespace);
+    }
 }
 
 async function showManifestPicker() : Promise<vscode.Uri | undefined> {
@@ -354,7 +356,7 @@ Please run the 'Okteto: Create Manifest' command to create it and then try again
 }
 
 async function showActiveManifestPicker() : Promise<vscode.Uri | undefined> {
-    let items : any[] = [];
+    let items: any[] = [];
     activeManifest.forEach((file, manifest) => {
         items.push({
             label: manifest,

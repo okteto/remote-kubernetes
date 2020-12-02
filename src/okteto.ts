@@ -342,7 +342,7 @@ function getInstallPath(): string {
   return path.join(os.homedir(), '.okteto-vscode', 'okteto');
 }
 
-function disposeTerminal(namespace : string){
+function disposeTerminal(namespace: string){
   vscode.window.terminals.forEach((t) => {
     if (t.name === `${terminalName}-${namespace}`) {
       t.dispose();
@@ -350,7 +350,7 @@ function disposeTerminal(namespace : string){
   });
 }
 
-export function showTerminal(namespace : string){
+export function showTerminal(namespace: string){
   vscode.window.terminals.forEach((t) => {
     if (t.name === `${terminalName}-${namespace}`) {
       t.show();
