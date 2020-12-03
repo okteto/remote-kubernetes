@@ -114,17 +114,17 @@ async function upCommand(selectedManifestUri: vscode.Uri) {
     } catch (err) {
         reporter.track(events.sshPortFailed);
         reporter.captureError(`ssh.getPort failed: ${err.message}`, err);
-        return onOktetoFailed(`Okteto: Up failed to find an available port: ${err}`, m.namespace);
+        return onOktetoFailed(`Okteto: Up failed to find an available port: ${err}`, `${m.namespace}-${m.name}`);
     }
 
     okteto.up(manifestPath, m.namespace, m.name, port, kubeconfig);
-    activeManifest.set(m.namespace, manifestUri);
+    activeManifest.set(`${m.namespace}-${m.name}`, manifestUri);
 
     try{
         await waitForUp(m.namespace, m.name, port);
     } catch(err) {
         reporter.captureError(`okteto up failed: ${err.message}`, err);
-        return onOktetoFailed(err.message, m.namespace);
+        return onOktetoFailed(err.message, `${m.namespace}-${m.name}`);
     }
 
     await finalizeUp(m.namespace,m.name, m.workdir);
@@ -207,7 +207,7 @@ async function finalizeUp(namespace: string, name: string, workdir: string) {
     } catch (err) {
         reporter.captureError(`opensshremotes.openEmptyWindow failed: ${err.message}`, err);
         reporter.track(events.sshHostSelectionFailed);
-        return onOktetoFailed(`Okteto: Up failed to open the host selector: ${err.message}`, namespace);
+        return onOktetoFailed(`Okteto: Up failed to open the host selector: ${err.message}`, `${namespace}-${name}`);
     }
 }
 
@@ -251,8 +251,8 @@ async function downCommand() {
     }
 
     try {
-        await okteto.down(manifestPath, m.namespace, kubeconfig);
-        activeManifest.delete(m.namespace);
+        await okteto.down(manifestPath, m.namespace, m.name, kubeconfig);
+        activeManifest.delete(`${m.namespace}-${m.name}`);
         vscode.window.showInformationMessage("Okteto environment deactivated");
         reporter.track(events.downFinished);
     } catch (err) {
@@ -326,10 +326,10 @@ async function createCmd(){
     }
 }
 
-function onOktetoFailed(message: string, namespace: string | null = null) {
+function onOktetoFailed(message: string, terminalSuffix: string | null = null) {
     vscode.window.showErrorMessage(message);
-    if (namespace) {
-        okteto.showTerminal(namespace);
+    if (terminalSuffix) {
+        okteto.showTerminal(terminalSuffix);
     }
 }
 
