@@ -356,7 +356,7 @@ Please run the 'Okteto: Create Manifest' command to create it and then try again
 }
 
 async function showActiveManifestPicker() : Promise<vscode.Uri | undefined> {
-    let items: any[] = [];
+    const items: any[] = [];
     activeManifest.forEach((file, manifest) => {
         items.push({
             label: manifest,
