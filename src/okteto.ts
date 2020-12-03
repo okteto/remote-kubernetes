@@ -32,7 +32,7 @@ export const state = {
   failed: 'failed',
 };
 
-var isActive = new Map();
+const isActive = new Map();
 
 export async function needsInstall(): Promise<{install: boolean, upgrade: boolean}>{
   const binary = getBinary();
