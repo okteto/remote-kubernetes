@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.2.0
+- Support starting multiple `okteto up` from the same window.
+- Update to okteto `1.10.1`.
+- Update to syncthing `1.11.0`.
+
 ## 0.1.30
 - Change the log level (and add other flags) to the `okteto up` via the `Up Flags` setting.
 - Update to okteto `1.9.4`.
