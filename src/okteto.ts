@@ -32,7 +32,7 @@ export const state = {
   failed: 'failed',
 };
 
-var isActive = false;
+const isActive = new Map();
 
 export async function needsInstall(): Promise<{install: boolean, upgrade: boolean}>{
   const binary = getBinary();
@@ -140,11 +140,13 @@ export async function install() {
 
 export function up(manifest: string, namespace: string, name: string, port: number, kubeconfig: string) {
   console.log(`okteto up ${manifest}`);
-  isActive = false;
-  disposeTerminal();
+  if (isActive.has(`${terminalName}-${namespace}-${name}`) && isActive.get(`${terminalName}-${namespace}-${name}`)) {
+    disposeTerminal(`${namespace}-${name}`);
+  }
+  isActive.set(`${terminalName}-${namespace}-${name}`, false);
   cleanState(namespace, name);
   const term = vscode.window.createTerminal({
-    name: terminalName,
+    name: `${terminalName}-${namespace}-${name}`,
     hideFromUser: false,
     cwd: path.dirname(manifest),
     env: {
@@ -162,7 +164,7 @@ export function up(manifest: string, namespace: string, name: string, port: numb
     manifest = paths.toGitBash(manifest);
   }
 
-  isActive = true;
+  isActive.set(`${terminalName}-${namespace}-${name}`, true);
   let cmd = `${binary} up -f '${manifest}' --remote '${port}'`;
 
   const config = vscode.workspace.getConfiguration('okteto');
@@ -175,9 +177,9 @@ export function up(manifest: string, namespace: string, name: string, port: numb
   term.sendText(cmd, true);
 }
 
-export async function down(manifest: string, namespace: string, kubeconfig: string) {
-  isActive = false;
-  disposeTerminal();
+export async function down(manifest: string, namespace: string, name: string, kubeconfig: string) {
+  isActive.set(`${terminalName}-${namespace}-${name}`, false);
+  disposeTerminal(`${namespace}-${name}`);
   
   const r =  execa(getBinary(), ['down', '--file', `${manifest}`, '--namespace', `${namespace}`], {
     env: {
@@ -288,10 +290,10 @@ function splitStateError(state: string): {state: string, message: string} {
   return {state: st, message: msg};
 }
 
-export async function notifyIfFailed(namespace: string, name:string, callback: (m: string) => void){
+export async function notifyIfFailed(namespace: string, name:string, callback: (n: string, m: string) => void){
   const id = setInterval(async () => {
     const c = await getState(namespace, name);
-    if (!isActive) {
+    if (!isActive.has(`${terminalName}-${namespace}-${name}`) || !isActive.get(`${terminalName}-${namespace}-${name}`)) {
       clearInterval(id);
       return;
     }
@@ -300,9 +302,9 @@ export async function notifyIfFailed(namespace: string, name:string, callback: (
       console.error(`okteto up failed: ${c.message}`);
       clearInterval(id);
       if (c.message) {
-        callback(`Okteto: Up command failed: ${c.message}`);
+        callback(`${namespace}-${name}`, `Okteto: Up command failed: ${c.message}`);
       } else {
-        callback(`Okteto: Up command failed`);
+        callback(`${namespace}-${name}`, `Okteto: Up command failed`);
       }
     }
 
@@ -340,17 +342,17 @@ function getInstallPath(): string {
   return path.join(os.homedir(), '.okteto-vscode', 'okteto');
 }
 
-function disposeTerminal(){
+function disposeTerminal(terminalNameSuffix: string){
   vscode.window.terminals.forEach((t) => {
-    if (t.name === terminalName) {
+    if (t.name === `${terminalName}-${terminalNameSuffix}`) {
       t.dispose();
     }
   });
 }
 
-export function showTerminal(){
+export function showTerminal(terminalNameSuffix: string){
   vscode.window.terminals.forEach((t) => {
-    if (t.name === terminalName) {
+    if (t.name === `${terminalName}-${terminalNameSuffix}`) {
       t.show();
     }
   });

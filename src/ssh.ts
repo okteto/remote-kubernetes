@@ -4,7 +4,7 @@ import * as gp from 'get-port';
 import * as net from 'net';
 
 export function getPort(): Promise<number> {
-    return gp({port: 22100});
+    return gp({host:'127.0.0.1', port: 22100});
 }
 
 export function isReady(port: number): Promise<Boolean> {
