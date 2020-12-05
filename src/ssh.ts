@@ -17,7 +17,7 @@ export function isReady(port: number): Promise<Boolean> {
 
         var socket = net.createConnection(port, "localhost", function() {
             clearTimeout(timer);
-            resolve();
+            resolve(true);
             socket.end();
         });
 
