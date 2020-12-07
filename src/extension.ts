@@ -8,7 +8,7 @@ import * as kubernetes from './kubernetes';
 import {Reporter, events} from './telemetry';
 
 
-let activeManifest = new Map<string, vscode.Uri>();
+const activeManifest = new Map<string, vscode.Uri>();
 let reporter: Reporter;
 
 export function activate(context: vscode.ExtensionContext) {
