@@ -8,7 +8,7 @@ import * as kubernetes from './kubernetes';
 import {Reporter, events} from './telemetry';
 
 
-let activeManifest = new Map();
+const activeManifest = new Map<string, vscode.Uri>();
 let reporter: Reporter;
 
 export function activate(context: vscode.ExtensionContext) {
@@ -264,12 +264,17 @@ async function downCommand() {
 
 async function getManifestOrAsk(): Promise<string | undefined> {
     if (activeManifest.size > 0) {
-        const manifestUri = await showActiveManifestPicker();
-        if (manifestUri) {
-            reporter.track(events.manifestSelected);
+        if (activeManifest.size === 1) {
+            const manifestUri = activeManifest.values().next().value;
             return manifestUri.fsPath;
         } else {
+          const manifestUri = await showActiveManifestPicker();
+          if (manifestUri) {
+            reporter.track(events.manifestSelected);
+            return manifestUri.fsPath;
+          } else {
             reporter.track(events.manifestDismissed);
+          }
         }
     } else {
         const manifestUri = await showManifestPicker();
