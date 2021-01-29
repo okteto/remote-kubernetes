@@ -137,7 +137,7 @@
   "dependencies": {
     "@kubernetes/client-node": "^0.12.3",
     "@sentry/cli": "^1.60.1",
-    "@sentry/node": "^5.28.0",
+    "@sentry/node": "^6.0.2",
     "@types/command-exists": "^1.2.0",
     "@types/download": "^6.2.4",
     "@types/semver": "^7.3.4",
@@ -148,6 +148,7 @@
     "command-exists": "^1.2.9",
     "download": "^8.0.0",
     "execa": "^4.1.0",
+    "find-process": "^1.4.4",
     "fs": "^0.0.2",
     "get-port": "^5.1.1",
     "mixpanel": "^0.11.0",

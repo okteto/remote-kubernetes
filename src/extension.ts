@@ -170,13 +170,18 @@ async function waitForFinalState(namespace: string, name:string, progress: vscod
         }
 
         seen.set(res.state, true);
-
-        if (okteto.state.ready === res.state) {
-            return {result: true, message: ''};
-        } else if(okteto.state.failed === res.state) {
-            return {result: false, message: res.message};
+        switch(res.state){
+            case okteto.state.ready:
+                return {result: true, message: ''};
+            case okteto.state.failed:
+                return {result: false, message: res.message};
+            case okteto.state.starting:
+                const isRunning = await okteto.isRunning(namespace, name);
+                if (!isRunning && counter > 10){
+                    return {result: false, message: `process failed to start`};
+                }
         }
-
+        
         counter++;
         if (counter === timeout) {
             return {result: false, message: `task didn't finish in 5 minutes`};
