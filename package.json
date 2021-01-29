@@ -137,7 +137,7 @@
   "dependencies": {
     "@kubernetes/client-node": "^0.12.3",
     "@sentry/cli": "^1.60.1",
-    "@sentry/node": "^5.28.0",
+    "@sentry/node": "^6.0.2",
     "@types/command-exists": "^1.2.0",
     "@types/download": "^6.2.4",
     "@types/semver": "^7.3.4",
