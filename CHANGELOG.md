@@ -2,8 +2,9 @@
 
 ## 0.2.0
 - Support starting multiple `okteto up` from the same window.
-- Update to okteto `1.10.1`.
-- Update to syncthing `1.11.0`.
+- Update to okteto `1.10.5`.
+- Update to syncthing `1.12.0`.
+- Detect if `okteto up` crashes.
 
 ## 0.1.30
 - Change the log level (and add other flags) to the `okteto up` via the `Up Flags` setting.
