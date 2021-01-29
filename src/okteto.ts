@@ -2,22 +2,24 @@
 
 import * as fs from 'fs';
 import {promises} from 'fs';
-import * as execa from 'execa';
+import execa from 'execa';
 import * as path from 'path';
-import * as commandExists from 'command-exists';
+import commandExists from 'command-exists';
 import {protect} from './machineid';
 import * as vscode from 'vscode';
 import * as os from 'os';
-import * as download from 'download';
+import download from 'download';
 import * as semver from 'semver';
 import {pascalCase} from 'change-case';
 import * as paths from './paths';
 import { clearInterval, setInterval } from 'timers';
+import find from 'find-process';
 
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
-const minimum = '1.10.1';
+const pidFile = 'okteto.pid';
+const minimum = '1.10.5';
 const terminalName = `okteto`;
 
 export const state = {
@@ -236,6 +238,10 @@ function getStateFile(namespace: string, name:string): string {
   return path.join(os.homedir(), oktetoFolder, namespace, name, stateFile);
 }
 
+function getPidFile(namespace: string, name:string): string {
+  return path.join(os.homedir(), oktetoFolder, namespace, name, pidFile);
+}
+
 export async function getState(namespace: string, name: string): Promise<{state: string, message: string}> {
   const p = getStateFile(namespace, name);
 
@@ -275,6 +281,45 @@ export async function getState(namespace: string, name: string): Promise<{state:
         console.error(`received unknown state: '${c}'`);
         return {state: state.unknown, message: ''};
   }
+}
+
+export async function isRunning(namespace: string, name: string): Promise<boolean> {
+  const p = getPidFile(namespace, name);
+
+  try{
+    await promises.access(p);
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      return false;
+    }
+    
+    return true;
+  }
+
+  var c = '';
+  try {
+    const buffer = await promises.readFile(p, {encoding: 'utf8'});
+    c = buffer.toString();
+  } catch(err) {
+    console.error(`failed to open ${p}: ${err}`);
+    return true;
+  }
+
+  const parsed = parseInt(c);
+  if (isNaN(parsed)) { return true; }
+  
+  try {
+    const result = await find('pid', parsed);
+    if (result.length == 0){
+      return false;
+    }
+    return true;
+  } catch(err) {
+    console.error(`failed to list processes: ${err}`);
+    return true;
+  }
+
+  return true;
 }
 
 function splitStateError(state: string): {state: string, message: string} {

@@ -177,6 +177,10 @@ async function waitForFinalState(namespace: string, name:string, progress: vscod
             return {result: false, message: res.message};
         }
 
+        const isRunning = await okteto.isRunning(namespace, name);
+        if (!isRunning){
+            return {result: false, message: `process failed to start`};
+        }
         counter++;
         if (counter === timeout) {
             return {result: false, message: `task didn't finish in 5 minutes`};

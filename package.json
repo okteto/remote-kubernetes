@@ -148,6 +148,7 @@
     "command-exists": "^1.2.9",
     "download": "^8.0.0",
     "execa": "^4.1.0",
+    "find-process": "^1.4.4",
     "fs": "^0.0.2",
     "get-port": "^5.1.1",
     "mixpanel": "^0.11.0",
