@@ -7,6 +7,7 @@ import * as okteto from './okteto';
 import * as kubernetes from './kubernetes';
 import { Reporter, events } from './telemetry';
 import { getCurrentRepo } from './git';
+import { DevContainersProvider, Manifest } from './tree';
 
 let activeManifest: string;
 let reporter: Reporter;
@@ -44,6 +45,17 @@ export function activate(context: vscode.ExtensionContext) {
         }
       }
     });
+
+    // Register Okteto Tree View.
+    const devContainersProvider =
+      new DevContainersProvider(vscode.workspace.rootPath ?? '', context);
+    vscode.window.registerTreeDataProvider('developmentContainers', devContainersProvider);
+    vscode.commands.registerCommand('developmentContainers.refreshEntry', () =>
+      devContainersProvider.refresh()
+    );
+    vscode.commands.registerCommand('developmentContainers.upEntry', (manifest: Manifest) =>
+      manifest.up()
+    );
 }
 
 async function installCmd(upgrade: boolean, handleErr: boolean) {

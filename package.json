@@ -42,6 +42,7 @@
     "onCommand:okteto.up",
     "onCommand:okteto.down",
     "onCommand:okteto.create",
+    "onView:developmentContainers",
     "onUri"
   ],
   "main": "./dist/extension",
@@ -63,6 +64,22 @@
       {
         "command": "okteto.up",
         "title": "Okteto: Up"
+      },
+      {
+        "command": "developmentContainers.refreshEntry",
+        "title": "Refresh",
+        "icon": {
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
+        }
+      },
+      {
+        "command": "developmentContainers.upEntry",
+        "title": "Up",
+        "icon": {
+          "light": "resources/light/up.svg",
+          "dark": "resources/dark/up.svg"
+        }
       }
     ],
     "menus": {
@@ -71,6 +88,20 @@
           "when": "resourceFilename == okteto.yml",
           "command": "okteto.up",
           "group": "navigation"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "developmentContainers.refreshEntry",
+          "when": "view == developmentContainers",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "developmentContainers.upEntry",
+          "when": "view == developmentContainers && viewItem == manifest",
+          "group": "inline"
         }
       ]
     },
@@ -98,6 +129,25 @@
           "description": "Absolute path to your kubeconfig file. When empty, it will fall back to KUBECONFIG and then to the default path"
         }
       }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "okteto-explorer",
+          "title": "Okteto",
+          "icon": "media/okteto.svg"
+        }
+      ]
+    },
+    "views": {
+      "okteto-explorer": [
+        {
+          "id": "developmentContainers",
+          "name": "Development Container",
+          "icon": "media/okteto.svg",
+          "contextualTitle": "Okteto"
+        }
+      ]
     }
   },
   "scripts": {
@@ -150,6 +200,7 @@
     "get-port": "^5.1.1",
     "git-remote-origin-url": "^3.1.0",
     "git-url-parse": "^11.1.2",
+    "js-yaml": "^4.0.0",
     "mixpanel": "^0.11.0",
     "node-machine-id": "^1.1.12",
     "query-string": "^6.13.1",

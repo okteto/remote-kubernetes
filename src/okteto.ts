@@ -13,7 +13,7 @@ import * as semver from 'semver';
 import {pascalCase} from 'change-case';
 import * as paths from './paths';
 import { clearInterval, setInterval } from 'timers';
-
+import { Reporter, events } from './telemetry';
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
