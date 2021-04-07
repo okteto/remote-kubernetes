@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.2.1
+- Update to okteto `1.12.5` to explicitly set `PubkeyAcceptedKeyTypes` in the SSH configuration.
+
 ## 0.2.0
 - Support starting multiple `okteto up` from the same window.
 - Update to okteto `1.10.5`.
