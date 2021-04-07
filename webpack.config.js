@@ -25,7 +25,11 @@ const config = {
     // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
     extensions: ['.ts', '.js']
   },
-  plugins: [new webpack.IgnorePlugin(/^electron$/)],
+  plugins: [
+    new webpack.IgnorePlugin({
+      resourceRegExp: /^electron$/
+    })
+  ],
   module: {
     rules: [
       {
