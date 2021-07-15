@@ -19,7 +19,7 @@ import find from 'find-process';
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
 const pidFile = 'okteto.pid';
-const minimum = '1.12.12';
+const minimum = '1.13.1';
 const terminalName = `okteto`;
 
 export const state = {
