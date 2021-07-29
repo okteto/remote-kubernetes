@@ -19,7 +19,7 @@ import find from 'find-process';
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
 const pidFile = 'okteto.pid';
-const minimum = '1.13.1';
+const minimum = '1.13.2';
 const terminalName = `okteto`;
 
 export const state = {
@@ -290,9 +290,11 @@ export async function isRunning(namespace: string, name: string): Promise<boolea
     await promises.access(p);
   } catch (err) {
     if (err.code === 'ENOENT') {
+      console.error(`${p} doesn't exist`)
       return false;
     }
     
+    console.error(`failed to open  pid file ${p}: ${err}`)
     return true;
   }
 
@@ -306,20 +308,24 @@ export async function isRunning(namespace: string, name: string): Promise<boolea
   }
 
   const parsed = parseInt(c);
-  if (isNaN(parsed)) { return true; }
+  if (isNaN(parsed)) { 
+    console.error(`the content of ${p} is NaN: ${parsed}`)
+    return true; 
+  }
   
   try {
     const result = await find('pid', parsed);
     if (result.length == 0){
+      console.log(`pid-${parsed} is not running`)
       return false;
     }
+
+    console.log(`pid-${parsed} is running`)
     return true;
   } catch(err) {
     console.error(`failed to list processes: ${err}`);
     return true;
   }
-
-  return true;
 }
 
 function splitStateError(state: string): {state: string, message: string} {

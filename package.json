@@ -14,7 +14,7 @@
     "gke",
     "eks"
   ],
-  "version": "0.3.1",
+  "version": "0.3.2",
   "icon": "media/icon.png",
   "author": {
     "name": "Ramiro Berrelleza",
@@ -136,6 +136,7 @@
     "@kubernetes/client-node": "^0.14.1",
     "@sentry/cli": "^1.63.2",
     "@sentry/node": "^6.2.5",
+    "@tuplo/envsubst": "^1.13.0",
     "@types/command-exists": "^1.2.0",
     "@types/download": "^6.2.4",
     "@types/semver": "^7.3.4",
