@@ -2,6 +2,7 @@ import {promises} from 'fs';
 import * as yaml from 'yaml';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import envsubst from '@tuplo/envsubst';
 
 export class Manifest {
     constructor(public name: string, public namespace: string, public workdir: string) {}
@@ -20,7 +21,11 @@ export async function getManifest(manifestPath: string): Promise<Manifest> {
     }
 
     const j = parsed.toJSON();
-    const m = new Manifest(j.name, j.namespace, j.workdir);
+    const name = envsubst(j.name);
+    const namespace = envsubst(j.namespace);
+    const workdir = envsubst(j.workdir);
+    
+    const m = new Manifest(name, namespace, workdir);
     if (!m.name){
         throw new Error(`${manifestPath} is not a valid Okteto manifest`);
     }
