@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.3.2
+- Update to okteto `1.13.2`
+
 ## 0.3.1
 - Update to okteto `1.13.1`
 
