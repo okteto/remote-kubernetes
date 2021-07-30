@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.3.3
+- Fix regression on `okteto up`
+
 ## 0.3.2
 - Update to okteto `1.13.2`
 
