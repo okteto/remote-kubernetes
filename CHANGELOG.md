@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.3.4
+- Update to okteto `1.13.5`
+- Update dependencies to fix security vulnerabilities
+
 ## 0.3.3
 - Fix regression on `okteto up`
 
