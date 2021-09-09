@@ -155,7 +155,9 @@ export function up(manifest: string, namespace: string, name: string, port: numb
       "OKTETO_AUTODEPLOY":"1",
       "OKTETO_ORIGIN":"vscode",
       "KUBECONFIG": kubeconfig,
-    }
+    },
+    message: "This terminal will be automatically closed when you run the okteto down command. Happy coding!",
+    iconPath: new vscode.ThemeIcon('server-process')
   });
 
 
@@ -174,8 +176,7 @@ export function up(manifest: string, namespace: string, name: string, port: numb
     const params = config.get<boolean>('upArgs') || '';
     cmd = `${cmd} ${params}`;
   }
-
-  console.log(cmd);
+  
   term.sendText(cmd, true);
 }
 
