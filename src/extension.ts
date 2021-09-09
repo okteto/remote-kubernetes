@@ -46,7 +46,7 @@ async function installCmd(upgrade: boolean, handleErr: boolean) {
       async () => {
         try {
             await okteto.install();
-        } catch (err) {
+        } catch(err: any) {
             reporter.track(events.oktetoInstallFailed);
             reporter.captureError(`okteto install failed: ${err.message}`, err);
             if (handleErr) {
@@ -67,7 +67,7 @@ async function upCommand(selectedManifestUri: vscode.Uri) {
     if (install) {
         try {
             await installCmd(upgrade, false);
-        } catch(err) {
+        } catch(err: any) {
             vscode.window.showErrorMessage(err.message);
             return;
         }
@@ -89,7 +89,7 @@ async function upCommand(selectedManifestUri: vscode.Uri) {
 
     try {
         m = await manifest.getManifest(manifestPath);
-    } catch (err) {
+    } catch(err: any) {
         reporter.track(events.manifestLoadFailed);
         reporter.captureError(`load manifest failed: ${err.message}`, err);
         return onOktetoFailed(`Okteto: Up failed to load your Okteto manifest: ${err.message}`);
@@ -111,7 +111,7 @@ async function upCommand(selectedManifestUri: vscode.Uri) {
     let port: number;
     try {
         port = await ssh.getPort();
-    } catch (err) {
+    } catch(err: any) {
         reporter.track(events.sshPortFailed);
         reporter.captureError(`ssh.getPort failed: ${err.message}`, err);
         return onOktetoFailed(`Okteto: Up failed to find an available port: ${err}`, `${m.namespace}-${m.name}`);
@@ -122,7 +122,7 @@ async function upCommand(selectedManifestUri: vscode.Uri) {
 
     try{
         await waitForUp(m.namespace, m.name, port);
-    } catch(err) {
+    } catch(err: any) {
         reporter.captureError(`okteto up failed: ${err.message}`, err);
         return onOktetoFailed(err.message, `${m.namespace}-${m.name}`);
     }
@@ -148,7 +148,7 @@ async function waitForUp(namespace: string, name: string, port: number) {
 
               try {
                   await ssh.isReady(port);
-              } catch(err) {
+              } catch(err: any) {
                   reporter.track(events.sshServiceFailed);
                   reporter.captureError(`SSH wasn't available after 60 seconds: ${err.message}`, err);
                   throw new Error(`Okteto: Up command failed, SSH server wasn't available after 60 seconds`);
@@ -209,7 +209,7 @@ async function finalizeUp(namespace: string, name: string, workdir: string) {
         await vscode.commands.executeCommand('vscode.openFolder', uri, true);
         reporter.track(events.upFinished);
         okteto.notifyIfFailed(namespace, name, onOktetoFailed);
-    } catch (err) {
+    } catch(err: any) {
         reporter.captureError(`opensshremotes.openEmptyWindow failed: ${err.message}`, err);
         reporter.track(events.sshHostSelectionFailed);
         return onOktetoFailed(`Okteto: Up failed to open the host selector: ${err.message}`, `${namespace}-${name}`);
@@ -221,7 +221,7 @@ async function downCommand() {
     if (install){
         try {
             await installCmd(upgrade, false);
-        } catch (err){
+        } catch(err: any){
             vscode.window.showErrorMessage(err.message);
             return;
         }
@@ -237,7 +237,7 @@ async function downCommand() {
 
     try {
         m = await manifest.getManifest(manifestPath);
-    } catch (err) {
+    } catch(err: any) {
         reporter.track(events.manifestLoadFailed);
         reporter.captureError(`load manifest failed: ${err.message}`, err);
         return onOktetoFailed(`Okteto: Down failed to load your Okteto manifest: ${err.message}`);
@@ -260,7 +260,7 @@ async function downCommand() {
         activeManifest.delete(`${m.namespace}-${m.name}`);
         vscode.window.showInformationMessage("Okteto environment deactivated");
         reporter.track(events.downFinished);
-    } catch (err) {
+    } catch(err: any) {
         reporter.track(events.oktetoDownFailed);
         reporter.captureError(`okteto down failed: ${err.message}`, err);
         vscode.window.showErrorMessage(`Okteto: Down failed: ${err.message}`);
@@ -299,7 +299,7 @@ async function createCmd(){
     if (install) {
         try {
             await installCmd(upgrade, false);
-        } catch(err) {
+        } catch(err: any) {
             vscode.window.showErrorMessage(err.message);
             return;
         }
@@ -319,7 +319,7 @@ async function createCmd(){
 
     try {
         await okteto.init(manifestPath, choice.value);
-    } catch (err) {
+    } catch(err: any) {
         reporter.track(events.oktetoInitFailed);
         reporter.captureError(`okteto init failed: ${err.message}`, err);
         vscode.window.showErrorMessage(`Okteto: Create failed: ${err}`);
@@ -328,7 +328,7 @@ async function createCmd(){
 
     try {
         await vscode.commands.executeCommand('vscode.openFolder', manifestPath);
-    } catch (err) {
+    } catch (err: any) {
         reporter.track(events.createOpenFailed);
         reporter.captureError(`open folder failed ${err.message}`, err);
         vscode.window.showErrorMessage(`Okteto: Create failed: Couldn't open ${manifestPath}`);

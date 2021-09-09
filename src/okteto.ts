@@ -107,13 +107,13 @@ export async function install() {
   
   try {
     await promises.mkdir(path.dirname(folder), {mode: 0o700, recursive: true});
-  } catch(err) {
+  } catch(err: any) {
     console.error(`failed to create dir: ${getErrorMessage(err)}`);
   }
 
   try {
     await download(source, folder, {filename: filename});
-  } catch(err) {
+  } catch(err: any) {
     console.error(`download fail: ${err}`);
     if (err.code === 'EBUSY'){
       throw new Error(`failed to install okteto, ${installPath} is in use`);
@@ -125,7 +125,7 @@ export async function install() {
   if (chmod) {
     try {
       await execa('chmod', ['a+x', installPath]);
-    } catch(err) {
+    } catch(err: any) {
       throw new Error(`failed to chmod ${installPath}: ${getErrorMessage(err)}`);
     }
   }
@@ -135,7 +135,7 @@ export async function install() {
     if (!version) {
       throw new Error(`${installPath} wasn't correctly installed`);
     }
-  } catch(err) {
+  } catch(err: any) {
     throw err;
   }
 }
@@ -193,7 +193,7 @@ export async function down(manifest: string, namespace: string, name: string, ku
   
   try{
     await r;
-  } catch (err) {
+  } catch (err: any) {
     console.error(`${err}: ${err.stdout}`);
     const message = extractMessage(err.stdout);    
     throw new Error(message);
@@ -213,7 +213,7 @@ export async function init(manifestPath: vscode.Uri, choice: string) {
     
   try{
     await r;
-  } catch (err) {
+  } catch (err: any) {
     console.error(`${err}: ${err.stdout}`);
     const message = extractMessage(err.stdout);
     throw new Error(message);
@@ -247,7 +247,7 @@ export async function getState(namespace: string, name: string): Promise<{state:
 
   try{
     await promises.access(p);
-  } catch (err) {
+  } catch (err: any) {
     if (err.code !== 'ENOENT') {
       console.log(`failed to read state file: ${err}`);
     }
@@ -260,7 +260,7 @@ export async function getState(namespace: string, name: string): Promise<{state:
   try {
     const buffer = await promises.readFile(p, {encoding: 'utf8'});
     c = buffer.toString();
-  } catch(err) {
+  } catch(err: any) {
     console.error(`failed to open ${p}: ${err}`);
     return {state: state.unknown, message: ""};
   }
@@ -288,7 +288,7 @@ export async function isRunning(namespace: string, name: string): Promise<boolea
 
   try{
     await promises.access(p);
-  } catch (err) {
+  } catch (err: any) {
     if (err.code === 'ENOENT') {
       console.error(`${p} doesn't exist`)
       return false;
@@ -302,7 +302,7 @@ export async function isRunning(namespace: string, name: string): Promise<boolea
   try {
     const buffer = await promises.readFile(p, {encoding: 'utf8'});
     c = buffer.toString();
-  } catch(err) {
+  } catch(err: any) {
     console.error(`failed to open ${p}: ${err}`);
     return true;
   }
@@ -322,7 +322,7 @@ export async function isRunning(namespace: string, name: string): Promise<boolea
 
     console.log(`pid-${parsed} is running`)
     return true;
-  } catch(err) {
+  } catch(err: any) {
     console.error(`failed to list processes: ${err}`);
     return true;
   }
@@ -367,7 +367,7 @@ function cleanState(namespace: string, name:string) {
 
   try{
     fs.unlinkSync(p);
-  }catch(err) {
+  }catch(err: any) {
     if (err.code !== 'ENOENT'){
       console.error(`failed to delete ${p}: ${err}`);
     }
@@ -419,7 +419,7 @@ export function getOktetoId(): {id: string, machineId: string} {
     const token = JSON.parse(c);
     oktetoId = token.ID;
     machineId = token.MachineID;
-  } catch(err) {
+  } catch(err: any) {
     console.error(`failed to open ${tokenFile}: ${err}`);
     oktetoId = "";
     machineId = "";
