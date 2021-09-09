@@ -175,7 +175,8 @@ export function up(manifest: string, namespace: string, name: string, port: numb
   if (config) {
     const params = config.get<boolean>('upArgs') || '';
     cmd = `${cmd} ${params}`;
-
+  }
+  
   term.sendText(cmd, true);
 }
 
