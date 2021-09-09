@@ -169,14 +169,13 @@ export function up(manifest: string, namespace: string, name: string, port: numb
   }
 
   isActive.set(`${terminalName}-${namespace}-${name}`, true);
-  let cmd = `${binary} up -f '${manifest}' --remote '${port}'`;
+  let cmd = `${binary} up -f '${manifest}' --remote ${port}`;
 
   const config = vscode.workspace.getConfiguration('okteto');
   if (config) {
     const params = config.get<boolean>('upArgs') || '';
     cmd = `${cmd} ${params}`;
-  }
-  
+
   term.sendText(cmd, true);
 }
 
