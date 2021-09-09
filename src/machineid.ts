@@ -42,7 +42,7 @@ export function protect(): string {
 
     const id = expose(result.stdout);
     return hash(id);
-  }catch(err){
+  }catch(err: any){
     console.log(`failed to generate machineid: ${err}`);
     return 'na';
   }

@@ -24,14 +24,14 @@ export function getCurrentNamespace(kubeconfig: string): string {
         console.log(`loading kubeconfig from files: ${kubeconfig}`);
         try{
             kc = getFromFiles(kubeconfig);
-        } catch(err) {
+        } catch(err: any) {
             console.error(`failed to read the configuration: ${err}`);
             throw new Error(`${kubeconfig} is not a valid kubernetes configuration file`);
         }
     } else {
         try{
             kc = getDefault();
-        } catch(err) {
+        } catch(err: any) {
             console.error(`failed to read the default configuration: ${err}`);
             throw new Error(notFound);
         }
@@ -56,7 +56,7 @@ export function getCurrentNamespace(kubeconfig: string): string {
         }
 
         return 'default';
-    } catch(err) {
+    } catch(err: any) {
         console.error(`failed to get the context: ${err}`);
         throw new Error(err.message);
     }
