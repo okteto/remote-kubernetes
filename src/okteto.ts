@@ -108,7 +108,7 @@ export async function install() {
   try {
     await promises.mkdir(path.dirname(folder), {mode: 0o700, recursive: true});
   } catch(err) {
-    console.error(`failed to create dir: ${err.message}`);
+    console.error(`failed to create dir: ${getErrorMessage(err)}`);
   }
 
   try {
@@ -119,14 +119,14 @@ export async function install() {
       throw new Error(`failed to install okteto, ${installPath} is in use`);
     }
 
-    throw new Error(`failed to download ${source} into ${installPath}: ${err.message}`);
+    throw new Error(`failed to download ${source} into ${installPath}: ${getErrorMessage(err)}`);
   }
 
   if (chmod) {
     try {
       await execa('chmod', ['a+x', installPath]);
     } catch(err) {
-      throw new Error(`failed to chmod ${installPath}: ${err.message}`);
+      throw new Error(`failed to chmod ${installPath}: ${getErrorMessage(err)}`);
     }
   }
 
@@ -488,4 +488,12 @@ function extractMessage(error :string):string {
 
   message = message.replace('x  ', '');  
   return message;
+}
+
+function getErrorMessage(err: any): string {
+  if (err instanceof Error) {
+    return err.message;
+  }
+
+  return JSON.stringify(err);
 }
