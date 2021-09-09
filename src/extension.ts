@@ -108,14 +108,16 @@ async function upCommand(selectedManifestUri: vscode.Uri) {
         m.namespace = ns;
     }
 
-    let port: number;
-    try {
-        port = await ssh.getPort();
-    } catch(err: any) {
-        reporter.track(events.sshPortFailed);
-        reporter.captureError(`ssh.getPort failed: ${err.message}`, err);
-        return onOktetoFailed(`Okteto: Up failed to find an available port: ${err}`, `${m.namespace}-${m.name}`);
-    }
+    let port = m.port;
+    if (port === 0 || port === undefined) {
+        try {
+            port = await ssh.getPort();
+        } catch(err: any) {
+            reporter.track(events.sshPortFailed);
+            reporter.captureError(`ssh.getPort failed: ${err.message}`, err);
+            return onOktetoFailed(`Okteto: Up failed to find an available port: ${err}`, `${m.namespace}-${m.name}`);
+        }
+    }    
 
     okteto.up(manifestPath, m.namespace, m.name, port, kubeconfig);
     activeManifest.set(`${m.namespace}-${m.name}`, manifestUri);

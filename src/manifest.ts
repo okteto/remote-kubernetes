@@ -4,7 +4,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 
 export class Manifest {
-    constructor(public name: string, public namespace: string, public workdir: string) {}
+    constructor(public name: string, public namespace: string, public workdir: string, public port: number) {}
 }
 
 export async function getManifest(manifestPath: string): Promise<Manifest> {
@@ -21,7 +21,7 @@ export async function getManifest(manifestPath: string): Promise<Manifest> {
 
     const j = parsed.toJSON();
     
-    const m = new Manifest(j.name, j.namespace, j.workdir);
+    const m = new Manifest(j.name, j.namespace, j.workdir, j.remote);
     if (!m.name){
         throw new Error(`${manifestPath} is not a valid Okteto manifest`);
     }
