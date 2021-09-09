@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.3.4
+- Update to okteto `1.13.10`
+- Add custom icon to the terminal
+- Build with Typescript 4
+
 ## 0.3.3
 - Fix regression on `okteto up`
 
