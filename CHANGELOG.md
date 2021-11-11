@@ -1,9 +1,11 @@
 # Change Log
 
 ## 0.3.5
-- Update to okteto `1.14.5`
-- Enable SSH-RSA keys for the SSH host created by okteto
-- Update dependencies
+- Update to okteto `1.14.5`.
+- Enable SSH-RSA keys for the SSH host created by okteto.
+- Handle $HOME directory with spaces correctly.
+- Install the correct binary in ARM64 devices.
+- Update dependencies.
 
 ## 0.3.4
 - Update to okteto `1.13.10`
