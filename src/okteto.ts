@@ -107,7 +107,14 @@ export async function install() {
       chmod = false;
       break;
     case 'darwin':
+      switch(os.arch()){
+        case 'arm64':
+          source = `https://github.com/okteto/okteto/releases/download/${minimum}/okteto-Darwin-arm64`; 
+          break;
+        default:
       source = `https://github.com/okteto/okteto/releases/download/${minimum}/okteto-Darwin-x86_64`;
+          break;
+      }
       break;
     default:
         source = `https://github.com/okteto/okteto/releases/download/${minimum}/okteto-Linux-x86_64`;
