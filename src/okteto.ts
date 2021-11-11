@@ -98,21 +98,36 @@ async function getVersion(binary: string): Promise<string | undefined> {
 }
 
 export async function install() {
-  let source = '';
   let chmod = true;
+  let binaryName = "okteto.exe";
 
   switch(os.platform()){
     case 'win32':
-      source = `https://github.com/okteto/okteto/releases/download/${minimum}/okteto.exe`;
+      binaryName = `okteto.exe`;
       chmod = false;
       break;
     case 'darwin':
-      source = `https://github.com/okteto/okteto/releases/download/${minimum}/okteto-Darwin-x86_64`;
+      switch(os.arch()){
+        case 'arm64':
+          binaryName = "okteto-Darwin-arm64"; 
+          break;
+        default:
+          binaryName =  "okteto-Darwin-x86_64";
+          break;
+      }
       break;
     default:
-        source = `https://github.com/okteto/okteto/releases/download/${minimum}/okteto-Linux-x86_64`;
+      switch(os.arch()){
+        case 'arm64':
+          binaryName =  "okteto-Linux-arm64"; 
+          break;
+        default: 
+          binaryName =  "okteto-Linux-x86_64";
+          break;
+      }
   }
 
+  const source = `https://github.com/okteto/okteto/releases/download/${minimum}/${binaryName}`;
   const installPath = getInstallPath();
   const folder = path.dirname(installPath);
   const filename = path.basename(installPath);
