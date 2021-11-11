@@ -20,8 +20,10 @@ export function activate(context: vscode.ExtensionContext) {
 
     console.log(`okteto.remote-kubernetes ${version} activated`);
 
-    const ids = okteto.getOktetoId();
-    reporter = new Reporter(version, ids.id, ids.machineId);
+    const ctx = okteto.getContext();
+    const machineId = okteto.getMachineId();
+
+    reporter = new Reporter(version, ctx.id, machineId);
     reporter.track(events.activated);
 
     context.subscriptions.push(vscode.commands.registerCommand('okteto.up', upCommand));
@@ -95,17 +97,22 @@ async function upCommand(selectedManifestUri: vscode.Uri) {
         return onOktetoFailed(`Okteto: Up failed to load your Okteto manifest: ${err.message}`);
     }
 
+    const ctx = okteto.getContext();
     const kubeconfig = kubernetes.getKubeconfig();
 
 
     if (!m.namespace) {
-        const ns = kubernetes.getCurrentNamespace(kubeconfig);
-        if (!ns) {
-            vscode.window.showErrorMessage("Couldn't detect your current Kubernetes context.");
-            return;
+        if (ctx.namespace != "") {
+            m.namespace = ctx.namespace;
+        }else {
+            const ns = kubernetes.getCurrentNamespace(kubeconfig);
+            if (!ns) {
+                vscode.window.showErrorMessage("Couldn't detect your current Kubernetes context.");
+                return;
+            }
+        
+            m.namespace = ns;
         }
-    
-        m.namespace = ns;
     }
 
     let port = m.port;

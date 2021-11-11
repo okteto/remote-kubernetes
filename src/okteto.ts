@@ -19,7 +19,7 @@ import find from 'find-process';
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
 const pidFile = 'okteto.pid';
-const minimum = '1.13.10';
+const minimum = '1.14.5';
 const terminalName = `okteto`;
 
 export const state = {
@@ -33,6 +33,18 @@ export const state = {
   unknown: 'unknown',
   failed: 'failed',
 };
+
+export class Context {
+  isOkteto: boolean = false;
+  id: string = "";
+  namespace: string = "";
+
+  constructor(id: string, namespace: string, isOkteto: boolean) {
+   this.id = id;
+   this.isOkteto = isOkteto;
+   this.namespace = namespace;
+  }
+}
 
 const isActive = new Map();
 
@@ -410,28 +422,42 @@ export function showTerminal(terminalNameSuffix: string){
   });
 }
 
-export function getOktetoId(): {id: string, machineId: string} {
-  const tokenFile =  path.join(os.homedir(), oktetoFolder, ".token.json");
-  let oktetoId: string;
-  let machineId: string;
-
+export function getContext(): Context {
+  const contextsFile =  path.join(os.homedir(), oktetoFolder,"context", "config.json");
   try {
-    const c = fs.readFileSync(tokenFile, {encoding: 'utf8'});
+    const c = fs.readFileSync(contextsFile, {encoding: 'utf8'});
+    const contexts = JSON.parse(c);
+    const current = contexts["current-context"];
+    const ctx = contexts.contexts[current];
+    if (ctx == null) {
+      return new Context("", "", false);
+    }
+
+    return {id: ctx.id, namespace: ctx.namespace, isOkteto: ctx.isOkteto};
+  } catch(err: any) {
+    console.error(`failed to get current context from ${contextsFile}: ${err}`);
+  }
+
+  return new Context("", "", false);
+}
+
+export function getMachineId(): string {
+  const analyticsFile =  path.join(os.homedir(), oktetoFolder,  ".token.json");
+  let machineId = "";
+  try {
+    const c = fs.readFileSync(analyticsFile, {encoding: 'utf8'});
     const token = JSON.parse(c);
-    oktetoId = token.ID;
     machineId = token.MachineID;
   } catch(err: any) {
-    console.error(`failed to open ${tokenFile}: ${err}`);
-    oktetoId = "";
+    console.error(`failed to open ${analyticsFile}: ${err}`);
     machineId = "";
   }
 
   if (!machineId) {
     machineId = protect();
-
   }
 
-  return {id: oktetoId, machineId: machineId};
+  return machineId;
 }
 
 export function getLanguages(): RuntimeItem[] {
