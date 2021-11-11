@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.3.5
+- Update to okteto `1.14.5`
+- Enable SSH-RSA keys for the SSH host created by okteto
+- Update dependencies
+
 ## 0.3.4
 - Update to okteto `1.13.10`
 - Add custom icon to the terminal
