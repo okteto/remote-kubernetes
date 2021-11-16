@@ -63,7 +63,8 @@ export async function needsInstall(): Promise<{install: boolean, upgrade: boolea
       return {install: false, upgrade: false};
     }
     return {install: semver.lt(version, minimum), upgrade: true};
-  } catch {
+  } catch (err: any) {
+    console.error(`${err}: ${err.stdout}`);
     return {install: false, upgrade: false};
   }
 }
@@ -83,7 +84,7 @@ async function isInstalled(binaryPath: string): Promise<boolean> {
 }
 
 async function getVersion(binary: string): Promise<string | undefined> {
-  const r = await execa.command(`"${binary}" version`);
+  const r = await execa(binary, ['version']);
   if (r.failed) {
     console.error(`okteto version failed: ${r.stdout} ${r.stderr}`);
     return undefined;
@@ -196,7 +197,7 @@ export function up(manifest: string, namespace: string, name: string, port: numb
   }
 
   isActive.set(`${terminalName}-${namespace}-${name}`, true);
-  let cmd = `"${binary}" up -f '${manifest}' --remote ${port}`;
+  let cmd = `${binary} up -f '${manifest}' --remote ${port}`;
 
   const config = vscode.workspace.getConfiguration('okteto');
   if (config) {
