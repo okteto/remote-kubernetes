@@ -19,7 +19,7 @@ import find from 'find-process';
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
 const pidFile = 'okteto.pid';
-const minimum = '1.14.6';
+const minimum = '1.14.10';
 const terminalName = `okteto`;
 
 export const state = {
@@ -197,7 +197,7 @@ export function up(manifest: string, namespace: string, name: string, port: numb
   }
 
   isActive.set(`${terminalName}-${namespace}-${name}`, true);
-  let cmd = `${binary} up -f '${manifest}' --remote ${port}`;
+  let cmd = `"${binary}" up -f '${manifest}' --remote ${port}`;
 
   const config = vscode.workspace.getConfiguration('okteto');
   if (config) {
