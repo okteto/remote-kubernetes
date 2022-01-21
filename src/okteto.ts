@@ -169,7 +169,7 @@ export async function install() {
   }
 }
 
-export function up(manifest: string, namespace: string, name: string, port: number, kubeconfig: string) {
+export function up(manifest: string, namespace: string, name: string, port: number) {
   console.log(`okteto up ${manifest}`);
   disposeTerminal(`${terminalName}-${namespace}-${name}`);
   isActive.set(`${terminalName}-${namespace}-${name}`, false);
@@ -182,7 +182,6 @@ export function up(manifest: string, namespace: string, name: string, port: numb
     env: {
       "OKTETO_AUTODEPLOY":"1",
       "OKTETO_ORIGIN":"vscode",
-      "KUBECONFIG": kubeconfig,
     },
     message: "This terminal will be automatically closed when you run the okteto down command. Happy coding!",
     iconPath: new vscode.ThemeIcon('server-process')
@@ -208,13 +207,12 @@ export function up(manifest: string, namespace: string, name: string, port: numb
   term.sendText(cmd, true);
 }
 
-export async function down(manifest: string, namespace: string, name: string, kubeconfig: string) {
+export async function down(manifest: string, namespace: string, name: string) {
   isActive.set(`${terminalName}-${namespace}-${name}`, false);
   disposeTerminal(`${terminalName}-${namespace}-${name}`);
   
   const r =  execa(getBinary(), ['down', '--file', `${manifest}`, '--namespace', `${namespace}`], {
     env: {
-      "KUBECONFIG": kubeconfig,
       "OKTETO_ORIGIN":"vscode"
     },
     cwd: path.dirname(manifest),

@@ -4,7 +4,6 @@ import * as vscode from 'vscode';
 import * as manifest from './manifest';
 import * as ssh from './ssh';
 import * as okteto from './okteto';
-import * as kubernetes from './kubernetes';
 import {Reporter, events} from './telemetry';
 
 
@@ -102,20 +101,9 @@ async function upCmd(selectedManifestUri: vscode.Uri) {
     }
 
     const ctx = okteto.getContext();
-    const kubeconfig = kubernetes.getKubeconfig();
-
-
     if (!m.namespace) {
         if (ctx.namespace != "") {
             m.namespace = ctx.namespace;
-        }else {
-            const ns = kubernetes.getCurrentNamespace(kubeconfig);
-            if (!ns) {
-                vscode.window.showErrorMessage("Couldn't detect your current Kubernetes context.");
-                return;
-            }
-        
-            m.namespace = ns;
         }
     }
 
@@ -130,7 +118,7 @@ async function upCmd(selectedManifestUri: vscode.Uri) {
         }
     }    
 
-    okteto.up(manifestPath, m.namespace, m.name, port, kubeconfig);
+    okteto.up(manifestPath, m.namespace, m.name, port);
     activeManifest.set(`${m.namespace}-${m.name}`, manifestUri);
 
     try{
@@ -256,20 +244,15 @@ async function downCmd() {
         return onOktetoFailed(`Okteto: Down failed to load your Okteto manifest: ${err.message}`);
     }
 
-    const kubeconfig = kubernetes.getKubeconfig();
-
+    const ctx = okteto.getContext();
     if (!m.namespace) {
-        const ns = kubernetes.getCurrentNamespace(kubeconfig);
-        if (!ns) {
-            vscode.window.showErrorMessage("Couldn't detect your current Kubernetes context.");
-            return;
+        if (ctx.namespace != "") {
+            m.namespace = ctx.namespace;
         }
-    
-        m.namespace = ns;
     }
 
     try {
-        await okteto.down(manifestPath, m.namespace, m.name, kubeconfig);
+        await okteto.down(manifestPath, m.namespace, m.name);
         activeManifest.delete(`${m.namespace}-${m.name}`);
         vscode.window.showInformationMessage("Okteto environment deactivated");
         reporter.track(events.downFinished);
