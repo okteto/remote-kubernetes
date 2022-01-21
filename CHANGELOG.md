@@ -1,7 +1,8 @@
 # Change Log
 
-## 0.3.5
-- Update to okteto `1.14.5`.
+## 0.4.0
+- New commands to deploy and delete your development environment, and to set the default namespace.
+- Update to okteto `1.15.0`.
 - Enable SSH-RSA keys for the SSH host created by okteto.
 - Handle $HOME directory with spaces correctly.
 - Install the correct binary in ARM64 devices.

@@ -15,7 +15,7 @@ The extension starts a development environment in your Kubernetes cluster by usi
 
 ## Requirements
 
-1. VS Code 1.45 or newer.
+1. VS Code 1.60 or newer.
 1. Deploy access to a Kubernetes cluster (you can use https://cloud.okteto.com/, Okteto's free managed Kubernetes service for developers).
 1. An OpenSSH compatible [SSH client](https://code.visualstudio.com/docs/remote/troubleshooting#_installing-a-supported-ssh-client).
 
@@ -23,7 +23,7 @@ The extension starts a development environment in your Kubernetes cluster by usi
 
 1. [Install VS Code](https://code.visualstudio.com/) and [this extension](https://marketplace.visualstudio.com/items?itemName=okteto.remote-kubernetes).
 1. Install the [Remote - SSH](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh) extension.
-1. [Download and configure](https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/) your `kubeconfig` file.
+1. (optional) [Download and configure](https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/) your `kubeconfig` file.
 
 ## Getting started
 
@@ -31,7 +31,9 @@ There is a complete tutorial [here](https://okteto.com/blog/remote-kubernetes-de
 
 1. Clone https://github.com/okteto/vscode-remote-go
 1. Start VS Code
-1. Run the `Okteto: Up` command to launch your development environment in Kubernetes. When prompted, pick the `okteto.yml` manifest. 
+1. If this is your first time, set the context by running the  `Okteto: Set the context for all the Okteto commands`. You can pass either an Okteto URL (if you are developing in Okteto) or the name of your Kubernetes context. Every other command you execute will use this from now on. 
+1. Deploy your development environment. If you are using Okteto, you can run the `Okteto: Deploy your development environment` command to deploy it. 
+1. Run the `Okteto: Up` command to launch your development container. When prompted, pick the `okteto.yml` manifest. 
 1. After a few seconds, you'll be asked to select a host. Pick the `vscode-remote-go.okteto` entry from the dialog to launch your remote VS Code instance.
 1. Develop directly in Kubernetes from VS Code!
 
