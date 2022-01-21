@@ -22,7 +22,7 @@ const contextFolder = 'context';
 const contextFile = 'config.json';
 const terminalName = `okteto`;
 
-export const minimum = '1.15.0-rc.2';
+export const minimum = '1.15.0';
 
 export const state = {
   starting: 'starting',
