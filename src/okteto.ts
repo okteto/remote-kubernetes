@@ -85,7 +85,7 @@ async function isInstalled(binaryPath: string): Promise<boolean> {
 }
 
 async function getVersion(binary: string): Promise<string | undefined> {
-  const r = await execa.command(`"${binary}" version`);
+  const r = await execa(binary, ['version']);
   if (r.failed) {
     console.error(`okteto version failed: ${r.stdout} ${r.stderr}`);
     return undefined;
