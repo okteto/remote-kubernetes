@@ -92,6 +92,11 @@
           "group": "navigation"
         },
         {
+          "when": "resourceFilename in ext.supportedDeployFiles",
+          "command": "okteto.deploy",
+          "group": "navigation"
+        },
+        {
           "when": "resourceFilename == okteto-pipeline.yml",
           "command": "okteto.deploy",
           "group": "navigation"
