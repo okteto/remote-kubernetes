@@ -406,14 +406,25 @@ async function contextCmd(){
     }
 
     reporter.track(events.context);
-
-    const context = await vscode.window.showInputBox({title: "Set the context for all the Okteto commands", prompt: "Specify an Okteto URL or a Kubernetes context name", placeHolder: "https://cloud.okteto.com"})
-    if (!context) {
+    let choice = await vscode.window.showQuickPick(okteto.getContextList(), {canPickMany: false, placeHolder: 'Select the context for all the Okteto commands'});
+    if (!choice) {
         return;
     }
 
+    let context = choice.value;
+    if (choice.value === "create") {
+        const create = await vscode.window.showInputBox({title: "Set the context for all the Okteto commands", prompt: "Specify an Okteto URL or a Kubernetes context name", placeHolder: "https://cloud.okteto.com"})
+        if (!create) {
+            return;
+        }
+
+        context = create;
+    }
+
     const success = await okteto.setContext(context);
-    if (!success) {
+    if (success) {
+        vscode.window.showInformationMessage('Your new context was set successfully');    
+    } else {
         vscode.window.showErrorMessage('fail to set the context');    
         return;
     }

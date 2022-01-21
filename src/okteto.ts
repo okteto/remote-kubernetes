@@ -40,10 +40,12 @@ export class Context {
   isOkteto: boolean = false;
   id: string = "";
   namespace: string = "";
+  name: string = "";
 
-  constructor(id: string, namespace: string, isOkteto: boolean) {
+  constructor(id: string, name: string, namespace: string, isOkteto: boolean) {
    this.id = id;
    this.isOkteto = isOkteto;
+   this.name = name;
    this.namespace = namespace;
   }
 }
@@ -306,8 +308,7 @@ export async function setContext(context: string) : Promise<boolean>{
   isActive.set(name, true);
   let cmd = `${getBinary()} context use ${context}`;
   term.sendText(cmd, true);
-  term.show(true);
-
+  
   return new Promise<boolean>(function(resolve, reject) {
     var timer = setTimeout(function () {
       reject(new Error('Context was not created, check your terminal for errors'));
@@ -315,7 +316,7 @@ export async function setContext(context: string) : Promise<boolean>{
 
     fs.watchFile(getContextConfigurationFile(), (curr, prev) => {
       const ctx = getContext();
-      if (ctx.id !== "") {
+      if (ctx.name === context) {
         clearTimeout(timer);
         disposeTerminal(name);
         resolve(true);
@@ -560,15 +561,15 @@ export function getContext(): Context {
     const current = contexts["current-context"];
     const ctx = contexts.contexts[current];
     if (ctx == null) {
-      return new Context("", "", false);
+      return new Context("", "", "", false);
     }
 
-    return {id: ctx.id, namespace: ctx.namespace, isOkteto: ctx.isOkteto};
+    return {id: ctx.id, name: ctx.name, namespace: ctx.namespace, isOkteto: ctx.isOkteto};
   } catch(err: any) {
     console.error(`failed to get current context from ${getContextConfigurationFile()}: ${err}`);
   }
 
-  return new Context("", "", false);
+  return new Context("", "", "", false);
 }
 
 export function getMachineId(): string {
@@ -589,6 +590,26 @@ export function getMachineId(): string {
 
   return machineId;
 }
+
+export function getContextList(): RuntimeItem[]{
+  const items = new Array<RuntimeItem>();
+
+  try {
+    const c = fs.readFileSync(getContextConfigurationFile(), {encoding: 'utf8'});
+    const contexts = JSON.parse(c);
+    const map = contexts["contexts"];
+    for (const [key, value] of Object.entries(map) ) {
+      items.push(new RuntimeItem(key, "", key))  
+    }
+  } catch(err: any) {
+    console.error(`failed to get context list from ${getContextConfigurationFile()}: ${err}`);
+    items.push(new RuntimeItem("https://cloud.okteto.com", "", "https://cloud.okteto.com"))
+  }
+
+  items.push(new RuntimeItem("Create new context", "Create new context", "create"))
+  return items;
+}
+
 export function getLanguages(): RuntimeItem[] {
   const items = new Array<RuntimeItem>();
   items.push(new RuntimeItem("Java", "Maven", "maven"));
@@ -620,7 +641,7 @@ class RuntimeItem implements vscode.QuickPickItem {
 	label: string;
 
 	constructor(private l: string, public description: string, public value: string) {
-		this.label = pascalCase(l);
+		this.label = l;
 	}
 }
 
