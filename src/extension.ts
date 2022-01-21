@@ -10,6 +10,15 @@ import {Reporter, events} from './telemetry';
 const activeManifest = new Map<string, vscode.Uri>();
 let reporter: Reporter;
 
+
+vscode.commands.executeCommand('setContext', 'ext.supportedDeployFiles', [
+    'okteto-pipeline.yml',
+    'okteto-pipeline.yaml',
+    'docker-compose.yml',
+    'docker-compose.yaml'
+  ]);
+  
+
 function getExtensionVersion() : string {
     let version = "0.0.0";
     const ex = vscode.extensions.getExtension('okteto.remote-kubernetes');
