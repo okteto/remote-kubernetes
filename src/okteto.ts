@@ -14,6 +14,8 @@ import {pascalCase} from 'change-case';
 import * as paths from './paths';
 import { clearInterval, setInterval } from 'timers';
 import find from 'find-process';
+import { resolve } from 'path/posix';
+import { rejects } from 'assert';
 
 
 const oktetoFolder = '.okteto';
@@ -289,7 +291,7 @@ export async function destroy() {
   console.log('okteto destroy completed');
 }
 
-export async function setContext(context: string) {
+export async function setContext(context: string) : Promise<boolean>{
   const name = `${terminalName}-context`;
   disposeTerminal(name);
   isActive.set(name, false);
@@ -307,7 +309,21 @@ export async function setContext(context: string) {
   let cmd = `${getBinary()} context use ${context}`;
   term.sendText(cmd, true);
   term.show(true);
-  console.log('okteto context completed');
+
+  return new Promise<boolean>(function(resolve, reject) {
+    var timer = setTimeout(function () {
+      reject(new Error('Context was not created, check your terminal for errors'));
+    }, 5 * 60 * 1000);
+
+    const contextsFile =  path.join(os.homedir(), oktetoFolder,"context", "config.json");
+    fs.watchFile(contextsFile, (curr, prev) => {
+      const ctx = getContext();
+      if (ctx.id !== "") {
+        disposeTerminal(name);
+        resolve(true);
+      }
+    });
+  });
 }
 
 export async function setNamespace(namespace: string) {
@@ -525,6 +541,7 @@ export function showTerminal(terminalNameSuffix: string){
 
 export function getContext(): Context {
   const contextsFile =  path.join(os.homedir(), oktetoFolder,"context", "config.json");
+    
   try {
     const c = fs.readFileSync(contextsFile, {encoding: 'utf8'});
     const contexts = JSON.parse(c);

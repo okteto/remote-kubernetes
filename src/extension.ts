@@ -401,7 +401,11 @@ async function contextCmd(){
         return;
     }
 
-    await okteto.setContext(context);
+    const success = await okteto.setContext(context);
+    if (!success) {
+        vscode.window.showErrorMessage('fail to set the context');    
+        return;
+    }
 
     const machineId = okteto.getMachineId();
     const ctx = okteto.getContext();
