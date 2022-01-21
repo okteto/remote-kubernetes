@@ -33,7 +33,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 async function installCmd(upgrade: boolean, handleErr: boolean) {
-    let title = "Installing Okteto";
+    let title = `Installing Okteto ${okteto.minimum}`;
     let success = `Okteto was successfully installed`;
     
     if (upgrade) {
