@@ -10,20 +10,20 @@ import {Reporter, events} from './telemetry';
 const activeManifest = new Map<string, vscode.Uri>();
 let reporter: Reporter;
 
-export function activate(context: vscode.ExtensionContext) {
+function getExtensionVersion() : string {
     let version = "0.0.0";
     const ex = vscode.extensions.getExtension('okteto.remote-kubernetes');
     if (ex) {
         version = ex.packageJSON.version;
     }
 
+    return version;
+}
+
+export function activate(context: vscode.ExtensionContext) {
+    const version = getExtensionVersion();
+
     console.log(`okteto.remote-kubernetes ${version} activated`);
-
-    const ctx = okteto.getContext();
-    const machineId = okteto.getMachineId();
-
-    reporter = new Reporter(version, ctx.id, machineId);
-    reporter.track(events.activated);
 
     context.subscriptions.push(vscode.commands.registerCommand('okteto.up', upCmd));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.down', downCmd));
@@ -33,6 +33,11 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('okteto.destroy', destroyCmd));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.context', contextCmd));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.namespace', namespaceCmd));
+
+    const ctx = okteto.getContext();
+    const machineId = okteto.getMachineId();
+    reporter = new Reporter(version, ctx.id, machineId);
+    reporter.track(events.activated);
 }
 
 async function installCmd(upgrade: boolean, handleErr: boolean) {
@@ -391,6 +396,11 @@ async function contextCmd(){
     }
 
     okteto.setContext(context);
+
+    const machineId = okteto.getMachineId();
+    const ctx = okteto.getContext();
+    reporter = new Reporter(getExtensionVersion(), ctx.id, machineId);
+    reporter.track(events.activated);
 }
 
 async function namespaceCmd(){
