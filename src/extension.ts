@@ -40,6 +40,30 @@ export function activate(context: vscode.ExtensionContext) {
     reporter.track(events.activated);
 }
 
+async function checkPrereqs(checkContext: boolean) {
+    const { install, upgrade } = await okteto.needsInstall();
+    if (install) {
+        try {
+            await installCmd(upgrade, false);
+        } catch(err: any) {
+            throw err;
+        }
+    }
+
+    if (!checkContext) {
+        return
+    }
+
+    const ctx = okteto.getContext();
+    if (ctx.id === '') {
+        try {
+            await contextCmd();
+        } catch(err: any) {
+            throw err;
+        }
+    }
+}
+
 async function installCmd(upgrade: boolean, handleErr: boolean) {
     let title = "Installing Okteto";
     let success = `Okteto was successfully installed`;
@@ -73,14 +97,11 @@ async function installCmd(upgrade: boolean, handleErr: boolean) {
 }
 
 async function upCmd(selectedManifestUri: vscode.Uri) {
-    const { install, upgrade } = await okteto.needsInstall();
-    if (install) {
-        try {
-            await installCmd(upgrade, false);
-        } catch(err: any) {
-            vscode.window.showErrorMessage(err.message);
-            return;
-        }
+    try{
+        await checkPrereqs(true);
+    } catch(err: any) {   
+        vscode.window.showErrorMessage(err.message);    
+        return;
     }
 
     reporter.track(events.up);
@@ -223,14 +244,11 @@ async function finalizeUp(namespace: string, name: string, workdir: string) {
 }
 
 async function downCmd() {
-    const { install, upgrade } = await okteto.needsInstall();
-    if (install){
-        try {
-            await installCmd(upgrade, false);
-        } catch(err: any){
-            vscode.window.showErrorMessage(err.message);
-            return;
-        }
+    try{
+        await checkPrereqs(true);
+    } catch(err: any) {   
+        vscode.window.showErrorMessage(err.message);    
+        return;
     }
 
     reporter.track(events.down);
@@ -269,14 +287,11 @@ async function downCmd() {
 }
 
 async function deployCmd() {
-    const { install, upgrade } = await okteto.needsInstall();
-    if (install){
-        try {
-            await installCmd(upgrade, false);
-        } catch(err: any){
-            vscode.window.showErrorMessage(err.message);
-            return;
-        }
+    try{
+        await checkPrereqs(true);
+    } catch(err: any) {   
+        vscode.window.showErrorMessage(err.message);    
+        return;
     }
 
     reporter.track(events.deploy);
@@ -289,14 +304,11 @@ async function deployCmd() {
 }
 
 async function destroyCmd() {
-    const { install, upgrade } = await okteto.needsInstall();
-    if (install){
-        try {
-            await installCmd(upgrade, false);
-        } catch(err: any){
-            vscode.window.showErrorMessage(err.message);
-            return;
-        }
+    try{
+        await checkPrereqs(true);
+    } catch(err: any) {   
+        vscode.window.showErrorMessage(err.message);    
+        return;
     }
 
     reporter.track(events.destroy);
@@ -334,17 +346,14 @@ async function getManifestOrAsk(): Promise<string | undefined> {
 }
 
 async function createCmd(){
-    reporter.track(events.create);
-
-    const { install, upgrade } = await okteto.needsInstall();
-    if (install) {
-        try {
-            await installCmd(upgrade, false);
-        } catch(err: any) {
-            vscode.window.showErrorMessage(err.message);
-            return;
-        }
+    try{
+        await checkPrereqs(true);
+    } catch(err: any) {   
+        vscode.window.showErrorMessage(err.message);    
+        return;
     }
+
+    reporter.track(events.create);
 
     const manifestPath = manifest.getDefaultLocation();
     if (!manifestPath) {
@@ -378,24 +387,21 @@ async function createCmd(){
 }
 
 async function contextCmd(){
-    reporter.track(events.context);
-
-    const { install, upgrade } = await okteto.needsInstall();
-    if (install) {
-        try {
-            await installCmd(upgrade, false);
-        } catch(err: any) {
-            vscode.window.showErrorMessage(err.message);
-            return;
-        }
+    try{
+        await checkPrereqs(false);
+    } catch(err: any) {   
+        vscode.window.showErrorMessage(err.message);    
+        return;
     }
+
+    reporter.track(events.context);
 
     const context = await vscode.window.showInputBox({title: "Set the context for all the Okteto commands", prompt: "Specify an Okteto URL or a Kubernetes context name", placeHolder: "https://cloud.okteto.com"})
     if (!context) {
         return;
     }
 
-    okteto.setContext(context);
+    await okteto.setContext(context);
 
     const machineId = okteto.getMachineId();
     const ctx = okteto.getContext();
@@ -404,24 +410,20 @@ async function contextCmd(){
 }
 
 async function namespaceCmd(){
-    reporter.track(events.namespace);
-
-    const { install, upgrade } = await okteto.needsInstall();
-    if (install) {
-        try {
-            await installCmd(upgrade, false);
-        } catch(err: any) {
-            vscode.window.showErrorMessage(err.message);
-            return;
-        }
+    try{
+        await checkPrereqs(true);
+    } catch(err: any) {   
+        vscode.window.showErrorMessage(err.message);    
+        return;
     }
 
+    reporter.track(events.namespace);
     const ns = await vscode.window.showInputBox({title: "Set the namespace for all the Okteto commands"})
     if (!ns) {
         return;
     }
 
-    okteto.setNamespace(ns);
+    await okteto.setNamespace(ns);
 }
 
 function onOktetoFailed(message: string, terminalSuffix: string | null = null) {
