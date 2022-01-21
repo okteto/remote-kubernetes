@@ -32,7 +32,7 @@ There is a complete tutorial [here](https://okteto.com/blog/remote-kubernetes-de
 1. Clone https://github.com/okteto/vscode-remote-go
 1. Start VS Code
 1. If this is your first time, set the context by running the  `Okteto: Set the context for all the Okteto commands`. You can pass either an Okteto URL (if you are developing in Okteto) or the name of your Kubernetes context. Every other command you execute will use this from now on. 
-1. Deploy your development environment. If you are using Okteto, you can run the `Okteto: Deploy your development environment` command to deploy it. 
+1. Deploy your development environment. If you are using Okteto Cloud, you can run the `Okteto: Deploy your development environment` command to deploy it. 
 1. Run the `Okteto: Up` command to launch your development container. When prompted, pick the `okteto.yml` manifest. 
 1. After a few seconds, you'll be asked to select a host. Pick the `vscode-remote-go.okteto` entry from the dialog to launch your remote VS Code instance.
 1. Develop directly in Kubernetes from VS Code!
