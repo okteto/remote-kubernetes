@@ -316,8 +316,7 @@ export async function setContext(context: string) : Promise<boolean>{
       reject(new Error('Context was not created, check your terminal for errors'));
     }, 5 * 60 * 1000);
 
-    const contextsFile =  path.join(os.homedir(), oktetoFolder,"context", "config.json");
-    fs.watchFile(contextsFile, (curr, prev) => {
+    fs.watchFile(getContextConfigurationFile(), (curr, prev) => {
       const ctx = getContext();
       if (ctx.id !== "") {
         clearTimeout(timer);
@@ -352,18 +351,16 @@ export async function setNamespace(namespace: string) {
       reject(new Error('Context was not created, check your terminal for errors'));
     }, 5 * 60 * 1000);
 
-    const contextsFile =  path.join(os.homedir(), oktetoFolder,"context", "config.json");
-    fs.watchFile(contextsFile, (curr, prev) => {
+    fs.watchFile(getContextConfigurationFile(), (curr, prev) => {
       const ctx = getContext();
       if (ctx.namespace === namespace) {
         clearTimeout(timer);
         disposeTerminal(name);
         resolve(true);
+        console.log('okteto namespace completed');
       }
     });
   });
-
-  console.log('okteto namespace completed');
 }
 
 
@@ -559,10 +556,9 @@ export function showTerminal(terminalNameSuffix: string){
 }
 
 export function getContext(): Context {
-  const contextsFile =  path.join(os.homedir(), oktetoFolder,"context", "config.json");
     
   try {
-    const c = fs.readFileSync(contextsFile, {encoding: 'utf8'});
+    const c = fs.readFileSync(getContextConfigurationFile(), {encoding: 'utf8'});
     const contexts = JSON.parse(c);
     const current = contexts["current-context"];
     const ctx = contexts.contexts[current];
@@ -572,7 +568,7 @@ export function getContext(): Context {
 
     return {id: ctx.id, namespace: ctx.namespace, isOkteto: ctx.isOkteto};
   } catch(err: any) {
-    console.error(`failed to get current context from ${contextsFile}: ${err}`);
+    console.error(`failed to get current context from ${getContextConfigurationFile()}: ${err}`);
   }
 
   return new Context("", "", false);
