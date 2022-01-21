@@ -1,7 +1,8 @@
 # Change Log
 
 ## 0.4.0
-- New commands to deploy and delete your development environment, and to set the default namespace.
+- You can know [set up a context](https://www.okteto.com/docs/reference/cli/#context) that will be applied to all commands, independently of your kubernetes context.
+- New commands to deploy and delete your development environment, and to set the default namespace for Okteto commands.
 - Update to okteto `1.15.0`.
 - Enable SSH-RSA keys for the SSH host created by okteto.
 - Handle $HOME directory with spaces correctly.
