@@ -23,8 +23,9 @@ const stateFile = 'okteto.state';
 const pidFile = 'okteto.pid';
 const contextFolder = 'context';
 const contextFile = 'config.json';
-const minimum = '1.15.0-rc.2';
 const terminalName = `okteto`;
+
+export const minimum = '1.15.0-rc.2';
 
 export const state = {
   starting: 'starting',
