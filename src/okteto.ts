@@ -15,13 +15,14 @@ import * as paths from './paths';
 import { clearInterval, setInterval } from 'timers';
 import find from 'find-process';
 
-
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
 const pidFile = 'okteto.pid';
+const contextFolder = 'context';
+const contextFile = 'config.json';
 const terminalName = `okteto`;
 
-export const minimum = '1.14.5';
+export const minimum = '1.15.0-rc.2';
 
 export const state = {
   starting: 'starting',
@@ -47,7 +48,7 @@ export class Context {
   }
 }
 
-const isActive = new Map();
+const isActive = new Map<string, Boolean>();
 
 export async function needsInstall(): Promise<{install: boolean, upgrade: boolean}>{
   const binary = getBinary();
@@ -168,12 +169,11 @@ export async function install() {
   }
 }
 
-export function up(manifest: string, namespace: string, name: string, port: number, kubeconfig: string) {
+export function up(manifest: string, namespace: string, name: string, port: number) {
   console.log(`okteto up ${manifest}`);
-  if (isActive.has(`${terminalName}-${namespace}-${name}`) && isActive.get(`${terminalName}-${namespace}-${name}`)) {
-    disposeTerminal(`${namespace}-${name}`);
-  }
+  disposeTerminal(`${terminalName}-${namespace}-${name}`);
   isActive.set(`${terminalName}-${namespace}-${name}`, false);
+
   cleanState(namespace, name);
   const term = vscode.window.createTerminal({
     name: `${terminalName}-${namespace}-${name}`,
@@ -182,7 +182,6 @@ export function up(manifest: string, namespace: string, name: string, port: numb
     env: {
       "OKTETO_AUTODEPLOY":"1",
       "OKTETO_ORIGIN":"vscode",
-      "KUBECONFIG": kubeconfig,
     },
     message: "This terminal will be automatically closed when you run the okteto down command. Happy coding!",
     iconPath: new vscode.ThemeIcon('server-process')
@@ -208,13 +207,12 @@ export function up(manifest: string, namespace: string, name: string, port: numb
   term.sendText(cmd, true);
 }
 
-export async function down(manifest: string, namespace: string, name: string, kubeconfig: string) {
+export async function down(manifest: string, namespace: string, name: string) {
   isActive.set(`${terminalName}-${namespace}-${name}`, false);
-  disposeTerminal(`${namespace}-${name}`);
+  disposeTerminal(`${terminalName}-${namespace}-${name}`);
   
   const r =  execa(getBinary(), ['down', '--file', `${manifest}`, '--namespace', `${namespace}`], {
     env: {
-      "KUBECONFIG": kubeconfig,
       "OKTETO_ORIGIN":"vscode"
     },
     cwd: path.dirname(manifest),
@@ -251,6 +249,118 @@ export async function init(manifestPath: vscode.Uri, choice: string) {
   console.log('okteto init completed');
 }
 
+export async function deploy(namespace: string) {
+  const name = `${terminalName}-${namespace}-deploy`;
+  disposeTerminal(name);
+  isActive.set(name, false);
+
+  const term = vscode.window.createTerminal({
+    name: name,
+    hideFromUser: false,
+    env: {
+      "OKTETO_ORIGIN":"vscode",
+    },
+    iconPath: new vscode.ThemeIcon('server-process')
+  });
+
+  isActive.set(name, true);
+  term.sendText(`${getBinary()} pipeline deploy --wait`, true);
+  term.show(true);
+  console.log('okteto deploy completed');
+}
+
+export async function destroy(namespace: string) {
+  const name = `${terminalName}-${namespace}-destroy`;
+  disposeTerminal(name);
+  isActive.set(name, false);
+
+  const term = vscode.window.createTerminal({
+    name: name,
+    hideFromUser: false,
+    env: {
+      "OKTETO_ORIGIN":"vscode",
+    },
+    iconPath: new vscode.ThemeIcon('server-process')
+  });
+
+  isActive.set(name, true);
+  term.sendText(`${getBinary()} pipeline destroy --wait`, true);
+  term.show(true);
+  console.log('okteto destroy completed');
+}
+
+export async function setContext(context: string) : Promise<boolean>{
+  const name = `${terminalName}-context`;
+  disposeTerminal(name);
+  isActive.set(name, false);
+
+  const term = vscode.window.createTerminal({
+    name: name,
+    hideFromUser: false,
+    env: {
+      "OKTETO_ORIGIN":"vscode",
+    },
+    iconPath: new vscode.ThemeIcon('server-process')
+  });
+
+  isActive.set(name, true);
+  let cmd = `${getBinary()} context use ${context}`;
+  term.sendText(cmd, true);
+  term.show(true);
+
+  return new Promise<boolean>(function(resolve, reject) {
+    var timer = setTimeout(function () {
+      reject(new Error('Context was not created, check your terminal for errors'));
+    }, 5 * 60 * 1000);
+
+    fs.watchFile(getContextConfigurationFile(), (curr, prev) => {
+      const ctx = getContext();
+      if (ctx.id !== "") {
+        clearTimeout(timer);
+        disposeTerminal(name);
+        resolve(true);
+      }
+    });
+  });
+}
+
+export async function setNamespace(namespace: string) {
+  const name = `${terminalName}-context`;
+  disposeTerminal(name);
+  isActive.set(name, false);
+
+  const term = vscode.window.createTerminal({
+    name: name,
+    hideFromUser: false,
+    env: {
+      "OKTETO_ORIGIN":"vscode",
+    },
+    iconPath: new vscode.ThemeIcon('server-process')
+  });
+
+  isActive.set(name, true);
+  let cmd = `${getBinary()} namespace use ${namespace}`;
+  term.sendText(cmd, true);
+  term.show(true);
+
+  return new Promise<boolean>(function(resolve, reject) {
+    var timer = setTimeout(function () {
+      reject(new Error('Context was not created, check your terminal for errors'));
+    }, 5 * 60 * 1000);
+
+    fs.watchFile(getContextConfigurationFile(), (curr, prev) => {
+      const ctx = getContext();
+      if (ctx.namespace === namespace) {
+        clearTimeout(timer);
+        disposeTerminal(name);
+        resolve(true);
+        console.log('okteto namespace completed');console.log('okteto namespace completed');
+      }
+    });
+  });
+}
+
+
 export function getStateMessages(): Map<string, string> {
   const messages = new Map<string, string>();
   messages.set(state.starting, "Starting your development environment...");
@@ -269,6 +379,10 @@ function getStateFile(namespace: string, name:string): string {
 
 function getPidFile(namespace: string, name:string): string {
   return path.join(os.homedir(), oktetoFolder, namespace, name, pidFile);
+}
+
+function getContextConfigurationFile(): string {
+  return path.join(os.homedir(), oktetoFolder, contextFolder, contextFile);
 }
 
 export async function getState(namespace: string, name: string): Promise<{state: string, message: string}> {
@@ -422,9 +536,9 @@ function getInstallPath(): string {
   return path.join(os.homedir(), '.okteto-vscode', 'okteto');
 }
 
-function disposeTerminal(terminalNameSuffix: string){
+function disposeTerminal(terminalName: string){
   vscode.window.terminals.forEach((t) => {
-    if (t.name === `${terminalName}-${terminalNameSuffix}`) {
+    if (t.name === `${terminalName}`) {
       t.dispose();
     }
   });
@@ -439,9 +553,9 @@ export function showTerminal(terminalNameSuffix: string){
 }
 
 export function getContext(): Context {
-  const contextsFile =  path.join(os.homedir(), oktetoFolder,"context", "config.json");
+    
   try {
-    const c = fs.readFileSync(contextsFile, {encoding: 'utf8'});
+    const c = fs.readFileSync(getContextConfigurationFile(), {encoding: 'utf8'});
     const contexts = JSON.parse(c);
     const current = contexts["current-context"];
     const ctx = contexts.contexts[current];
@@ -451,7 +565,7 @@ export function getContext(): Context {
 
     return {id: ctx.id, namespace: ctx.namespace, isOkteto: ctx.isOkteto};
   } catch(err: any) {
-    console.error(`failed to get current context from ${contextsFile}: ${err}`);
+    console.error(`failed to get current context from ${getContextConfigurationFile()}: ${err}`);
   }
 
   return new Context("", "", false);
@@ -475,7 +589,6 @@ export function getMachineId(): string {
 
   return machineId;
 }
-
 export function getLanguages(): RuntimeItem[] {
   const items = new Array<RuntimeItem>();
   items.push(new RuntimeItem("Java", "Maven", "maven"));

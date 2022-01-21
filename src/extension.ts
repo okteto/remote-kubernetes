@@ -4,32 +4,64 @@ import * as vscode from 'vscode';
 import * as manifest from './manifest';
 import * as ssh from './ssh';
 import * as okteto from './okteto';
-import * as kubernetes from './kubernetes';
 import {Reporter, events} from './telemetry';
 
 
 const activeManifest = new Map<string, vscode.Uri>();
 let reporter: Reporter;
 
-export function activate(context: vscode.ExtensionContext) {
+function getExtensionVersion() : string {
     let version = "0.0.0";
     const ex = vscode.extensions.getExtension('okteto.remote-kubernetes');
     if (ex) {
         version = ex.packageJSON.version;
     }
 
+    return version;
+}
+
+export function activate(context: vscode.ExtensionContext) {
+    const version = getExtensionVersion();
+
     console.log(`okteto.remote-kubernetes ${version} activated`);
+
+    context.subscriptions.push(vscode.commands.registerCommand('okteto.up', upCmd));
+    context.subscriptions.push(vscode.commands.registerCommand('okteto.down', downCmd));
+    context.subscriptions.push(vscode.commands.registerCommand('okteto.install', installCmd));
+    context.subscriptions.push(vscode.commands.registerCommand('okteto.create', createCmd));
+    context.subscriptions.push(vscode.commands.registerCommand('okteto.deploy', deployCmd));
+    context.subscriptions.push(vscode.commands.registerCommand('okteto.destroy', destroyCmd));
+    context.subscriptions.push(vscode.commands.registerCommand('okteto.context', contextCmd));
+    context.subscriptions.push(vscode.commands.registerCommand('okteto.namespace', namespaceCmd));
 
     const ctx = okteto.getContext();
     const machineId = okteto.getMachineId();
-
     reporter = new Reporter(version, ctx.id, machineId);
     reporter.track(events.activated);
+}
 
-    context.subscriptions.push(vscode.commands.registerCommand('okteto.up', upCommand));
-    context.subscriptions.push(vscode.commands.registerCommand('okteto.down', downCommand));
-    context.subscriptions.push(vscode.commands.registerCommand('okteto.install', installCmd));
-    context.subscriptions.push(vscode.commands.registerCommand('okteto.create', createCmd));
+async function checkPrereqs(checkContext: boolean) {
+    const { install, upgrade } = await okteto.needsInstall();
+    if (install) {
+        try {
+            await installCmd(upgrade, false);
+        } catch(err: any) {
+            throw err;
+        }
+    }
+
+    if (!checkContext) {
+        return
+    }
+
+    const ctx = okteto.getContext();
+    if (ctx.id === '') {
+        try {
+            await contextCmd();
+        } catch(err: any) {
+            throw err;
+        }
+    }
 }
 
 async function installCmd(upgrade: boolean, handleErr: boolean) {
@@ -64,15 +96,12 @@ async function installCmd(upgrade: boolean, handleErr: boolean) {
     vscode.window.showInformationMessage(success);
 }
 
-async function upCommand(selectedManifestUri: vscode.Uri) {
-    const { install, upgrade } = await okteto.needsInstall();
-    if (install) {
-        try {
-            await installCmd(upgrade, false);
-        } catch(err: any) {
-            vscode.window.showErrorMessage(err.message);
-            return;
-        }
+async function upCmd(selectedManifestUri: vscode.Uri) {
+    try{
+        await checkPrereqs(true);
+    } catch(err: any) {   
+        vscode.window.showErrorMessage(err.message);    
+        return;
     }
 
     reporter.track(events.up);
@@ -98,20 +127,9 @@ async function upCommand(selectedManifestUri: vscode.Uri) {
     }
 
     const ctx = okteto.getContext();
-    const kubeconfig = kubernetes.getKubeconfig();
-
-
     if (!m.namespace) {
         if (ctx.namespace != "") {
             m.namespace = ctx.namespace;
-        }else {
-            const ns = kubernetes.getCurrentNamespace(kubeconfig);
-            if (!ns) {
-                vscode.window.showErrorMessage("Couldn't detect your current Kubernetes context.");
-                return;
-            }
-        
-            m.namespace = ns;
         }
     }
 
@@ -126,7 +144,7 @@ async function upCommand(selectedManifestUri: vscode.Uri) {
         }
     }    
 
-    okteto.up(manifestPath, m.namespace, m.name, port, kubeconfig);
+    okteto.up(manifestPath, m.namespace, m.name, port);
     activeManifest.set(`${m.namespace}-${m.name}`, manifestUri);
 
     try{
@@ -225,15 +243,12 @@ async function finalizeUp(namespace: string, name: string, workdir: string) {
     }
 }
 
-async function downCommand() {
-    const { install, upgrade } = await okteto.needsInstall();
-    if (install){
-        try {
-            await installCmd(upgrade, false);
-        } catch(err: any){
-            vscode.window.showErrorMessage(err.message);
-            return;
-        }
+async function downCmd() {
+    try{
+        await checkPrereqs(true);
+    } catch(err: any) {   
+        vscode.window.showErrorMessage(err.message);    
+        return;
     }
 
     reporter.track(events.down);
@@ -252,20 +267,15 @@ async function downCommand() {
         return onOktetoFailed(`Okteto: Down failed to load your Okteto manifest: ${err.message}`);
     }
 
-    const kubeconfig = kubernetes.getKubeconfig();
-
+    const ctx = okteto.getContext();
     if (!m.namespace) {
-        const ns = kubernetes.getCurrentNamespace(kubeconfig);
-        if (!ns) {
-            vscode.window.showErrorMessage("Couldn't detect your current Kubernetes context.");
-            return;
+        if (ctx.namespace != "") {
+            m.namespace = ctx.namespace;
         }
-    
-        m.namespace = ns;
     }
 
     try {
-        await okteto.down(manifestPath, m.namespace, m.name, kubeconfig);
+        await okteto.down(manifestPath, m.namespace, m.name);
         activeManifest.delete(`${m.namespace}-${m.name}`);
         vscode.window.showInformationMessage("Okteto environment deactivated");
         reporter.track(events.downFinished);
@@ -273,6 +283,42 @@ async function downCommand() {
         reporter.track(events.oktetoDownFailed);
         reporter.captureError(`okteto down failed: ${err.message}`, err);
         vscode.window.showErrorMessage(`Okteto: Down failed: ${err.message}`);
+    }
+}
+
+async function deployCmd() {
+    try{
+        await checkPrereqs(true);
+    } catch(err: any) {   
+        vscode.window.showErrorMessage(err.message);    
+        return;
+    }
+
+    reporter.track(events.deploy);
+    try {
+        const ctx = okteto.getContext();
+        await okteto.deploy(ctx.namespace);
+    } catch(err: any) {
+        reporter.captureError(`okteto deploy failed: ${err.message}`, err);
+        vscode.window.showErrorMessage(`Okteto: Deploy failed: ${err.message}`);
+    }
+}
+
+async function destroyCmd() {
+    try{
+        await checkPrereqs(true);
+    } catch(err: any) {   
+        vscode.window.showErrorMessage(err.message);    
+        return;
+    }
+
+    reporter.track(events.destroy);
+    try {
+        const ctx = okteto.getContext();
+        await okteto.destroy(ctx.namespace);
+    } catch(err: any) {
+        reporter.captureError(`okteto destroy failed: ${err.message}`, err);
+        vscode.window.showErrorMessage(`Okteto: Destroy failed: ${err.message}`);
     }
 }
 
@@ -302,17 +348,14 @@ async function getManifestOrAsk(): Promise<string | undefined> {
 }
 
 async function createCmd(){
-    reporter.track(events.create);
-
-    const { install, upgrade } = await okteto.needsInstall();
-    if (install) {
-        try {
-            await installCmd(upgrade, false);
-        } catch(err: any) {
-            vscode.window.showErrorMessage(err.message);
-            return;
-        }
+    try{
+        await checkPrereqs(true);
+    } catch(err: any) {   
+        vscode.window.showErrorMessage(err.message);    
+        return;
     }
+
+    reporter.track(events.create);
 
     const manifestPath = manifest.getDefaultLocation();
     if (!manifestPath) {
@@ -343,6 +386,50 @@ async function createCmd(){
         vscode.window.showErrorMessage(`Okteto: Create failed: Couldn't open ${manifestPath}`);
         return;
     }
+}
+
+async function contextCmd(){
+    try{
+        await checkPrereqs(false);
+    } catch(err: any) {   
+        vscode.window.showErrorMessage(err.message);    
+        return;
+    }
+
+    reporter.track(events.context);
+
+    const context = await vscode.window.showInputBox({title: "Set the context for all the Okteto commands", prompt: "Specify an Okteto URL or a Kubernetes context name", placeHolder: "https://cloud.okteto.com"})
+    if (!context) {
+        return;
+    }
+
+    const success = await okteto.setContext(context);
+    if (!success) {
+        vscode.window.showErrorMessage('fail to set the context');    
+        return;
+    }
+
+    const machineId = okteto.getMachineId();
+    const ctx = okteto.getContext();
+    reporter = new Reporter(getExtensionVersion(), ctx.id, machineId);
+    reporter.track(events.activated);
+}
+
+async function namespaceCmd(){
+    try{
+        await checkPrereqs(true);
+    } catch(err: any) {   
+        vscode.window.showErrorMessage(err.message);    
+        return;
+    }
+
+    reporter.track(events.namespace);
+    const ns = await vscode.window.showInputBox({title: "Set the namespace for all the Okteto commands"})
+    if (!ns) {
+        return;
+    }
+
+    await okteto.setNamespace(ns);
 }
 
 function onOktetoFailed(message: string, terminalSuffix: string | null = null) {
