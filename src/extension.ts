@@ -296,7 +296,8 @@ async function deployCmd() {
 
     reporter.track(events.deploy);
     try {
-        await okteto.deploy();
+        const ctx = okteto.getContext();
+        await okteto.deploy(ctx.namespace);
     } catch(err: any) {
         reporter.captureError(`okteto deploy failed: ${err.message}`, err);
         vscode.window.showErrorMessage(`Okteto: Deploy failed: ${err.message}`);
@@ -313,7 +314,8 @@ async function destroyCmd() {
 
     reporter.track(events.destroy);
     try {
-        await okteto.destroy();
+        const ctx = okteto.getContext();
+        await okteto.destroy(ctx.namespace);
     } catch(err: any) {
         reporter.captureError(`okteto destroy failed: ${err.message}`, err);
         vscode.window.showErrorMessage(`Okteto: Destroy failed: ${err.message}`);

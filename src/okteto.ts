@@ -251,8 +251,8 @@ export async function init(manifestPath: vscode.Uri, choice: string) {
   console.log('okteto init completed');
 }
 
-export async function deploy() {
-  const name = `${terminalName}-deploy`;
+export async function deploy(namespace: string) {
+  const name = `${terminalName}-${namespace}-deploy`;
   disposeTerminal(name);
   isActive.set(name, false);
 
@@ -271,8 +271,8 @@ export async function deploy() {
   console.log('okteto deploy completed');
 }
 
-export async function destroy() {
-  const name = `${terminalName}-destroy`;
+export async function destroy(namespace: string) {
+  const name = `${terminalName}-${namespace}-destroy`;
   disposeTerminal(name);
   isActive.set(name, false);
 
@@ -319,6 +319,7 @@ export async function setContext(context: string) : Promise<boolean>{
     fs.watchFile(contextsFile, (curr, prev) => {
       const ctx = getContext();
       if (ctx.id !== "") {
+        clearTimeout(timer);
         disposeTerminal(name);
         resolve(true);
       }
@@ -344,6 +345,23 @@ export async function setNamespace(namespace: string) {
   let cmd = `${getBinary()} namespace use ${namespace}`;
   term.sendText(cmd, true);
   term.show(true);
+
+  return new Promise<boolean>(function(resolve, reject) {
+    var timer = setTimeout(function () {
+      reject(new Error('Context was not created, check your terminal for errors'));
+    }, 5 * 60 * 1000);
+
+    const contextsFile =  path.join(os.homedir(), oktetoFolder,"context", "config.json");
+    fs.watchFile(contextsFile, (curr, prev) => {
+      const ctx = getContext();
+      if (ctx.namespace === namespace) {
+        clearTimeout(timer);
+        disposeTerminal(name);
+        resolve(true);
+      }
+    });
+  });
+
   console.log('okteto namespace completed');
 }
 
