@@ -14,9 +14,6 @@ import {pascalCase} from 'change-case';
 import * as paths from './paths';
 import { clearInterval, setInterval } from 'timers';
 import find from 'find-process';
-import { resolve } from 'path/posix';
-import { rejects } from 'assert';
-
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
@@ -357,7 +354,7 @@ export async function setNamespace(namespace: string) {
         clearTimeout(timer);
         disposeTerminal(name);
         resolve(true);
-        console.log('okteto namespace completed');
+        console.log('okteto namespace completed');console.log('okteto namespace completed');
       }
     });
   });
