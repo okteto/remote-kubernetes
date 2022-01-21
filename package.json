@@ -43,7 +43,9 @@
     "onCommand:okteto.down",
     "onCommand:okteto.create",
     "onCommand:okteto.deploy",
-    "onCommand:okteto.destroy"
+    "onCommand:okteto.destroy",
+    "onCommand:okteto.context",
+    "onCommand:okteto.namespace"
   ],
   "main": "./dist/extension",
   "contributes": {
@@ -64,6 +66,14 @@
       {
         "command": "okteto.up",
         "title": "Okteto: Up"
+      },
+      {
+        "command": "okteto.context",
+        "title": "Okteto: Set the context for all the Okteto commands"
+      },
+      {
+        "command": "okteto.namespace",
+        "title": "Okteto: Set the namespace for all the Okteto commands"
       },
       {
         "command": "okteto.deploy",

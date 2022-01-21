@@ -32,6 +32,8 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('okteto.create', createCmd));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.deploy', deployCmd));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.destroy', destroyCmd));
+    context.subscriptions.push(vscode.commands.registerCommand('okteto.context', contextCmd));
+    context.subscriptions.push(vscode.commands.registerCommand('okteto.namespace', namespaceCmd));
 }
 
 async function installCmd(upgrade: boolean, handleErr: boolean) {
@@ -385,6 +387,48 @@ async function createCmd(){
         vscode.window.showErrorMessage(`Okteto: Create failed: Couldn't open ${manifestPath}`);
         return;
     }
+}
+
+async function contextCmd(){
+    reporter.track(events.context);
+
+    const { install, upgrade } = await okteto.needsInstall();
+    if (install) {
+        try {
+            await installCmd(upgrade, false);
+        } catch(err: any) {
+            vscode.window.showErrorMessage(err.message);
+            return;
+        }
+    }
+
+    const context = await vscode.window.showInputBox({title: "Set the context for all the Okteto commands", prompt: "Specify an Okteto URL or a Kubernetes context name", placeHolder: "https://cloud.okteto.com"})
+    if (!context) {
+        return;
+    }
+
+    okteto.setContext(context);
+}
+
+async function namespaceCmd(){
+    reporter.track(events.namespace);
+
+    const { install, upgrade } = await okteto.needsInstall();
+    if (install) {
+        try {
+            await installCmd(upgrade, false);
+        } catch(err: any) {
+            vscode.window.showErrorMessage(err.message);
+            return;
+        }
+    }
+
+    const ns = await vscode.window.showInputBox({title: "Set the namespace for all the Okteto commands"})
+    if (!ns) {
+        return;
+    }
+
+    okteto.setNamespace(ns);
 }
 
 function onOktetoFailed(message: string, terminalSuffix: string | null = null) {

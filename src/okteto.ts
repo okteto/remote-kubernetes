@@ -19,6 +19,8 @@ import find from 'find-process';
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
 const pidFile = 'okteto.pid';
+const contextFolder = 'context';
+const contextFile = 'config.json';
 const minimum = '1.15.0-rc.2';
 const terminalName = `okteto`;
 
@@ -289,6 +291,49 @@ export async function destroy() {
   console.log('okteto destroy completed');
 }
 
+export async function setContext(context: string) {
+  const name = `${terminalName}-context`;
+  disposeTerminal(name);
+  isActive.set(name, false);
+
+  const term = vscode.window.createTerminal({
+    name: name,
+    hideFromUser: false,
+    env: {
+      "OKTETO_ORIGIN":"vscode",
+    },
+    iconPath: new vscode.ThemeIcon('server-process')
+  });
+
+  isActive.set(name, true);
+  let cmd = `${getBinary()} context use ${context}`;
+  term.sendText(cmd, true);
+  term.show(true);
+  console.log('okteto context completed');
+}
+
+export async function setNamespace(namespace: string) {
+  const name = `${terminalName}-context`;
+  disposeTerminal(name);
+  isActive.set(name, false);
+
+  const term = vscode.window.createTerminal({
+    name: name,
+    hideFromUser: false,
+    env: {
+      "OKTETO_ORIGIN":"vscode",
+    },
+    iconPath: new vscode.ThemeIcon('server-process')
+  });
+
+  isActive.set(name, true);
+  let cmd = `${getBinary()} namespace use ${namespace}`;
+  term.sendText(cmd, true);
+  term.show(true);
+  console.log('okteto namespace completed');
+}
+
+
 export function getStateMessages(): Map<string, string> {
   const messages = new Map<string, string>();
   messages.set(state.starting, "Starting your development environment...");
@@ -307,6 +352,10 @@ function getStateFile(namespace: string, name:string): string {
 
 function getPidFile(namespace: string, name:string): string {
   return path.join(os.homedir(), oktetoFolder, namespace, name, pidFile);
+}
+
+function getContextConfigurationFile(): string {
+  return path.join(os.homedir(), oktetoFolder, contextFolder, contextFile);
 }
 
 export async function getState(namespace: string, name: string): Promise<{state: string, message: string}> {
@@ -513,7 +562,6 @@ export function getMachineId(): string {
 
   return machineId;
 }
-
 export function getLanguages(): RuntimeItem[] {
   const items = new Array<RuntimeItem>();
   items.push(new RuntimeItem("Java", "Maven", "maven"));

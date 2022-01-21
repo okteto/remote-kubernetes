@@ -11,6 +11,7 @@ const mp = '564133a36e3c39ecedf700669282c315';
 export const events = {
     activated: 'activated',
     install: 'cmd_install',
+    context: 'cmd_context',
     create: 'cmd_create',
     createFailed: 'cmd_create_failed',
     createOpenFailed: 'cmd_create_open_failed',
@@ -19,6 +20,7 @@ export const events = {
     destroy: 'cmd_destroy',
     down: 'cmd_down',
     downFinished: 'cmd_down_success',
+    namespace: "cmd_namespace",
     up: 'cmd_up',
     upCancelled: 'cmd_up_cancelled',
     upReady: 'cmd_up_ready',
