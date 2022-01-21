@@ -41,7 +41,9 @@
     "onCommand:okteto.install",
     "onCommand:okteto.up",
     "onCommand:okteto.down",
-    "onCommand:okteto.create"
+    "onCommand:okteto.create",
+    "onCommand:okteto.deploy",
+    "onCommand:okteto.destroy"
   ],
   "main": "./dist/extension",
   "contributes": {
@@ -62,6 +64,14 @@
       {
         "command": "okteto.up",
         "title": "Okteto: Up"
+      },
+      {
+        "command": "okteto.deploy",
+        "title": "Okteto: Deploy your development environment"
+      },
+      {
+        "command": "okteto.destroy",
+        "title": "Okteto: Destroy your development environment"
       }
     ],
     "menus": {
@@ -69,6 +79,11 @@
         {
           "when": "resourceFilename == okteto.yml",
           "command": "okteto.up",
+          "group": "navigation"
+        },
+        {
+          "when": "resourceFilename == okteto-pipeline.yml",
+          "command": "okteto.deploy",
           "group": "navigation"
         }
       ]

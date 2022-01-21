@@ -15,6 +15,8 @@ export const events = {
     createFailed: 'cmd_create_failed',
     createOpenFailed: 'cmd_create_open_failed',
     createFinished: 'cmd_create_success',
+    deploy: 'cmd_deploy',
+    destroy: 'cmd_destroy',
     down: 'cmd_down',
     downFinished: 'cmd_down_success',
     up: 'cmd_up',

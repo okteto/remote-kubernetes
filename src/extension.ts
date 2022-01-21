@@ -26,10 +26,12 @@ export function activate(context: vscode.ExtensionContext) {
     reporter = new Reporter(version, ctx.id, machineId);
     reporter.track(events.activated);
 
-    context.subscriptions.push(vscode.commands.registerCommand('okteto.up', upCommand));
-    context.subscriptions.push(vscode.commands.registerCommand('okteto.down', downCommand));
+    context.subscriptions.push(vscode.commands.registerCommand('okteto.up', upCmd));
+    context.subscriptions.push(vscode.commands.registerCommand('okteto.down', downCmd));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.install', installCmd));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.create', createCmd));
+    context.subscriptions.push(vscode.commands.registerCommand('okteto.deploy', deployCmd));
+    context.subscriptions.push(vscode.commands.registerCommand('okteto.destroy', destroyCmd));
 }
 
 async function installCmd(upgrade: boolean, handleErr: boolean) {
@@ -64,7 +66,7 @@ async function installCmd(upgrade: boolean, handleErr: boolean) {
     vscode.window.showInformationMessage(success);
 }
 
-async function upCommand(selectedManifestUri: vscode.Uri) {
+async function upCmd(selectedManifestUri: vscode.Uri) {
     const { install, upgrade } = await okteto.needsInstall();
     if (install) {
         try {
@@ -225,7 +227,7 @@ async function finalizeUp(namespace: string, name: string, workdir: string) {
     }
 }
 
-async function downCommand() {
+async function downCmd() {
     const { install, upgrade } = await okteto.needsInstall();
     if (install){
         try {
@@ -273,6 +275,46 @@ async function downCommand() {
         reporter.track(events.oktetoDownFailed);
         reporter.captureError(`okteto down failed: ${err.message}`, err);
         vscode.window.showErrorMessage(`Okteto: Down failed: ${err.message}`);
+    }
+}
+
+async function deployCmd() {
+    const { install, upgrade } = await okteto.needsInstall();
+    if (install){
+        try {
+            await installCmd(upgrade, false);
+        } catch(err: any){
+            vscode.window.showErrorMessage(err.message);
+            return;
+        }
+    }
+
+    reporter.track(events.deploy);
+    try {
+        await okteto.deploy();
+    } catch(err: any) {
+        reporter.captureError(`okteto deploy failed: ${err.message}`, err);
+        vscode.window.showErrorMessage(`Okteto: Deploy failed: ${err.message}`);
+    }
+}
+
+async function destroyCmd() {
+    const { install, upgrade } = await okteto.needsInstall();
+    if (install){
+        try {
+            await installCmd(upgrade, false);
+        } catch(err: any){
+            vscode.window.showErrorMessage(err.message);
+            return;
+        }
+    }
+
+    reporter.track(events.destroy);
+    try {
+        await okteto.destroy();
+    } catch(err: any) {
+        reporter.captureError(`okteto destroy failed: ${err.message}`, err);
+        vscode.window.showErrorMessage(`Okteto: Destroy failed: ${err.message}`);
     }
 }
 
