@@ -10,7 +10,6 @@ import * as vscode from 'vscode';
 import * as os from 'os';
 import download from 'download';
 import * as semver from 'semver';
-import {pascalCase} from 'change-case';
 import * as paths from './paths';
 import { clearInterval, setInterval } from 'timers';
 import find from 'find-process';
@@ -591,18 +590,23 @@ export function getMachineId(): string {
   return machineId;
 }
 
-export function getContextList(): RuntimeItem[]{
+export async function getContextList(): Promise<RuntimeItem[]>{
   const items = new Array<RuntimeItem>();
 
   try {
-    const c = fs.readFileSync(getContextConfigurationFile(), {encoding: 'utf8'});
-    const contexts = JSON.parse(c);
-    const map = contexts["contexts"];
-    for (const [key, value] of Object.entries(map) ) {
-      items.push(new RuntimeItem(key, "", key))  
+    const r = await execa(getBinary(), ["context", "list"])
+    const lines = r.stdout.split('\n');
+    for(var i = 1; i < lines.length; i++) {
+      var tabs = lines[i].split(' ');
+      if (tabs.length > 1) {
+        items.push(new RuntimeItem(tabs[0], "", tabs[0]));
+      }
     }
   } catch(err: any) {
     console.error(`failed to get context list from ${getContextConfigurationFile()}: ${err}`);
+  }
+
+  if (items.length == 0) {
     items.push(new RuntimeItem("https://cloud.okteto.com", "", "https://cloud.okteto.com"))
   }
 
