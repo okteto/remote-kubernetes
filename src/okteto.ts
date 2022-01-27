@@ -606,10 +606,11 @@ export async function getContextList(): Promise<RuntimeItem[]>{
     console.error(`failed to get context list from ${getContextConfigurationFile()}: ${err}`);
   }
 
-  if (items.length == 0) {
-    items.push(new RuntimeItem("https://cloud.okteto.com", "", "https://cloud.okteto.com"))
+  if (items.filter(f => f.label === "https://cloud.okteto.com").length == 0) {
+    items.unshift(new RuntimeItem("https://cloud.okteto.com", "", "https://cloud.okteto.com"))
   }
 
+ 
   items.push(new RuntimeItem("Create new context", "Create new context", "create"))
   return items;
 }
