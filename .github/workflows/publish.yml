@@ -1,8 +1,10 @@
 name: publish-marketplace
-on: 
-  push:
-    tags:
-      - v*.*.*
+on:
+  release:
+    types: 
+    - published
+    - edited
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,7 +19,14 @@ jobs:
         node-version: 16.x
     - run: npm ci
     - run: npm run test
-    - run: npm run publish
+    - name: publish
+      if: github.event.release.prerelease != true
+      run: npm run publish
+      env:
+          VSCE_TOKEN: ${{secrets.VSCE_TOKEN}}
+    - name: publish-prerelease
+      if: github.event.release.prerelease == true
+      run: npm run publish-prerelease
       env:
           VSCE_TOKEN: ${{secrets.VSCE_TOKEN}}
     - run: npm run publish-sentry 
