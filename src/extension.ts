@@ -131,14 +131,29 @@ async function upCmd(selectedManifestUri: vscode.Uri) {
     const manifestPath = manifestUri.fsPath;
     console.log(`user selected: ${manifestPath}`);
 
-    let m: manifest.Manifest;
+    var manifests: manifest.Manifest[];
 
     try {
-        m = await manifest.getManifest(manifestPath);
+        manifests = await manifest.getManifests(manifestPath);
     } catch(err: any) {
         reporter.track(events.manifestLoadFailed);
         reporter.captureError(`load manifest failed: ${err.message}`, err);
         return onOktetoFailed(`Okteto: Up failed to load your Okteto manifest: ${err.message}`);
+    }
+
+    var m: manifest.Manifest;
+    var serviceName = "";
+    if (manifests.length == 1) {
+        m = manifests[0];
+    } else {
+        const choice = await showManifestServicePicker(manifests);
+        if (!choice) {
+            reporter.track(events.manifestDismissed);
+            return;
+        }
+
+        m = choice;
+        serviceName = choice.name;
     }
 
     const ctx = okteto.getContext();
@@ -159,7 +174,7 @@ async function upCmd(selectedManifestUri: vscode.Uri) {
         }
     }    
 
-    okteto.up(manifestPath, m.namespace, m.name, port);
+    okteto.up(manifestPath, m.namespace, m.name, port, serviceName);
     activeManifest.set(`${m.namespace}-${m.name}`, manifestUri);
 
     try{
@@ -219,7 +234,7 @@ async function waitForFinalState(namespace: string, name:string, progress: vscod
                 return {result: false, message: res.message};
             case okteto.state.starting:
                 const isRunning = await okteto.isRunning(namespace, name);
-                if (!isRunning && counter > 10){
+                if (!isRunning && counter > 100){
                     return {result: false, message: `process failed to start`};
                 }
         }
@@ -279,15 +294,31 @@ async function downCmd() {
         return;
     }
 
-    let m: manifest.Manifest;
-
+    let manifests: Array<manifest.Manifest>;
+    
     try {
-        m = await manifest.getManifest(manifestPath);
+        manifests = await manifest.getManifests(manifestPath);
     } catch(err: any) {
         reporter.track(events.manifestLoadFailed);
         reporter.captureError(`load manifest failed: ${err.message}`, err);
         return onOktetoFailed(`Okteto: Down failed to load your Okteto manifest: ${err.message}`);
     }
+
+    let m: manifest.Manifest;
+    let serviceName = "";
+
+    if (manifests.length == 1 ) {
+        m = manifests[0];
+    } else {
+        const result = await showManifestServicePicker(manifests);
+        if (!result) {
+            return;
+        }
+
+        m = result;
+        serviceName = m.name;
+    }
+    
 
     const ctx = okteto.getContext();
     if (!m.namespace) {
@@ -297,7 +328,7 @@ async function downCmd() {
     }
 
     try {
-        await okteto.down(manifestPath, m.namespace, m.name);
+        await okteto.down(manifestPath, m.namespace, m.name, serviceName);
         activeManifest.delete(`${m.namespace}-${m.name}`);
         vscode.window.showInformationMessage("Okteto environment deactivated");
         reporter.track(events.downFinished);
@@ -492,6 +523,24 @@ Please run the 'Okteto: Create Manifest' command to create it and then try again
         placeHolder: 'Select your okteto manifest'
     });
     return manifestItem ? manifestItem.uri : undefined;
+}
+
+async function showManifestServicePicker(manifests: manifest.Manifest[]) : Promise<manifest.Manifest | undefined>{
+    
+    const items = manifests.map(m => {
+        return {
+            label: m.name,
+            manifest: m
+        };
+    });
+    
+    const manifestItem = await vscode.window.showQuickPick(items, {
+        canPickMany: false,
+        placeHolder: 'Select the service to develop'
+    });
+
+
+    return manifestItem ? manifestItem.manifest : undefined;
 }
 
 async function showActiveManifestPicker() : Promise<vscode.Uri | undefined> {
