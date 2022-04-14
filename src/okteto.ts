@@ -186,7 +186,7 @@ export async function install() {
   }
 }
 
-export function up(manifest: string, namespace: string, name: string, port: number) {
+export function up(manifest: string, namespace: string, name: string, port: number, serviceName: string) {
   console.log(`okteto up ${manifest}`);
   disposeTerminal(`${terminalName}-${namespace}-${name}`);
   isActive.set(`${terminalName}-${namespace}-${name}`, false);
@@ -213,7 +213,7 @@ export function up(manifest: string, namespace: string, name: string, port: numb
   }
 
   isActive.set(`${terminalName}-${namespace}-${name}`, true);
-  let cmd = `"${binary}" up -f '${manifest}' --remote ${port}`;
+  let cmd = `"${binary}" up ${serviceName} -f '${manifest}' --remote ${port}`;
 
   const config = vscode.workspace.getConfiguration('okteto');
   if (config) {
@@ -224,11 +224,11 @@ export function up(manifest: string, namespace: string, name: string, port: numb
   term.sendText(cmd, true);
 }
 
-export async function down(manifest: string, namespace: string, name: string) {
+export async function down(manifest: string, namespace: string, name: string, serviceName: string) {
   isActive.set(`${terminalName}-${namespace}-${name}`, false);
   disposeTerminal(`${terminalName}-${namespace}-${name}`);
   
-  const r =  execa(getBinary(), ['down', '--file', `${manifest}`, '--namespace', `${namespace}`], {
+  const r =  execa(getBinary(), ['down', serviceName, '--file', `${manifest}`, '--namespace', `${namespace}`], {
     env: {
       "OKTETO_ORIGIN":"vscode"
     },
