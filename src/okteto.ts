@@ -21,7 +21,7 @@ const contextFolder = 'context';
 const contextFile = 'config.json';
 const terminalName = 'okteto';
 const cloudUrl = 'https://cloud.okteto.com';
-export const minimum = '1.15.2';
+export const minimum = '2.1.0';
 
 export const state = {
   starting: 'starting',
@@ -133,6 +133,7 @@ export async function install() {
   const source = `https://github.com/okteto/okteto/releases/download/${minimum}/${binaryName}`;
   const installPath = getInstallPath();
   const folder = path.dirname(installPath);
+  const filenameTemp = `${path.basename(installPath)}.temp`;
   const filename = path.basename(installPath);
   
   try {
@@ -142,7 +143,7 @@ export async function install() {
   }
 
   try {
-    await download(source, folder, {filename: filename});
+    await download(source, folder, {filename: filenameTemp});
   } catch(err: any) {
     console.error(`download fail: ${err}`);
     if (err.code === 'EBUSY'){
@@ -151,6 +152,21 @@ export async function install() {
 
     throw new Error(`failed to download ${source} into ${installPath}: ${getErrorMessage(err)}`);
   }
+
+  try {
+    fs.unlinkSync(installPath);
+  } catch(err: any) {
+    console.error(`delete fail: ${err}`);
+    throw new Error(`failed to download ${source} into ${installPath}: ${getErrorMessage(err)}`);
+  }
+
+  try {
+    fs.renameSync(path.join(folder, filenameTemp), installPath);
+  } catch(err: any) {
+    console.error(`rename fail: ${err}`);
+    throw new Error(`failed to download ${source} into ${installPath}: ${getErrorMessage(err)}`);
+  }
+
 
   if (chmod) {
     try {
@@ -528,6 +544,15 @@ function getBinary(): string {
   return getInstallPath();
 }
 
+export function getRemoteSSH(): boolean {
+  let remoteSSH = vscode.workspace.getConfiguration('okteto').get<boolean>('remoteSSH');
+  if (remoteSSH === undefined) {
+    return true;
+  }
+
+  return remoteSSH;
+}
+
 function getInstallPath(): string {
   if (os.platform() === 'win32') {
     return path.join(os.homedir(), "AppData", "Local", "Programs", "okteto.exe");
@@ -553,7 +578,6 @@ export function showTerminal(terminalNameSuffix: string){
 }
 
 export function getContext(): Context {
-    
   try {
     const c = fs.readFileSync(getContextConfigurationFile(), {encoding: 'utf8'});
     const contexts = JSON.parse(c);
@@ -572,7 +596,7 @@ export function getContext(): Context {
 }
 
 export function getMachineId(): string {
-  const analyticsFile =  path.join(os.homedir(), oktetoFolder,  ".token.json");
+  const analyticsFile =  path.join(os.homedir(), oktetoFolder,  "analytics.json");
   let machineId = "";
   try {
     const c = fs.readFileSync(analyticsFile, {encoding: 'utf8'});
@@ -594,13 +618,10 @@ export async function getContextList(): Promise<RuntimeItem[]>{
   const items = new Array<RuntimeItem>();
 
   try {
-    const r = await execa(getBinary(), ["context", "list"])
-    const lines = r.stdout.split('\n');
-    for(var i = 1; i < lines.length; i++) {
-      var tabs = lines[i].split(' ');
-      if (tabs.length > 1) {
-        items.push(new RuntimeItem(tabs[0], "", tabs[0]));
-      }
+    const r = await execa(getBinary(), ["context", "list", "--output", "json"])
+    const lines = JSON.parse(r.stdout);
+    for(var i = 0; i < lines.length; i++) {
+      items.push(new RuntimeItem(lines[i].name, "", lines[i].name));
     }
   } catch(err: any) {
     console.error(`failed to get context list from ${getContextConfigurationFile()}: ${err}`);

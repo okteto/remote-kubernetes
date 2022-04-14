@@ -6,18 +6,24 @@ import * as ssh from './ssh';
 import * as okteto from './okteto';
 import {Reporter, events} from './telemetry';
 
-
 const activeManifest = new Map<string, vscode.Uri>();
 let reporter: Reporter;
 
+const supportedDeployFilenames = ['okteto-pipeline.yml',
+'okteto-pipeline.yaml',
+'docker-compose.yml',
+'docker-compose.yaml',
+'okteto.yml', 
+'okteto.yaml']
 
-vscode.commands.executeCommand('setContext', 'ext.supportedDeployFiles', [
-    'okteto-pipeline.yml',
-    'okteto-pipeline.yaml',
-    'docker-compose.yml',
-    'docker-compose.yaml'
-  ]);
+const supportedUpFilenames = [
+'docker-compose.yml',
+'docker-compose.yaml',
+'okteto.yml', 
+'okteto.yaml']
   
+vscode.commands.executeCommand('setContext', 'ext.supportedDeployFiles', supportedDeployFilenames);
+vscode.commands.executeCommand('setContext', 'ext.supportedUpFilenames', supportedUpFilenames);
 
 function getExtensionVersion() : string {
     let version = "0.0.0";
@@ -33,7 +39,7 @@ export function activate(context: vscode.ExtensionContext) {
     const version = getExtensionVersion();
 
     console.log(`okteto.remote-kubernetes ${version} activated`);
-
+    
     context.subscriptions.push(vscode.commands.registerCommand('okteto.up', upCmd));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.down', downCmd));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.install', installCmd));
@@ -232,12 +238,19 @@ async function sleep(ms: number) {
 }
 
 async function finalizeUp(namespace: string, name: string, workdir: string) {
+    reporter.track(events.upReady);
+    const remoteSSH = okteto.getRemoteSSH();
+
+    if (!remoteSSH) {
+        reporter.track(events.upFinished);
+        okteto.showTerminal(`${namespace}-${name}`);
+        return;
+    }
+
     let folder = '/usr/src/app';
     if (workdir) {
         folder = workdir;
     }
-    
-    reporter.track(events.upReady);
 
     try {
         const remote = `${name}.okteto`;
@@ -460,7 +473,7 @@ function onOktetoFailed(message: string, terminalSuffix: string | null = null) {
 }
 
 async function showManifestPicker() : Promise<vscode.Uri | undefined> {
-    const files = await vscode.workspace.findFiles('**/okteto.{yml,yaml}', '**/node_modules/**');
+    const files = await vscode.workspace.findFiles('**/{okteto,docker-compose}.{yml,yaml}', '**/node_modules/**');
     if (files.length === 0) {
         await vscode.window.showErrorMessage(`No manifests found in your workspace.\n
 Please run the 'Okteto: Create Manifest' command to create it and then try again.`, {
