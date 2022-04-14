@@ -569,7 +569,6 @@ export function showTerminal(terminalNameSuffix: string){
 }
 
 export function getContext(): Context {
-    
   try {
     const c = fs.readFileSync(getContextConfigurationFile(), {encoding: 'utf8'});
     const contexts = JSON.parse(c);
@@ -610,13 +609,10 @@ export async function getContextList(): Promise<RuntimeItem[]>{
   const items = new Array<RuntimeItem>();
 
   try {
-    const r = await execa(getBinary(), ["context", "list"])
-    const lines = r.stdout.split('\n');
-    for(var i = 1; i < lines.length; i++) {
-      var tabs = lines[i].split(' ');
-      if (tabs.length > 1) {
-        items.push(new RuntimeItem(tabs[0], "", tabs[0]));
-      }
+    const r = await execa(getBinary(), ["context", "list", "--output", "json"])
+    const lines = JSON.parse(r.stdout);
+    for(var i = 0; i < lines.length; i++) {
+      items.push(new RuntimeItem(lines[i].name, "", lines[i].name));
     }
   } catch(err: any) {
     console.error(`failed to get context list from ${getContextConfigurationFile()}: ${err}`);
