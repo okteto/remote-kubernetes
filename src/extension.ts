@@ -238,12 +238,19 @@ async function sleep(ms: number) {
 }
 
 async function finalizeUp(namespace: string, name: string, workdir: string) {
+    reporter.track(events.upReady);
+    const remoteSSH = okteto.getRemoteSSH();
+
+    if (!remoteSSH) {
+        reporter.track(events.upFinished);
+        okteto.showTerminal(`${namespace}-${name}`);
+        return;
+    }
+
     let folder = '/usr/src/app';
     if (workdir) {
         folder = workdir;
     }
-    
-    reporter.track(events.upReady);
 
     try {
         const remote = `${name}.okteto`;

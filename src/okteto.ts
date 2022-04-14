@@ -544,6 +544,15 @@ function getBinary(): string {
   return getInstallPath();
 }
 
+export function getRemoteSSH(): boolean {
+  let remoteSSH = vscode.workspace.getConfiguration('okteto').get<boolean>('remoteSSH');
+  if (remoteSSH === undefined) {
+    return true;
+  }
+
+  return remoteSSH;
+}
+
 function getInstallPath(): string {
   if (os.platform() === 'win32') {
     return path.join(os.homedir(), "AppData", "Local", "Programs", "okteto.exe");
