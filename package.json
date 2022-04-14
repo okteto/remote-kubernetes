@@ -20,7 +20,6 @@
     "name": "Ramiro Berrelleza",
     "email": "ramiro@okteto.com"
   },
-  "preview": true,
   "homepage": "https://github.com/okteto/remote-kubernetes",
   "bugs": {
     "url": "https://github.com/okteto/remote-kubernetes/issues"
