@@ -1,8 +1,10 @@
 # Change Log
 
-## 0.3.5
-- Update to okteto `2.1.0`.
-- Support for [Okteto CLI 2.0](https://www.okteto.com/blog/announcing-the-launch-of-okteto-cli-2-0/)
+## 0.4.0
+- Support for [Okteto CLI 2.0](https://www.okteto.com/blog/announcing-the-launch-of-okteto-cli-2-0/).
+- You can know [set up a context](https://www.okteto.com/docs/reference/cli/#context) that will be applied to all commands, independently of your kubernetes context.
+- New commands to deploy and delete your development environment, and to set the default namespace for Okteto commands.
+- Option to enable/disable using the Remote-SSH extension.
 - Enable SSH-RSA keys for the SSH host created by okteto.
 - Handle $HOME directory with spaces correctly.
 - Install the correct binary in ARM64 devices.
