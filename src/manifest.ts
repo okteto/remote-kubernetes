@@ -35,10 +35,6 @@ export async function getManifests(manifestPath: string): Promise<Manifest[]> {
     }
 
     return result;
-    
-    
-
-    
 }
 
 export function getDefaultLocation(): vscode.Uri | undefined{
@@ -50,5 +46,4 @@ export function getDefaultLocation(): vscode.Uri | undefined{
     const loc = vscode.Uri.file(p);
     console.log(`default location: ${loc.fsPath.toString()}`);
     return loc;
-
 }
