@@ -154,10 +154,11 @@ export async function install() {
   }
 
   try {
-    fs.unlinkSync(installPath);
+    if (fs.existsSync(installPath)) {
+      fs.unlinkSync(installPath);
+    }
   } catch(err: any) {
     console.error(`delete fail: ${err}`);
-    throw new Error(`failed to download ${source} into ${installPath}: ${getErrorMessage(err)}`);
   }
 
   try {
