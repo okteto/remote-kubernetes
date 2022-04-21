@@ -247,23 +247,24 @@ export async function down(manifest: string, namespace: string, name: string, se
   console.log('okteto down completed');
 }
 
-export async function init(manifestPath: vscode.Uri, choice: string) {
-  const r = execa(getBinary(),['init', '--replace', '--file', `${manifestPath.fsPath}`], {
-    cwd: path.dirname(manifestPath.fsPath),
+export async function init(manifestPath: vscode.Uri) {    
+  const name = `${terminalName}-init`;
+  disposeTerminal(name);
+  isActive.set(name, false);
+
+  const term = vscode.window.createTerminal({
+    name: name,
+    hideFromUser: false,
     env: {
       "OKTETO_ORIGIN":"vscode",
-      "OKTETO_LANGUAGE":choice
-      }
-    }); 
-    
-  try{
-    await r;
-  } catch (err: any) {
-    console.error(`${err}: ${err.stdout}`);
-    const message = extractMessage(err.stdout);
-    throw new Error(message);
-  }
+    },
+    iconPath: new vscode.ThemeIcon('server-process'),
+    cwd: path.dirname(manifestPath.fsPath)
+  });
 
+  isActive.set(name, true);
+  term.sendText(`${getBinary()} init --replace --file ${manifestPath.fsPath}`, true);
+  term.show(false);
   console.log('okteto init completed');
 }
 
@@ -635,31 +636,6 @@ export async function getContextList(): Promise<RuntimeItem[]>{
  
   items.push(new RuntimeItem("Create new context", "Create new context", "create"))
   return items;
-}
-
-export function getLanguages(): RuntimeItem[] {
-  const items = new Array<RuntimeItem>();
-  items.push(new RuntimeItem("Java", "Maven", "maven"));
-  items.push(new RuntimeItem("Java", "Gradle", "gradle"));
-  items.push(new RuntimeItem("Ruby", "", "ruby"));
-  items.push(new RuntimeItem("Python", "", "python"));
-  items.push(new RuntimeItem("Node", "", "javascript"));
-  items.push(new RuntimeItem("Golang", "", "golang"));
-  items.push(new RuntimeItem("CSharp", "", "csharp"));
-
-  const sorted = items.sort((a, b)=>{
-    if (a.label === b.label) {
-      return 0;
-    } else if (a.label > b.label) {
-      return 1;
-    } else {
-      return -1;
-    }
-  });
-
-  sorted.push(new RuntimeItem("Other", "", ""));
-  return sorted;
-
 }
 
 
