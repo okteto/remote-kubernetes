@@ -248,7 +248,7 @@ export async function down(manifest: string, namespace: string, name: string, se
 }
 
 export async function init(manifestPath: vscode.Uri, choice: string) {
-  const r = execa(getBinary(),['init', '--overwrite', '--file', `${manifestPath.fsPath}`], {
+  const r = execa(getBinary(),['init', '--replace', '--file', `${manifestPath.fsPath}`], {
     cwd: path.dirname(manifestPath.fsPath),
     env: {
       "OKTETO_ORIGIN":"vscode",
