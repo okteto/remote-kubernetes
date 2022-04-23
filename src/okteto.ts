@@ -657,15 +657,8 @@ function gitBashMode(): boolean {
 }
 
 function extractMessage(error :string):string {
-  const parts = error.split(':');
-  let message = '';
-  if (parts.length === 1) {
-    message = parts[0];
-  } else {
-    message = parts[1];
-  }
-
-  message = message.replace('x  ', '');  
+  let message = error.replace('x  ', '');  
+  message = message.replace('i  ', '');  
   return message;
 }
 
