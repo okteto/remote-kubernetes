@@ -6,6 +6,7 @@ import execa from 'execa';
 import * as path from 'path';
 import commandExists from 'command-exists';
 import {protect} from './machineid';
+import * as shell from './shell';
 import * as vscode from 'vscode';
 import * as os from 'os';
 import download from 'download';
@@ -216,7 +217,7 @@ export function up(manifest: string, namespace: string, name: string, port: numb
     const params = config.get<boolean>('upArgs') || '';
     cmd = `${cmd} ${params}`;
   }
-  
+  console.log(term.name);
   term.sendText(cmd, true);
 }
 
@@ -306,6 +307,7 @@ export async function destroy(namespace: string) {
 
   isActive.set(name, true);
   let cmd = buildCmd(`destroy`);
+  
   term.sendText(cmd, true);
   term.show(true);
   console.log('okteto destroy completed');
@@ -683,6 +685,7 @@ function getErrorMessage(err: any): string {
 
 function buildCmd(args: string): string {
   let binary = getBinary();
+  
   if (gitBashMode()){
     console.log('using gitbash style paths');
     binary = paths.toGitBash(binary);
@@ -690,7 +693,10 @@ function buildCmd(args: string): string {
 
   let cmd = `"${binary}" ${args}`;
   if (os.platform() === "win32") {
-    cmd = `& ${cmd}`;
+    if (!shell.isWindowsCmd()){
+      // only powershell needs this
+      cmd = `& ${cmd}`;    
+    }
   }
 
   return cmd;
