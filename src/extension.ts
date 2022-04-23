@@ -417,13 +417,8 @@ async function createCmd(){
         return;
     }
 
-    const choice = await vscode.window.showQuickPick(okteto.getLanguages(), {canPickMany: false, placeHolder: 'Select your development runtime'});
-    if (!choice) {
-        return;
-    }
-
     try {
-        await okteto.init(manifestPath, choice.value);
+        await okteto.init(manifestPath);
     } catch(err: any) {
         reporter.track(events.oktetoInitFailed);
         reporter.captureError(`okteto init failed: ${err.message}`, err);
