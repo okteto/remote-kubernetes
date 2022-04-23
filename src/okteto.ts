@@ -305,7 +305,7 @@ export async function destroy(namespace: string) {
   });
 
   isActive.set(name, true);
-  let cmd = buildCmd(`destroy --wait`);
+  let cmd = buildCmd(`destroy`);
   term.sendText(cmd, true);
   term.show(true);
   console.log('okteto destroy completed');
