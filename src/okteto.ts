@@ -198,7 +198,6 @@ export function up(manifest: string, namespace: string, name: string, port: numb
     hideFromUser: false,
     cwd: path.dirname(manifest),
     env: {
-      "OKTETO_AUTODEPLOY":"1",
       "OKTETO_ORIGIN":"vscode",
     },
     message: "This terminal will be automatically closed when you run the okteto down command. Happy coding!",
