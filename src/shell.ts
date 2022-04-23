@@ -11,7 +11,16 @@ const IS_COMMAND = /(cmd.exe$|cmd$)/i;
 
 function getTerminalShellPath(): string | undefined {
     const shellConfig = vscode.workspace.getConfiguration('terminal.integrated.shell');
-    return shellConfig.get<string>(os.platform())!;    
+    let osType = "";
+    switch(os.platform()){
+        case "win32":
+            osType = "windows";
+        case "darwin":
+            osType = "osx";
+        case "linux":
+            osType = "linux";
+    }
+    return shellConfig.get<string>(osType)!;    
 }
 
 export function isGitBash(): boolean {
