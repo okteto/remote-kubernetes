@@ -418,7 +418,7 @@ async function createCmd(){
     }
 
     try {
-        await okteto.init(manifestPath);
+        await okteto.init(manifestPath.fsPath);
     } catch(err: any) {
         reporter.track(events.oktetoInitFailed);
         reporter.captureError(`okteto init failed: ${err.message}`, err);

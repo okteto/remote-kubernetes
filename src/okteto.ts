@@ -204,16 +204,12 @@ export function up(manifest: string, namespace: string, name: string, port: numb
     iconPath: new vscode.ThemeIcon('server-process')
   });
 
-
-  let binary = getBinary();
+  isActive.set(`${terminalName}-${namespace}-${name}`, true);
   if (gitBashMode()){
     console.log('using gitbash style paths');
-    binary = paths.toGitBash(binary);
     manifest = paths.toGitBash(manifest);
   }
-
-  isActive.set(`${terminalName}-${namespace}-${name}`, true);
-  let cmd = `"${binary}" up ${serviceName} -f '${manifest}' --remote ${port}`;
+  let cmd = buildCmd(`up ${serviceName} -f '${manifest}' --remote ${port}`);
 
   const config = vscode.workspace.getConfiguration('okteto');
   if (config) {
@@ -246,7 +242,7 @@ export async function down(manifest: string, namespace: string, name: string, se
   console.log('okteto down completed');
 }
 
-export async function init(manifestPath: vscode.Uri) {    
+export async function init(manifest: string) {    
   const name = `${terminalName}-init`;
   disposeTerminal(name);
   isActive.set(name, false);
@@ -258,11 +254,17 @@ export async function init(manifestPath: vscode.Uri) {
       "OKTETO_ORIGIN":"vscode",
     },
     iconPath: new vscode.ThemeIcon('server-process'),
-    cwd: path.dirname(manifestPath.fsPath)
+    cwd: path.dirname(manifest)
   });
 
+  if (gitBashMode()){
+    console.log('using gitbash style paths');
+    manifest = paths.toGitBash(manifest);
+  }
+
   isActive.set(name, true);
-  term.sendText(`${getBinary()} init --replace --file ${manifestPath.fsPath}`, true);
+  let cmd = buildCmd(`init --replace --file "${manifest}"`);
+  term.sendText(cmd, true);
   term.show(false);
   console.log('okteto init completed');
 }
@@ -282,7 +284,8 @@ export async function deploy(namespace: string) {
   });
 
   isActive.set(name, true);
-  term.sendText(`${getBinary()} pipeline deploy --wait`, true);
+  let cmd = buildCmd(`deploy --wait`);
+  term.sendText(cmd, true);
   term.show(true);
   console.log('okteto deploy completed');
 }
@@ -302,7 +305,8 @@ export async function destroy(namespace: string) {
   });
 
   isActive.set(name, true);
-  term.sendText(`${getBinary()} pipeline destroy --wait`, true);
+  let cmd = buildCmd(`destroy --wait`);
+  term.sendText(cmd, true);
   term.show(true);
   console.log('okteto destroy completed');
 }
@@ -322,7 +326,7 @@ export async function setContext(context: string) : Promise<boolean>{
   });
 
   isActive.set(name, true);
-  let cmd = `${getBinary()} context use ${context}`;
+  let cmd = buildCmd(`context use ${context}`);
   term.sendText(cmd, true);
   
   return new Promise<boolean>(function(resolve, reject) {
@@ -356,7 +360,7 @@ export async function setNamespace(namespace: string) {
   });
 
   isActive.set(name, true);
-  let cmd = `${getBinary()} namespace use ${namespace}`;
+  let cmd = buildCmd(`namespace use ${namespace}`);
   term.sendText(cmd, true);
   term.show(true);
 
@@ -675,4 +679,19 @@ function getErrorMessage(err: any): string {
   }
 
   return JSON.stringify(err);
+}
+
+function buildCmd(args: string): string {
+  let binary = getBinary();
+  if (gitBashMode()){
+    console.log('using gitbash style paths');
+    binary = paths.toGitBash(binary);
+  }
+
+  let cmd = `"${binary}" ${args}`;
+  if (os.platform() === "win32") {
+    cmd = `& ${cmd}`;
+  }
+
+  return cmd;
 }
