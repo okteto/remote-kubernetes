@@ -15,7 +15,7 @@ The extension starts a development environment in your Kubernetes cluster by usi
 
 ## Requirements
 
-1. VS Code 1.45 or newer.
+1. VS Code 1.66 or newer.
 1. Deploy access to a Kubernetes cluster (you can use https://cloud.okteto.com/, Okteto's free managed Kubernetes service for developers).
 1. An OpenSSH compatible [SSH client](https://code.visualstudio.com/docs/remote/troubleshooting#_installing-a-supported-ssh-client).
 

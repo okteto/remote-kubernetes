@@ -2,6 +2,7 @@
 
 ## 0.4.2
 - Fix error on the create manifest task
+- Fix compatibility with v1 manifests
 
 ## 0.4.1
 - Support for [Okteto CLI 2.0](https://www.okteto.com/blog/announcing-the-launch-of-okteto-cli-2-0/).
