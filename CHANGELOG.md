@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.4.2
+- Fix error on the create manifest task
+
 ## 0.4.1
 - Support for [Okteto CLI 2.0](https://www.okteto.com/blog/announcing-the-launch-of-okteto-cli-2-0/).
 - You can know [set up a context](https://www.okteto.com/docs/reference/cli/#context) that will be applied to all commands, independently of your kubernetes context.
