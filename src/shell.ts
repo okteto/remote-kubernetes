@@ -15,10 +15,13 @@ function getTerminalShellPath(): string | undefined {
     switch(os.platform()){
         case "win32":
             osType = "windows";
+            break;
         case "darwin":
             osType = "osx";
+            break;
         case "linux":
             osType = "linux";
+            break;
     }
     return shellConfig.get<string>(osType)!;    
 }
