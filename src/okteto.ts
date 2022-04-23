@@ -213,7 +213,7 @@ export function up(manifest: string, namespace: string, name: string, port: numb
   }
 
   isActive.set(`${terminalName}-${namespace}-${name}`, true);
-  let cmd = `"${binary}" up ${serviceName} -f '${manifest}' --remote ${port}`;
+  let cmd = `${binary} up ${serviceName} -f '${manifest}' --remote ${port}`;
 
   const config = vscode.workspace.getConfiguration('okteto');
   if (config) {
@@ -282,7 +282,7 @@ export async function deploy(namespace: string) {
   });
 
   isActive.set(name, true);
-  term.sendText(`${getBinary()} pipeline deploy --wait`, true);
+  term.sendText(`${getBinary()} deploy --wait`, true);
   term.show(true);
   console.log('okteto deploy completed');
 }
@@ -302,7 +302,7 @@ export async function destroy(namespace: string) {
   });
 
   isActive.set(name, true);
-  term.sendText(`${getBinary()} pipeline destroy --wait`, true);
+  term.sendText(`${getBinary()} destroy`, true);
   term.show(true);
   console.log('okteto destroy completed');
 }

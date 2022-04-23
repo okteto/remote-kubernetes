@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.4.3
+- Fix error with Windows Paths
+
 ## 0.4.2
 - Fix error on the create manifest task
 - Fix compatibility with v1 manifests
