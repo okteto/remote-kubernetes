@@ -11,6 +11,7 @@ const IS_COMMAND = /(cmd.exe$|cmd$)/i;
 
 function getTerminalShellPath(): string | undefined {
     const shellConfig = vscode.workspace.getConfiguration('terminal.integrated.shell');
+    terminal.external.windowsExec
     let osType = "";
     switch(os.platform()){
         case "win32":
@@ -44,7 +45,8 @@ export function isWindowsCmd(): boolean {
         return false;
     }
 
-    const sh = getTerminalShellPath()
+    const shellConfig = vscode.workspace.getConfiguration('terminal.external');
+    const sh = shellConfig.get<string>('windowsExec');
     if (sh === undefined) {
         return false;
     }
