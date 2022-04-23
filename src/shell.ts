@@ -28,10 +28,44 @@ function getProfile(name: string): vscodeProfile | undefined {
 
     return winProfiles.get(name);
 }
-// rules
-// 1. check if there's a default profile
-// 2. check terminal.external.windowsExec
-// 3. assume powershell?
+
+// this checks if the shell defined in the default profile is the cmd
+export function isGitBash(): boolean {
+    if (os.platform() !== "win32") {
+        return false;
+    }
+
+    const config = vscode.workspace.getConfiguration('okteto');
+    if (!config) {
+      return false;
+    }
+  
+    const r = config.get<boolean>('gitBash');
+    if (r) {
+        return r;
+    }
+
+    const winProfile = getDefaultProfileName();
+    if (winProfile) {
+        if (winProfile === "Git Bash") {
+            return true;
+        }
+    
+        const defaultProfile = getProfile(winProfile);
+        if (defaultProfile && defaultProfile.path) {
+            defaultProfile.path.forEach(p => {
+                if (p && IS_GITBASH.test(p)) {
+                    return true;
+                }
+            });
+        }
+    }
+    
+    return false;
+}
+
+
+// this checks if the shell defined in the default profile is the cmd
 export function isWindowsCmd(): boolean {
     if (os.platform() !== "win32") {
         return false;
@@ -57,11 +91,6 @@ export function isWindowsCmd(): boolean {
         }
     }
     
-    const shellConfig = vscode.workspace.getConfiguration('terminal.external');
-    const sh = shellConfig.get<string>('windowsExec');
-    if (sh === undefined) {
-        return false;
-    }
-
-    return IS_COMMAND.test(sh)
+    // if there's no default profile, then it defaults to PowerShell
+    return false;
 }

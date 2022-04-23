@@ -206,7 +206,7 @@ export function up(manifest: string, namespace: string, name: string, port: numb
   });
 
   isActive.set(`${terminalName}-${namespace}-${name}`, true);
-  if (gitBashMode()){
+  if (shell.isGitBash()){
     console.log('using gitbash style paths');
     manifest = paths.toGitBash(manifest);
   }
@@ -258,7 +258,7 @@ export async function init(manifest: string) {
     cwd: path.dirname(manifest)
   });
 
-  if (gitBashMode()){
+  if (shell.isGitBash()){
     console.log('using gitbash style paths');
     manifest = paths.toGitBash(manifest);
   }
@@ -653,15 +653,6 @@ class RuntimeItem implements vscode.QuickPickItem {
 	}
 }
 
-function gitBashMode(): boolean {
-  const config = vscode.workspace.getConfiguration('okteto');
-  if (!config) {
-    return false;
-  }
-
-  return config.get<boolean>('gitBash') || false;
-}
-
 function extractMessage(error :string):string {
   const parts = error.split(':');
   let message = '';
@@ -686,7 +677,7 @@ function getErrorMessage(err: any): string {
 function buildCmd(args: string): string {
   let binary = getBinary();
   
-  if (gitBashMode()){
+  if (shell.isGitBash()){
     console.log('using gitbash style paths');
     binary = paths.toGitBash(binary);
   }
