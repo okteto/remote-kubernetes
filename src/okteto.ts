@@ -21,7 +21,7 @@ const contextFolder = 'context';
 const contextFile = 'config.json';
 const terminalName = 'okteto';
 const cloudUrl = 'https://cloud.okteto.com';
-export const minimum = '2.1.0';
+export const minimum = '2.3.3';
 
 export const state = {
   starting: 'starting',
