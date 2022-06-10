@@ -199,6 +199,7 @@ export function up(manifest: string, namespace: string, name: string, port: numb
     cwd: path.dirname(manifest),
     env: {
       "OKTETO_ORIGIN":"vscode",
+      "OKTETO_AUTOGENERATE_STIGNORE": "true",
     },
     message: "This terminal will be automatically closed when you run the okteto down command. Happy coding!",
     iconPath: new vscode.ThemeIcon('server-process')
