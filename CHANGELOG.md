@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.4.4
+-  Update minimum version to Okteto CLI 2.4.2
+
 ## 0.4.3
 - Fix error with Windows Paths
 

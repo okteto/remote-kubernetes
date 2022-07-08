@@ -21,7 +21,7 @@ const contextFolder = 'context';
 const contextFile = 'config.json';
 const terminalName = 'okteto';
 const cloudUrl = 'https://cloud.okteto.com';
-export const minimum = '2.3.3';
+export const minimum = '2.4.2';
 
 export const state = {
   starting: 'starting',
@@ -130,7 +130,7 @@ export async function install() {
       }
   }
 
-  const source = `https://github.com/okteto/okteto/releases/download/${minimum}/${binaryName}`;
+  const source = `https://downloads.okteto.com/cli/stable/${minimum}/${binaryName}`;
   const installPath = getInstallPath();
   const folder = path.dirname(installPath);
   const filenameTemp = `${path.basename(installPath)}.temp`;
