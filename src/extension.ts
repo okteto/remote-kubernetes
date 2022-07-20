@@ -2,7 +2,9 @@
 
 import * as vscode from 'vscode';
 import * as manifest from './manifest';
+import * as path from 'path';
 import * as ssh from './ssh';
+
 import * as okteto from './okteto';
 import {Reporter, events} from './telemetry';
 
@@ -408,6 +410,18 @@ async function getManifestOrAsk(): Promise<string | undefined> {
     }
 }
 
+export function getDefaultLocationManifest(): vscode.Uri | undefined{
+    if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
+        return undefined;
+    }
+
+    const p = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, 'okteto.yml');
+    const loc = vscode.Uri.file(p);
+    console.log(`default location: ${loc.fsPath.toString()}`);
+    return loc;
+}
+
+
 async function createCmd(){
     try{
         await checkPrereqs(true);
@@ -418,7 +432,7 @@ async function createCmd(){
 
     reporter.track(events.create);
 
-    const manifestPath = manifest.getDefaultLocation();
+    const manifestPath = getDefaultLocationManifest();
     if (!manifestPath) {
         reporter.track(events.createFailed);
         vscode.window.showErrorMessage(`Okteto: Create failed: Couldn't detect your project's path`);
