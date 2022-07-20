@@ -13,7 +13,8 @@ export function parseManifest(parsed: yaml.Document.Parsed): Manifest[] {
 
     if (j.dev) {
         Object.keys(j.dev).forEach(key => {
-            const m = new Manifest(key, j.namespace, j.workdir, j.remote);
+            const v = j.dev[key];
+            const m = new Manifest(key, v.namespace, v.workdir, v.remote);
             result.push(m);
         })
     } else {

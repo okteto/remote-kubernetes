@@ -124,6 +124,11 @@
           "type": "string",
           "default": "--log-level=warn",
           "description": "Extra arguments to pass to okteto up. You can use it to get debug logs, force a build before the up command, etc..."
+        },
+        "okteto.upTimeout": {
+          "type": "number",
+          "default": "100",
+          "description": "Timeout, in seconds, of the up command"
         }
       }
     }
