@@ -30,7 +30,7 @@
   },
   "license": "SEE LICENSE IN LICENSE",
   "engines": {
-    "vscode": "^1.63.0"
+    "vscode": "^1.69.0"
   },
   "categories": [
     "Other",
@@ -124,6 +124,11 @@
           "type": "string",
           "default": "--log-level=warn",
           "description": "Extra arguments to pass to okteto up. You can use it to get debug logs, force a build before the up command, etc..."
+        },
+        "okteto.upTimeout": {
+          "type": "number",
+          "default": "100",
+          "description": "Timeout, in seconds, of the up command"
         }
       }
     }
@@ -144,7 +149,7 @@
     "@types/glob": "^7.1.4",
     "@types/mocha": "^9.0.0",
     "@types/node": "^16.9.0",
-    "@types/vscode": "^1.63.0",
+    "@types/vscode": "^1.69.0",
     "chai": "^4.3.4",
     "glob": "^7.1.7",
     "markdown-it": ">=12.3.2",

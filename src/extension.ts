@@ -163,6 +163,8 @@ async function upCmd(selectedManifestUri: vscode.Uri) {
         }
     }
 
+    
+
     let port = m.port;
     if (port === 0 || port === undefined) {
         try {
@@ -214,6 +216,12 @@ async function waitForUp(namespace: string, name: string, port: number) {
 }
 
 async function waitForFinalState(namespace: string, name:string, progress: vscode.Progress<{message?: string | undefined; increment?: number | undefined}>): Promise<{result: boolean, message: string}> {
+    const config = vscode.workspace.getConfiguration('okteto');
+    let upTimeout = 100;
+    if (config) {
+        upTimeout = config.get<number>('timeout') || 100;
+    }
+    
     const seen = new Map<string, boolean>();
     const messages = okteto.getStateMessages();
     progress.report({  message: "Launching your development environment..." });
@@ -234,7 +242,7 @@ async function waitForFinalState(namespace: string, name:string, progress: vscod
                 return {result: false, message: res.message};
             case okteto.state.starting:
                 const isRunning = await okteto.isRunning(namespace, name);
-                if (!isRunning && counter > 100){
+                if (!isRunning && counter > upTimeout){
                     return {result: false, message: `process failed to start`};
                 }
         }
@@ -262,7 +270,7 @@ async function finalizeUp(namespace: string, name: string, workdir: string) {
         return;
     }
 
-    let folder = '/usr/src/app';
+    let folder = '';
     if (workdir) {
         folder = workdir;
     }
