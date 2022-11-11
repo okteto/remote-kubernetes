@@ -228,7 +228,7 @@ async function waitForFinalState(namespace: string, name:string, progress: vscod
     const messages = okteto.getStateMessages();
     progress.report({  message: "Launching your development environment..." });
     var counter = 0;
-    var timeout = 5 * 60; // 5 minutes
+    var timeout = 15 * 60; // 5 minutes
     while (true) {
         const res = await okteto.getState(namespace, name);
         if (!seen.has(res.state)) {
@@ -521,7 +521,7 @@ function onOktetoFailed(message: string, terminalSuffix: string | null = null) {
 }
 
 async function showManifestPicker() : Promise<vscode.Uri | undefined> {
-    const files = await vscode.workspace.findFiles('**/{okteto,docker-compose}.{yml,yaml}', '**/node_modules/**');
+    const files = await vscode.workspace.findFiles('**/{okteto,docker-compose,okteto-*}.{yml,yaml}', '**/node_modules/**');
     if (files.length === 0) {
         await vscode.window.showErrorMessage(`No manifests found in your workspace.\n
 Please run the 'Okteto: Create Manifest' command to create it and then try again.`, {
@@ -529,6 +529,11 @@ Please run the 'Okteto: Create Manifest' command to create it and then try again
         });
         return;
     }
+
+    if (files.length === 1 ) {
+        return files[0];
+    }
+    
     const items = files.map(file => {
         return {
             label: vscode.workspace.asRelativePath(file, true),
