@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.4.5
+- Update minimum version to Okteto CLI 2.9.0
+- Automatically pick the manifest if there's a single `okteto.yml` or `docker-compose.yml` file in the repository.
+
 ## 0.4.4
 - Update minimum version to Okteto CLI 2.4.2
 - Add an optional parameter to increase the timeout of the okteto up command.
