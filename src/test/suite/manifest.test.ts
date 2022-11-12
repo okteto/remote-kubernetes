@@ -18,6 +18,18 @@ describe('parseManifest', () => {
     expect(result[1].namespace).to.equal(undefined);
   });
 
+  it('parse v2 manifest without workdir', () => {
+    const data = fs.readFileSync('src/test/suite/artifacts/manifest-no-workdir.yaml', {encoding: 'utf8'});
+    const parsed = yaml.parseDocument(data);
+    const result = manifest.parseManifest(parsed);
+    expect(result.length).to.equal(3);
+    expect(result[0].workdir).to.equal('/usr/src/app');
+    expect(result[1].workdir).to.equal('/usr/src/frontend');
+    expect(result[2].workdir).to.equal('');
+    expect(result[0].namespace).to.equal('test');
+    expect(result[1].namespace).to.equal(undefined);
+  });
+
   it('parse legacy manifest', () => {
     const data = fs.readFileSync('src/test/suite/artifacts/legacy-manifest.yaml', {encoding: 'utf8'});
     const parsed = yaml.parseDocument(data);

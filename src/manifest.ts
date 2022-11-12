@@ -12,7 +12,9 @@ export function parseManifest(parsed: yaml.Document.Parsed): Manifest[] {
     if (j.dev) {
         Object.keys(j.dev).forEach(key => {
             const v = j.dev[key];
-            const m = new Manifest(key, v.namespace, v.workdir, v.remote);
+            const workdir = getWorkdir(v);
+            const m = new Manifest(key, v.namespace, workdir, v.remote);
+            
             result.push(m);
         })
     } else {
@@ -40,4 +42,18 @@ export async function getManifests(manifestPath: string): Promise<Manifest[]> {
     
     return parseManifest(parsed);
     
+}
+
+function getWorkdir(devBlock :any): string {
+    if (devBlock.workdir) {
+        return devBlock.workdir;
+    }
+
+    if (devBlock.sync && devBlock.sync.length > 0) {
+        const sync = devBlock.sync[0];
+        const w = sync.split(":");
+        return w[w.length - 1];
+    }
+
+    return "";
 }
