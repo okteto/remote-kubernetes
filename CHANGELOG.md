@@ -3,6 +3,8 @@
 ## 0.4.5
 - Update minimum version to Okteto CLI 2.9.0
 - Automatically pick the manifest if there's a single `okteto.yml` or `docker-compose.yml` file in the repository.
+- Fix connectivity issue when using Remote-SSH mode. 
+- Automatically calculate the `workdir` based on the sync folders if `workdir` is not declared in the manifest.
 
 ## 0.4.4
 - Update minimum version to Okteto CLI 2.4.2
@@ -19,7 +21,7 @@
 - Support for [Okteto CLI 2.0](https://www.okteto.com/blog/announcing-the-launch-of-okteto-cli-2-0/).
 - You can know [set up a context](https://www.okteto.com/docs/reference/cli/#context) that will be applied to all commands, independently of your kubernetes context.
 - New commands to deploy and delete your development environment, and to set the default namespace for Okteto commands.
-- Option to enable/disable using the Remote-SSH extension.
+- Option to enable/disable Remote-SSH mode.
 - Enable SSH-RSA keys for the SSH host created by okteto.
 - Handle $HOME directory with spaces correctly.
 - Install the correct binary in ARM64 devices.
