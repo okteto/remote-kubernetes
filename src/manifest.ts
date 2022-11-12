@@ -5,11 +5,51 @@ export class Manifest {
     constructor(public name: string, public namespace: string, public workdir: string, public port: number) {}
 }
 
+function isDockerCompose(manifest: any): boolean {
+    if (manifest.services) {
+        const s = manifest.services;
+        for (let $_ in s){
+            
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function getFirstComposeServiceAndWorkdir(manifest: any): {name: string, workdir: string} {
+    for (let k in manifest.services){   
+        const svc = manifest.services[k];
+        if (svc.volumes && svc.volumes.length > 0) {
+            for (var v of svc.volumes) {
+                const s = v.split(':');
+                if (s.length == 2) {
+                    return {name: k, workdir: s[1]};
+                }
+            }
+        }
+    }
+
+    return {name: '', workdir: ''};
+}
+
+function isOktetoV2(manifest: any): boolean {
+    if (manifest.dev) {
+        return true;
+    }
+
+    return false;
+}
+
 export function parseManifest(parsed: yaml.Document.Parsed): Manifest[] {
     const j = parsed.toJSON();
     const result: Array<Manifest> = [];
 
-    if (j.dev) {
+    if (isDockerCompose(j)) {
+        const r = getFirstComposeServiceAndWorkdir(j);
+        const m = new Manifest(r.name, '', r.workdir, 0);
+        result.push(m);
+    } else if (isOktetoV2(j)) {
         Object.keys(j.dev).forEach(key => {
             const v = j.dev[key];
             const workdir = getWorkdir(v);
