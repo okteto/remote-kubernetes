@@ -16,20 +16,33 @@ export function isDockerCompose(manifest: any): boolean {
     return false;
 }
 
-function getFirstComposeServiceAndWorkdir(manifest: any): {name: string, workdir: string} {
+function getComposeServices(manifest: any): Manifest[] {
+
+    var volumes = new Map<string, boolean>();
+    if (manifest.volumes) {
+        for (var k in manifest.volumes) {
+            volumes.set(k, true);
+        }
+    }
+
+    var result = [];
     for (let k in manifest.services){   
         const svc = manifest.services[k];
         if (svc.volumes && svc.volumes.length > 0) {
             for (var v of svc.volumes) {
                 const s = v.split(':');
+                
                 if (s.length == 2) {
-                    return {name: k, workdir: s[1]};
+                    // if the volume is declared, it's not used for sync
+                    if (!volumes.has(s[0])) {
+                        result.push(new Manifest(k, '', s[1], 0));
+                    }        
                 }
             }
         }
     }
 
-    return {name: '', workdir: ''};
+    return result;
 }
 
 function isOktetoV2(manifest: any): boolean {
@@ -42,13 +55,11 @@ function isOktetoV2(manifest: any): boolean {
 
 export function parseManifest(parsed: yaml.Document.Parsed): Manifest[] {
     const j = parsed.toJSON();
-    const result: Array<Manifest> = [];
-
+    
     if (isDockerCompose(j)) {
-        const r = getFirstComposeServiceAndWorkdir(j);
-        const m = new Manifest(r.name, '', r.workdir, 0);
-        result.push(m);
+        return getComposeServices(j);
     } else if (isOktetoV2(j)) {
+        const result: Array<Manifest> = [];
         Object.keys(j.dev).forEach(key => {
             const v = j.dev[key];
             const workdir = getWorkdir(v);
@@ -56,15 +67,14 @@ export function parseManifest(parsed: yaml.Document.Parsed): Manifest[] {
             
             result.push(m);
         })
+        return result;
     } else {
         const m = new Manifest(j.name, j.namespace, j.workdir, j.remote);
         if (!m.name){
             throw new Error(`Invalid manifest`);
         }
-        result.push(m);
+        return [m];
     }
-
-    return result;
 }
 
 export async function getManifests(manifestPath: string): Promise<Manifest[]> {
