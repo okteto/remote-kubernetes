@@ -53,27 +53,49 @@ function isOktetoV2(manifest: any): boolean {
     return false;
 }
 
-export function parseManifest(parsed: yaml.Document.Parsed): Manifest[] {
-    const j = parsed.toJSON();
-    
-    if (isDockerCompose(j)) {
-        return getComposeServices(j);
-    } else if (isOktetoV2(j)) {
-        const result: Array<Manifest> = [];
-        Object.keys(j.dev).forEach(key => {
-            const v = j.dev[key];
-            const workdir = getWorkdir(v);
-            const m = new Manifest(key, v.namespace, workdir, v.remote);
-            
-            result.push(m);
-        })
-        return result;
-    } else {
-        const m = new Manifest(j.name, j.namespace, j.workdir, j.remote);
+function getV2Services(manifest: any): Manifest[] {
+    const result: Array<Manifest> = [];
+    for (var k in manifest.dev) {
+        const svc = manifest.dev[k];
+        const workdir = getWorkdir(svc);
+        const m = new Manifest(k, svc.namespace, workdir, svc.remote);
+        result.push(m);
+    }
+        
+    return result;
+}
+
+function getWorkdir(devBlock :any): string {
+    if (devBlock.workdir) {
+        return devBlock.workdir;
+    }
+
+    if (devBlock.sync && devBlock.sync.length > 0) {
+        const sync = devBlock.sync[0];
+        const w = sync.split(":");
+        return w[w.length - 1];
+    }
+
+    return "";
+}
+
+function getV1Service(manifest: any): Manifest[] {
+    const m = new Manifest(manifest.name, manifest.namespace, manifest.workdir, manifest.remote);
         if (!m.name){
             throw new Error(`Invalid manifest`);
         }
         return [m];
+}
+
+export function parseManifest(parsed: yaml.Document.Parsed): Manifest[] {
+    const manifest = parsed.toJSON();
+    
+    if (isDockerCompose(manifest)) {
+        return getComposeServices(manifest);
+    } else if (isOktetoV2(manifest)) {
+        return getV2Services(manifest);
+    } else {
+        return getV1Service(manifest)
     }
 }
 
@@ -91,18 +113,4 @@ export async function getManifests(manifestPath: string): Promise<Manifest[]> {
     
     return parseManifest(parsed);
     
-}
-
-function getWorkdir(devBlock :any): string {
-    if (devBlock.workdir) {
-        return devBlock.workdir;
-    }
-
-    if (devBlock.sync && devBlock.sync.length > 0) {
-        const sync = devBlock.sync[0];
-        const w = sync.split(":");
-        return w[w.length - 1];
-    }
-
-    return "";
 }
