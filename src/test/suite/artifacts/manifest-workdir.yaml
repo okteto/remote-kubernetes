@@ -20,3 +20,11 @@ dev:
       - frontend:/usr/src/frontend
   worker:
     command: yarn start
+  env:
+    command: yarn start
+    sync:
+      - $HOME/frontend:/usr/src/frontend
+  malformed:
+    command: yarn start
+    sync:
+      - /usr/src/frontend
