@@ -272,14 +272,9 @@ async function finalizeUp(namespace: string, name: string, workdir: string) {
         return;
     }
 
-    let folder = '';
-    if (workdir) {
-        folder = workdir;
-    }
-
     try {
         const host = `${name}.okteto`;
-        const uri = vscode.Uri.parse(`vscode-remote://ssh-remote+${host}/${folder}`);
+        const uri = vscode.Uri.parse(`vscode-remote://ssh-remote+${host}/${workdir}`);
         await vscode.commands.executeCommand('vscode.openFolder', uri, true);
         reporter.track(events.upFinished);
         okteto.notifyIfFailed(namespace, name, onOktetoFailed);
