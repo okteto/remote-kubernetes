@@ -3,8 +3,14 @@
 import gp from 'get-port';
 import * as net from 'net';
 
+var nextPort = 22100;
+
 export function getPort(): Promise<number> {
-    return gp({host:'127.0.0.1', port: 22100});
+    const port = nextPort;
+    
+    // poorman's port collision avoidance
+    nextPort++
+    return gp({host:'127.0.0.1', port: port});
 }
 
 export function isReady(port: number): Promise<Boolean> {
