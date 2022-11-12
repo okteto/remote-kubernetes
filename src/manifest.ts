@@ -5,11 +5,10 @@ export class Manifest {
     constructor(public name: string, public namespace: string, public workdir: string, public port: number) {}
 }
 
-function isDockerCompose(manifest: any): boolean {
+export function isDockerCompose(manifest: any): boolean {
     if (manifest.services) {
         const s = manifest.services;
         for (let $_ in s){
-            
             return true;
         }
     }

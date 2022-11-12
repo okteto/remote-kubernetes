@@ -5,6 +5,22 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "args": [
+                "-r",  
+                "ts-node/register",
+                "${workspaceFolder}/src/test/suite/*.test.ts"
+            ],
+            "internalConsoleOptions": "openOnSessionStart",
+            "name": "Mocha Tests",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "request": "launch",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "node"
+        },
+        
+        {
             "type": "extensionHost",
             "request": "launch",
             "name": "Launch Extension",
@@ -19,7 +35,8 @@
             "env": {
                 "ENV": "dev"
             }
-        }
+        },
+        
 
     ],
 }
