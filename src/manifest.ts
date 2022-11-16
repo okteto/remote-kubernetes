@@ -54,7 +54,7 @@ function isOktetoV2(manifest: any): boolean {
 }
 
 function isOktetoV1(manifest: any): boolean {
-    if (manifest.name && !manifest.dev) {
+    if (manifest.name) {
         return true;
     }
 
