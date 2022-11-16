@@ -113,7 +113,7 @@ async function installCmd(upgrade: boolean, handleErr: boolean) {
     vscode.window.showInformationMessage(success);
 }
 
-async function upCmd(selectedManifestUri: vscode.Uri) {
+async function upCmd() {
     try{
         await checkPrereqs(true);
     } catch(err: any) {   
@@ -123,7 +123,7 @@ async function upCmd(selectedManifestUri: vscode.Uri) {
 
     reporter.track(events.up);
 
-    const manifestUri = selectedManifestUri || await showManifestPicker();
+    const manifestUri = await showManifestPicker();
     if (!manifestUri) {
         reporter.track(events.manifestDismissed);
         return;
@@ -351,11 +351,27 @@ async function deployCmd() {
         vscode.window.showErrorMessage(err.message);    
         return;
     }
+    
+    const manifestUri = await showManifestPicker();
+    if (!manifestUri) {
+        reporter.track(events.manifestDismissed);
+        return;
+    }
 
-    reporter.track(events.deploy);
+    reporter.track(events.manifestSelected);
+    const manifestPath = manifestUri.fsPath;
+    console.log(`user selected: ${manifestPath}`);
+
     try {
         const ctx = okteto.getContext();
-        await okteto.deploy(ctx.namespace);
+        var namespace = ctx.namespace;
+        const m  = await manifest.getManifests(manifestPath);
+        if (m.length > 0 && m[0].namespace){
+            namespace = m[0].namespace;
+        }
+
+        reporter.track(events.deploy);
+        await okteto.deploy(namespace, manifestPath);
     } catch(err: any) {
         reporter.captureError(`okteto deploy failed: ${err.message}`, err);
         vscode.window.showErrorMessage(`Okteto: Deploy failed: ${err.message}`);
@@ -370,10 +386,26 @@ async function destroyCmd() {
         return;
     }
 
+    const manifestUri = await showManifestPicker();
+    if (!manifestUri) {
+        reporter.track(events.manifestDismissed);
+        return;
+    }
+
+    reporter.track(events.manifestSelected);
+    const manifestPath = manifestUri.fsPath;
+    console.log(`user selected: ${manifestPath}`);
+
     reporter.track(events.destroy);
     try {
         const ctx = okteto.getContext();
-        await okteto.destroy(ctx.namespace);
+        var namespace = ctx.namespace;
+        const m  = await manifest.getManifests(manifestPath);
+        if (m.length > 0 && m[0].namespace){
+            namespace = m[0].namespace;
+        }
+
+        await okteto.destroy(namespace, manifestPath);
     } catch(err: any) {
         reporter.captureError(`okteto destroy failed: ${err.message}`, err);
         vscode.window.showErrorMessage(`Okteto: Destroy failed: ${err.message}`);

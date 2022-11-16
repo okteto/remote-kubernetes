@@ -268,7 +268,7 @@ export async function init(manifestPath: vscode.Uri) {
   console.log('okteto init completed');
 }
 
-export async function deploy(namespace: string) {
+export async function deploy(namespace: string, manifestPath: string) {
   const name = `${terminalName}-${namespace}-deploy`;
   disposeTerminal(name);
   isActive.set(name, false);
@@ -283,12 +283,12 @@ export async function deploy(namespace: string) {
   });
 
   isActive.set(name, true);
-  term.sendText(`${getBinary()} deploy --wait`, true);
+  term.sendText(`${getBinary()} deploy -f ${manifestPath} --wait`, true);
   term.show(true);
   console.log('okteto deploy completed');
 }
 
-export async function destroy(namespace: string) {
+export async function destroy(namespace: string, manifestPath: string) {
   const name = `${terminalName}-${namespace}-destroy`;
   disposeTerminal(name);
   isActive.set(name, false);
@@ -303,7 +303,7 @@ export async function destroy(namespace: string) {
   });
 
   isActive.set(name, true);
-  term.sendText(`${getBinary()} destroy`, true);
+  term.sendText(`${getBinary()} destroy -f ${manifestPath}`, true);
   term.show(true);
   console.log('okteto destroy completed');
 }
