@@ -219,9 +219,9 @@ async function waitForUp(namespace: string, name: string, port: number) {
 
 async function waitForFinalState(namespace: string, name:string, progress: vscode.Progress<{message?: string | undefined; increment?: number | undefined}>): Promise<{result: boolean, message: string}> {
     const config = vscode.workspace.getConfiguration('okteto');
-    let upTimeout = 100;
+    let upTimeout = 1000;
     if (config) {
-        upTimeout = config.get<number>('timeout') || 100;
+        upTimeout = config.get<number>('timeout') || 1000;
     }
     
     const seen = new Map<string, boolean>();
