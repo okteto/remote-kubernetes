@@ -6,9 +6,9 @@ import execa from 'execa';
 import * as path from 'path';
 import commandExists from 'command-exists';
 import {protect} from './machineid';
+import * as download from './download';
 import * as vscode from 'vscode';
 import * as os from 'os';
-import download from 'download';
 import * as semver from 'semver';
 import * as paths from './paths';
 import { clearInterval, setInterval } from 'timers';
@@ -65,7 +65,7 @@ export async function needsInstall(): Promise<{install: boolean, upgrade: boolea
     if (!version) {
       return {install: false, upgrade: false};
     }
-    return {install: semver.lt(version, minimum), upgrade: true};
+    return {install: semver.lt(version, download.minimum), upgrade: true};
   } catch {
     return {install: false, upgrade: false};
   }
@@ -101,41 +101,11 @@ async function getVersion(binary: string): Promise<string | undefined> {
 }
 
 export async function install() {
-  let chmod = true;
-  let binaryName = "okteto.exe";
-
-  switch(os.platform()){
-    case 'win32':
-      binaryName = `okteto.exe`;
-      chmod = false;
-      break;
-    case 'darwin':
-      switch(os.arch()){
-        case 'arm64':
-          binaryName = "okteto-Darwin-arm64"; 
-          break;
-        default:
-          binaryName =  "okteto-Darwin-x86_64";
-          break;
-      }
-      break;
-    default:
-      switch(os.arch()){
-        case 'arm64':
-          binaryName =  "okteto-Linux-arm64"; 
-          break;
-        default: 
-          binaryName =  "okteto-Linux-x86_64";
-          break;
-      }
-  }
-
-  const source = `https://downloads.okteto.com/cli/stable/${minimum}/${binaryName}`;
-  const installPath = getInstallPath();
+  const source = download.getOktetoUrl();
+  const installPath = download.getInstallPath();
   const folder = path.dirname(installPath);
   const filenameTemp = `${path.basename(installPath)}.temp`;
-  const filename = path.basename(installPath);
-  
+  const downloadPath = path.join(folder, filenameTemp);
   try {
     await promises.mkdir(path.dirname(folder), {mode: 0o700, recursive: true});
   } catch(err: any) {
@@ -143,7 +113,7 @@ export async function install() {
   }
 
   try {
-    await download(source, folder, {filename: filenameTemp});
+    const r = await download.binary(source.url, downloadPath);
   } catch(err: any) {
     console.error(`download fail: ${err}`);
     if (err.code === 'EBUSY'){
@@ -162,14 +132,14 @@ export async function install() {
   }
 
   try {
-    fs.renameSync(path.join(folder, filenameTemp), installPath);
+    fs.renameSync(downloadPath, installPath);
   } catch(err: any) {
     console.error(`rename fail: ${err}`);
     throw new Error(`failed to download ${source} into ${installPath}: ${getErrorMessage(err)}`);
   }
 
 
-  if (chmod) {
+  if (source.chmod) {
     try {
       await execa('chmod', ['a+x', installPath]);
     } catch(err: any) {
@@ -544,7 +514,7 @@ function getBinary(): string {
     }
   }
 
-  return getInstallPath();
+  return download.getInstallPath();
 }
 
 export function getRemoteSSH(): boolean {
@@ -556,13 +526,7 @@ export function getRemoteSSH(): boolean {
   return remoteSSH;
 }
 
-function getInstallPath(): string {
-  if (os.platform() === 'win32') {
-    return path.join(os.homedir(), "AppData", "Local", "Programs", "okteto.exe");
-  }
 
-  return path.join(os.homedir(), '.okteto-vscode', 'okteto');
-}
 
 function disposeTerminal(terminalName: string){
   vscode.window.terminals.forEach((t) => {
