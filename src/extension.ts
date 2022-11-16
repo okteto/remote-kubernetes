@@ -363,13 +363,7 @@ async function deployCmd() {
     console.log(`user selected: ${manifestPath}`);
 
     try {
-        const ctx = okteto.getContext();
-        var namespace = ctx.namespace;
-        const m  = await manifest.getManifests(manifestPath);
-        if (m.length > 0 && m[0].namespace){
-            namespace = m[0].namespace;
-        }
-
+        var namespace = await getNamespace(manifestPath);
         reporter.track(events.deploy);
         await okteto.deploy(namespace, manifestPath);
     } catch(err: any) {
@@ -398,13 +392,7 @@ async function destroyCmd() {
 
     reporter.track(events.destroy);
     try {
-        const ctx = okteto.getContext();
-        var namespace = ctx.namespace;
-        const m  = await manifest.getManifests(manifestPath);
-        if (m.length > 0 && m[0].namespace){
-            namespace = m[0].namespace;
-        }
-
+        var namespace = await getNamespace(manifestPath);
         await okteto.destroy(namespace, manifestPath);
     } catch(err: any) {
         reporter.captureError(`okteto destroy failed: ${err.message}`, err);
@@ -605,4 +593,15 @@ async function showActiveManifestPicker() : Promise<vscode.Uri | undefined> {
         placeHolder: 'Select your okteto active manifest'
     });
     return manifestItem ? manifestItem.uri : undefined;
+}
+
+async function getNamespace(manifestPath: string): Promise<string> {
+    const ctx = okteto.getContext();
+    var namespace = ctx.namespace;
+    const m  = await manifest.getManifests(manifestPath);
+    if (m.length > 0 && m[0].namespace){
+        namespace = m[0].namespace;
+    }
+
+    return namespace;
 }
