@@ -5,7 +5,7 @@ export class Manifest {
     constructor(public name: string, public namespace: string, public workdir: string, public port: number) {}
 }
 
-export function isDockerCompose(manifest: any): boolean {
+function isDockerCompose(manifest: any): boolean {
     if (manifest.services) {
         const s = manifest.services;
         for (let $_ in s){
@@ -53,6 +53,14 @@ function isOktetoV2(manifest: any): boolean {
     return false;
 }
 
+function isOktetoV1(manifest: any): boolean {
+    if (manifest.name && !manifest.dev) {
+        return true;
+    }
+
+    return false;
+}
+
 function getV2Services(manifest: any): Manifest[] {
     const result: Array<Manifest> = [];
     for (var k in manifest.dev) {
@@ -90,12 +98,14 @@ function getV1Service(manifest: any): Manifest[] {
 export function parseManifest(parsed: yaml.Document.Parsed): Manifest[] {
     const manifest = parsed.toJSON();
     
-    if (isDockerCompose(manifest)) {
-        return getComposeServices(manifest);
-    } else if (isOktetoV2(manifest)) {
+    if (isOktetoV2(manifest)) {
         return getV2Services(manifest);
-    } else {
+    } else if (isOktetoV1(manifest)) {
         return getV1Service(manifest)
+    } else if (isDockerCompose(manifest)) {
+        return getComposeServices(manifest);
+    } else {
+        return [];
     }
 }
 
@@ -111,6 +121,11 @@ export async function getManifests(manifestPath: string): Promise<Manifest[]> {
         throw new Error(`${manifestPath} is not a valid yaml file`);
     }
     
-    return parseManifest(parsed);
+    const r = parseManifest(parsed);
+    if (r.length == 0) {
+        throw new Error(`${manifestPath} is not a valid manifest`);
+    }
+
+    return r;
     
 }

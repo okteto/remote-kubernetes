@@ -11,6 +11,7 @@ describe('parseManifest', () => {
     const data = fs.readFileSync('src/test/suite/artifacts/simple-manifest.yaml', {encoding: 'utf8'});
     const parsed = yaml.parseDocument(data);
     const result = manifest.parseManifest(parsed);
+    expect(result).to.not.equal(undefined);
     expect(result.length).to.equal(2);
     expect(result[0].workdir).to.equal('/usr/src/app');
     expect(result[1].workdir).to.equal('/usr/src/frontend');
@@ -45,15 +46,15 @@ describe('parseManifest', () => {
   it('invalid docker-compose fails validation', () => {
     const data = fs.readFileSync('src/test/suite/artifacts/docker-compose-invalid.yaml', {encoding: 'utf8'});
     const parsed = yaml.parseDocument(data);
-    const result = manifest.isDockerCompose(parsed);
-    expect(result).to.equal(false);
+    const result = manifest.parseManifest(parsed);
+    expect(result.length).to.equal(0);
   });
 
   it('valid docker-compose pases validation', () => {
     const data = fs.readFileSync('src/test/suite/artifacts/docker-compose.yaml', {encoding: 'utf8'});
     const parsed = yaml.parseDocument(data);
-    const result = manifest.isDockerCompose(parsed);
-    expect(result).to.equal(false);
+    const result = manifest.parseManifest(parsed);
+    expect(result.length).to.equal(1);
   });
 
   it('parse legacy manifest', () => {
