@@ -50,14 +50,16 @@ export function getOktetoUrl() : {url: string, chmod: boolean} {
   return {url:`https://downloads.okteto.com/cli/stable/${minimum}/${binaryName}`, chmod: chmod};
 }
 
-export async function binary(source: string, destination: string) : Promise<boolean> { 
+export async function binary(source: string, destination: string, progress: vscode.Progress<{increment: number, message: string}>) : Promise<boolean> { 
   const downloadStream = got.stream(source);
   const fileWriterStream = fs.createWriteStream(destination);
-  
+  var current = 0;
   downloadStream
     .on("downloadProgress", ({transferred, total, percent})=> {
       const percentage = Math.round(percent * 100);
-      console.error(`progress: ${transferred}/${total} (${percentage}%)`);
+      const reportedProgress = percentage - current;
+      current = percentage;
+      progress.report({increment: reportedProgress, message: ''});
     })
     .on("error", (error) => {
       console.error(`Download failed: ${error.message}`);

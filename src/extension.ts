@@ -98,9 +98,10 @@ async function installCmd(upgrade: boolean, handleErr: boolean) {
     reporter.track(events.install);
     await vscode.window.withProgress(
       {location: vscode.ProgressLocation.Notification, title: title},
-      async () => {
+      async (progress) => {
         try {
-            await okteto.install();
+            
+            await okteto.install(progress);
         } catch(err: any) {
             reporter.track(events.oktetoInstallFailed);
             reporter.captureError(`okteto install failed: ${err.message}`, err);

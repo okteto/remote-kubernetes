@@ -100,7 +100,7 @@ async function getVersion(binary: string): Promise<string | undefined> {
   return undefined;
 }
 
-export async function install() {
+export async function install(progress: vscode.Progress<{increment: number, message: string}>) {
   const source = download.getOktetoUrl();
   const installPath = download.getInstallPath();
   const folder = path.dirname(installPath);
@@ -113,7 +113,7 @@ export async function install() {
   }
 
   try {
-    const r = await download.binary(source.url, downloadPath);
+    const r = await download.binary(source.url, downloadPath, progress);
   } catch(err: any) {
     console.error(`download fail: ${err}`);
     if (err.code === 'EBUSY'){
