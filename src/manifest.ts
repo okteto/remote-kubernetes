@@ -66,7 +66,7 @@ function getV2Services(manifest: any): Manifest[] {
     for (var k in manifest.dev) {
         const svc = manifest.dev[k];
         const workdir = getWorkdir(svc);
-        const m = new Manifest(k, svc.namespace, workdir, svc.remote);
+        const m = new Manifest(k, manifest.namespace, workdir, svc.remote);
         result.push(m);
     }
         

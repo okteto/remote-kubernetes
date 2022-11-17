@@ -16,7 +16,7 @@ describe('parseManifest', () => {
     expect(result[0].workdir).to.equal('/usr/src/app');
     expect(result[1].workdir).to.equal('/usr/src/frontend');
     expect(result[0].namespace).to.equal('test');
-    expect(result[1].namespace).to.equal(undefined);
+    expect(result[1].namespace).to.equal('test');
   });
 
   it('parse v2 manifest without workdir', () => {
@@ -30,7 +30,7 @@ describe('parseManifest', () => {
     expect(result[3].workdir).to.equal('/usr/src/frontend');
     expect(result[4].workdir).to.equal('/usr/src/frontend');
     expect(result[0].namespace).to.equal('test');
-    expect(result[1].namespace).to.equal(undefined);
+    expect(result[1].namespace).to.equal('test');
   });
 
   it('parse docker-compose', () => {
