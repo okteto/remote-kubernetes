@@ -1,5 +1,6 @@
 import {promises} from 'fs';
 import * as yaml from 'yaml';
+import * as vscode from 'vscode';
 
 export class Manifest {
     constructor(public name: string, public namespace: string, public workdir: string, public port: number) {}
@@ -109,8 +110,8 @@ export function parseManifest(parsed: yaml.Document.Parsed): Manifest[] {
     }
 }
 
-export async function getManifests(manifestPath: string): Promise<Manifest[]> {
-    const data = await promises.readFile(manifestPath, {encoding: 'utf8'});
+export async function getManifests(manifestPath: vscode.Uri): Promise<Manifest[]> {
+    const data = await promises.readFile(manifestPath.fsPath, {encoding: 'utf8'});
     if (!data) {
         throw new Error(`${manifestPath} is not a valid Okteto manifest`);
     }
