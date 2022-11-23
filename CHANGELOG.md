@@ -3,6 +3,7 @@
 ## 0.4.6
 - Support docker-compose.yaml files
 - Deploy and Destroy commands will ask the user to pick a file if there's more than one Okteto or docker-compose manifests in the root of the repository.
+- Update minimum version to Okteto CLI 2.9.1
 
 ## 0.4.5
 - Update minimum version to Okteto CLI 2.9.0
