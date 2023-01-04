@@ -41,6 +41,11 @@ export function activate(context: vscode.ExtensionContext) {
     const version = getExtensionVersion();
 
     console.log(`okteto.remote-kubernetes ${version} activated`);
+
+    const ctx = okteto.getContext();
+    const machineId = okteto.getMachineId();
+    reporter = new Reporter(version, ctx.id, machineId);
+    
     
     context.subscriptions.push(vscode.commands.registerCommand('okteto.up', upCmd));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.down', downCmd));
@@ -50,11 +55,9 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('okteto.destroy', destroyCmd));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.context', contextCmd));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.namespace', namespaceCmd));
-
-    const ctx = okteto.getContext();
-    const machineId = okteto.getMachineId();
-    reporter = new Reporter(version, ctx.id, machineId);
+    
     reporter.track(events.activated);
+
 }
 
 async function checkPrereqs(checkContext: boolean) {

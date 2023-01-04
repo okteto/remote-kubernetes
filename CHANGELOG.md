@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.4.7
+- Update to Okteto CLI 2.11.0
+- Fix race condition when activating telemetry
+
 ## 0.4.6
 - Support docker-compose.yaml files
 - Deploy and Destroy commands will ask the user to pick a file if there's more than one Okteto or docker-compose manifests in the root of the repository.

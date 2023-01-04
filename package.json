@@ -14,7 +14,7 @@
     "gke",
     "eks"
   ],
-  "version": "0.4.6",
+  "version": "0.4.7",
   "icon": "media/icon.png",
   "author": {
     "name": "Ramiro Berrelleza",
@@ -178,7 +178,7 @@
     "execa": "^5.1.1",
     "find-process": "^1.4.4",
     "get-port": "^5.1.1",
-    "mixpanel": "^0.13.0",
+    "mixpanel": "^0.17.0",
     "node-machine-id": "^1.1.12",
     "semver": "^7.3.5",
     "tcp-ping": "^0.1.1",
