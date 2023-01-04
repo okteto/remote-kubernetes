@@ -1,7 +1,8 @@
 # Change Log
 
 ## 0.4.7
-- Update to Okteto CLI 2.10.1
+- Update to Okteto CLI 2.11.1
+- Fix race condition when activating telemetry
 
 ## 0.4.6
 - Support docker-compose.yaml files
