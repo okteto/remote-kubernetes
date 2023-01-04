@@ -6,7 +6,7 @@ import * as os from 'os';
 import * as sentry from '@sentry/node';
 
 const dsn = 'https://3becafe2cb9040fe9b43a353a1f524c6@sentry.io/1802969';
-const mp = '564133a36e3c39ecedf700669282c315';
+const mpKey = '564133a36e3c39ecedf700669282c315';
 
 export const events = {
     activated: 'activated',
@@ -45,7 +45,7 @@ export class Reporter {
     private mp: mixpanel.Mixpanel;
 
     constructor(private extensionVersion: string, oktetoId: string, machineId: string) {
-        this.mp = mixpanel.init(mp, {});
+        this.mp = mixpanel.init(mpKey, {});
         this.machineId = machineId;
         
         const config = vscode.workspace.getConfiguration('okteto');

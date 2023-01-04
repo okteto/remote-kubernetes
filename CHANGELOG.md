@@ -1,7 +1,7 @@
 # Change Log
 
 ## 0.4.7
-- Update to Okteto CLI 2.11.1
+- Update to Okteto CLI 2.11.0
 - Fix race condition when activating telemetry
 
 ## 0.4.6
