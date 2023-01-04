@@ -96,6 +96,11 @@ export class Reporter {
               return;
           }
 
+          if (!this.mp) {
+            resolve();
+            return;
+          }
+
           this.mp.track(event, {
             distinct_id: this.distinctId,
             os: os.platform(),
