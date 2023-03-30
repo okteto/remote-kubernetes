@@ -7,6 +7,7 @@ import * as ssh from './ssh';
 
 import * as okteto from './okteto';
 import {Reporter, events} from './telemetry';
+import { minimum } from './download';
 
 const activeManifest = new Map<string, vscode.Uri>();
 let reporter: Reporter;
@@ -85,7 +86,7 @@ async function checkPrereqs(checkContext: boolean) {
 }
 
 async function installCmd(upgrade: boolean, handleErr: boolean) {
-    let title = `Installing Okteto ${okteto.minimum}`;
+    let title = `Installing Okteto ${minimum}`;
     let success = `Okteto was successfully installed`;
     
     if (upgrade) {
@@ -97,9 +98,10 @@ async function installCmd(upgrade: boolean, handleErr: boolean) {
     reporter.track(events.install);
     await vscode.window.withProgress(
       {location: vscode.ProgressLocation.Notification, title: title},
-      async () => {
+      async (progress) => {
         try {
-            await okteto.install();
+            
+            await okteto.install(progress);
         } catch(err: any) {
             reporter.track(events.oktetoInstallFailed);
             reporter.captureError(`okteto install failed: ${err.message}`, err);
