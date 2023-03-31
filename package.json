@@ -15,7 +15,7 @@
     "eks"
   ],
   "version": "0.4.8",
-  "icon": "media/icon.png",
+  "icon": "resources/icon.png",
   "author": {
     "name": "Ramiro Berrelleza",
     "email": "ramiro@okteto.com"
@@ -30,21 +30,11 @@
   },
   "license": "SEE LICENSE IN LICENSE",
   "engines": {
-    "vscode": "^1.69.0"
+    "vscode": "^1.77.0"
   },
   "categories": [
     "Other",
     "Azure"
-  ],
-  "activationEvents": [
-    "onCommand:okteto.install",
-    "onCommand:okteto.up",
-    "onCommand:okteto.down",
-    "onCommand:okteto.create",
-    "onCommand:okteto.deploy",
-    "onCommand:okteto.destroy",
-    "onCommand:okteto.context",
-    "onCommand:okteto.namespace"
   ],
   "main": "./dist/extension",
   "contributes": {
@@ -81,6 +71,23 @@
       {
         "command": "okteto.destroy",
         "title": "Okteto: Destroy your development environment"
+      }
+    ],
+    "languages": [
+      {
+        "id": "okteto",
+        "label": "Okteto",
+        "filenames": [
+          "okteto.yml",
+          "okteto.yaml",
+          "okteto-*.yml",
+          "okteto-*.yaml",
+          ".stignore"
+        ],
+        "icon": {
+          "light": "./resources/okteto.svg",
+          "dark": "./resources/okteto.svg"
+        }
       }
     ],
     "menus": {
@@ -149,7 +156,7 @@
     "@types/glob": "^7.1.4",
     "@types/mocha": "^9.0.0",
     "@types/node": "^16.9.0",
-    "@types/vscode": "^1.69.0",
+    "@types/vscode": "^1.77.0",
     "chai": "^4.3.4",
     "glob": "^7.1.7",
     "markdown-it": ">=12.3.2",

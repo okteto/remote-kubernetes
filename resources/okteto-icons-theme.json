@@ -1,0 +1,15 @@
+{
+    "iconDefinitions": {
+      "_okteto_file": {
+        "iconPath": "./resources/okteto.svg"
+      }
+    },
+    "fileNames": {
+        "okteto.yml": "_okteto_file",
+        "okteto.yaml": "_okteto_file",
+        ".stignore": "_okteto_file"
+    },
+    "fileExtensions": {
+        ".stignore": "_okteto_file"
+    }
+  }
