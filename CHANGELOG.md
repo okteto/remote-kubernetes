@@ -1,25 +1,26 @@
 # Change Log
 
 ## 0.4.8
-- Update to Okteto CLI 2.14.0
+- Update to Okteto CLI 2.14.1
+- Use `got` to download binary dependencies.
 
 ## 0.4.7
 - Update to Okteto CLI 2.11.0
-- Fix race condition when activating telemetry
+- Fix race condition when activating telemetry.
 
 ## 0.4.6
 - Support docker-compose.yaml files
 - Deploy and Destroy commands will ask the user to pick a file if there's more than one Okteto or docker-compose manifests in the root of the repository.
-- Update minimum version to Okteto CLI 2.9.1
+- Update minimum version to Okteto CLI 2.9.1.
 
 ## 0.4.5
-- Update minimum version to Okteto CLI 2.9.0
+- Update minimum version to Okteto CLI 2.9.0.
 - Automatically pick the manifest if there's a single `okteto.yml` or `docker-compose.yml` file in the repository.
 - Fix connectivity issue when using Remote-SSH mode. 
 - Automatically calculate the `workdir` based on the sync folders if `workdir` is not declared in the manifest.
 
 ## 0.4.4
-- Update minimum version to Okteto CLI 2.4.2
+- Update minimum version to Okteto CLI 2.4.2.
 - Add an optional parameter to increase the timeout of the okteto up command.
 
 ## 0.4.3
