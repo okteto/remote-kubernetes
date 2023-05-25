@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.4.9
+- Update to Okteto CLI 2.15.3
+
 ## 0.4.8
 - Update to Okteto CLI 2.14.1
 - Use `got` to download binary dependencies.
