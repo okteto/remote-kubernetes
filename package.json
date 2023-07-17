@@ -14,7 +14,7 @@
     "gke",
     "eks"
   ],
-  "version": "0.4.9",
+  "version": "0.4.10",
   "icon": "media/icon.png",
   "author": {
     "name": "Ramiro Berrelleza",
@@ -30,7 +30,7 @@
   },
   "license": "SEE LICENSE IN LICENSE",
   "engines": {
-    "vscode": "^1.77.0"
+    "vscode": "^1.80.0"
   },
   "categories": [
     "Other",
@@ -93,7 +93,7 @@
         "okteto.remoteSSH": {
           "type": "boolean",
           "default": true,
-          "description": "Connect to the development containers using the Remote-SSH extension."
+          "description": "Connect to the development container using VSCode's Remote-SSH extension."
         },
         "okteto.binary": {
           "type": "string",
