@@ -49,8 +49,9 @@ export class Reporter {
         this.machineId = machineId;
         
         const config = vscode.workspace.getConfiguration('okteto');
-        if (config) {
-            this.enabled = config.get<boolean>('telemetry') || true;
+        const telemetry = config.get<boolean>('telemetry');
+        if (config && telemetry != undefined) {
+            this.enabled = telemetry;
         }
 
         if (oktetoId) {
