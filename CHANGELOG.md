@@ -1,7 +1,8 @@
 # Change Log
 
 ## 0.4.10
-- Update to Okteto CLI 2.17.0
+- Update to Okteto CLI 2.18.0
+- Fixed issue that prevented telemetry from being properly disabled
 
 ## 0.4.9
 - Update to Okteto CLI 2.15.3
