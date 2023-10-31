@@ -108,7 +108,7 @@ export async function install(progress: vscode.Progress<{increment: number, mess
   try {
     await promises.mkdir(path.dirname(folder), {mode: 0o700, recursive: true});
   } catch(err: any) {
-    console.error(`failed to create dir: ${getErrorMessage(err)}`);
+    throw new Error(`failed to create dir: ${getErrorMessage(err)}`);
   }
 
   try {
