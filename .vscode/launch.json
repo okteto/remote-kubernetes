@@ -28,6 +28,9 @@
             "args": [
                 "--extensionDevelopmentPath=${workspaceFolder}"
             ],
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*.js"
+            ],
             "preLaunchTask": "npm: compile",
             "env": {
                 "ENV": "dev"
