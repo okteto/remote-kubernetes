@@ -1,5 +1,12 @@
 # Change Log
 
+## 0.4.11
+- Update to Okteto CLI 2.21.0
+- Fix issue when doing a clean installation of the okteto cli
+- Improved error messages
+- Updated depencencies
+- Removed TSLint in favor of ESLint
+
 ## 0.4.10
 - Update to Okteto CLI 2.18.0
 - Fixed issue that prevented telemetry from being properly disabled
