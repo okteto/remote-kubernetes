@@ -105,11 +105,14 @@ export async function install(progress: vscode.Progress<{increment: number, mess
   const folder = path.dirname(installPath);
   const filenameTemp = `${path.basename(installPath)}.temp`;
   const downloadPath = path.join(folder, filenameTemp);
+
   try {
-    await promises.mkdir(path.dirname(folder), {mode: 0o700, recursive: true});
+    await promises.mkdir(folder, {mode: 0o700, recursive: true});
+    console.log(`created ${folder}`);
   } catch(err: any) {
-    console.error(`failed to create dir: ${getErrorMessage(err)}`);
+    throw new Error(`failed to create dir: ${getErrorMessage(err)}`);``
   }
+
 
   try {
     const r = await download.binary(source.url, downloadPath, progress);
@@ -119,7 +122,7 @@ export async function install(progress: vscode.Progress<{increment: number, mess
       throw new Error(`failed to install okteto, ${installPath} is in use`);
     }
 
-    throw new Error(`failed to download ${source} into ${installPath}: ${getErrorMessage(err)}`);
+    throw new Error(`failed to download ${source.url} into ${installPath}: ${getErrorMessage(err)}`);
   }
 
   try {

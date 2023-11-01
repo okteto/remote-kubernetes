@@ -103,6 +103,7 @@ async function installCmd(upgrade: boolean, handleErr: boolean) {
             
             await okteto.install(progress);
         } catch(err: any) {
+            console.error(err)
             reporter.track(events.oktetoInstallFailed);
             reporter.captureError(`okteto install failed: ${err.message}`, err);
             if (handleErr) {
