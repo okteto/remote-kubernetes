@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.4.12
+- Update to Okteto CLI 2.23.1
+
 ## 0.4.11
 - Update to Okteto CLI 2.21.0
 - Fix issue when doing a clean installation of the okteto cli
