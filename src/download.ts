@@ -7,7 +7,7 @@ import { pipeline } from 'stream';
 import path from 'path';
 import * as vscode from 'vscode';
 
-export const minimum = '2.21.0';
+export const minimum = '2.23.1';
 
 export function getInstallPath(): string {
     if (os.platform() === 'win32') {
