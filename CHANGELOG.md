@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.4.13
+- Update minimum required Okteto CLI version to 2.25.4
+
 ## 0.4.12
 - Update minimum required Okteto CLI version to 2.23.1
 
