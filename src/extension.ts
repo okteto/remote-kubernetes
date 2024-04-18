@@ -494,7 +494,7 @@ async function contextCmd(){
 
     let context = choice.value;
     if (choice.value === "create") {
-        const create = await vscode.window.showInputBox({title: "Set the context for all the Okteto commands", prompt: "Specify an Okteto URL or a Kubernetes context name", placeHolder: "https://cloud.okteto.com"})
+        const create = await vscode.window.showInputBox({title: "Set the context for all the Okteto commands", prompt: "Specify an Okteto URL or a Kubernetes context name", placeHolder: "https://okteto.example.com"})
         if (!create) {
             return;
         }
