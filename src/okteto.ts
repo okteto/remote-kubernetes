@@ -20,7 +20,6 @@ const pidFile = 'okteto.pid';
 const contextFolder = 'context';
 const contextFile = 'config.json';
 const terminalName = 'okteto';
-const cloudUrl = 'https://cloud.okteto.com';
 
 export const state = {
   starting: 'starting',
@@ -596,11 +595,6 @@ export async function getContextList(): Promise<RuntimeItem[]>{
     console.error(`failed to get context list from ${getContextConfigurationFile()}: ${err}`);
   }
 
-  if (items.filter(f => f.label === cloudUrl).length == 0) {
-    items.unshift(new RuntimeItem(cloudUrl, "", cloudUrl))
-  }
-
- 
   items.push(new RuntimeItem("Create new context", "Create new context", "create"))
   return items;
 }
