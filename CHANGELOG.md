@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.4.14
+- Updated minimum required Okteto CLI version to 2.26.1
+- Updated dependencies
+
 ## 0.4.13
 - Update minimum required Okteto CLI version to 2.25.4
 
@@ -10,7 +14,7 @@
 - Update to Okteto CLI 2.21.0
 - Fix issue when doing a clean installation of the okteto cli
 - Improved error messages
-- Updated depencencies
+- Updated dependencies
 - Removed TSLint in favor of ESLint
 
 ## 0.4.10
