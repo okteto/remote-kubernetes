@@ -7,7 +7,7 @@ import { pipeline } from 'stream';
 import path from 'path';
 import * as vscode from 'vscode';
 
-export const minimum = '2.26.1';
+export const minimum = '2.28.0';
 
 export function getInstallPath(): string {
     if (os.platform() === 'win32') {
@@ -17,7 +17,7 @@ export function getInstallPath(): string {
     return path.join(os.homedir(), '.okteto-vscode', 'okteto');
   }
 
-export function getOktetoUrl() : {url: string, chmod: boolean} {
+export function getOktetoDownloadInfo() : {url: string, chmod: boolean} {
   let chmod = true;
   let binaryName = "okteto.exe";
 

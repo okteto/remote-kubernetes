@@ -99,7 +99,7 @@ async function getVersion(binary: string): Promise<string | undefined> {
 }
 
 export async function install(progress: vscode.Progress<{increment: number, message: string}>) {
-  const source = download.getOktetoUrl();
+  const source = download.getOktetoDownloadInfo();
   const installPath = download.getInstallPath();
   const folder = path.dirname(installPath);
   const filenameTemp = `${path.basename(installPath)}.temp`;
