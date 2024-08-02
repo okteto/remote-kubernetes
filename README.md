@@ -17,7 +17,7 @@ The extension starts a development environment in your Kubernetes cluster by usi
 
 1. VS Code 1.88 or newer.
 1. Deploy access to a Kubernetes cluster.
-1. An OpenSSH compatible [SSH client](https://code.visualstudio.com/docs/remote/troubleshooting#_installing-a-supported-ssh-client).
+1. An OpenSSH compatible [SSH client](https://code.visualstudio.com/docs/remote/troubleshooting#_installing-a-supported-ssh-client) available in your workstation.
 
 ## Installation
 

@@ -51,6 +51,14 @@ function isOktetoV2(manifest: any): boolean {
         return true;
     }
 
+    if (manifest.deploy) {
+        return true;
+    }
+
+    if (manifest.build) {
+        return true;
+    }
+
     return false;
 }
 
