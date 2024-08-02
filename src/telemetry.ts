@@ -75,17 +75,17 @@ export class Reporter {
                 environment: environment,
                 release: `remote-kubernetes-vscode@${this.extensionVersion}`});
 
-            sentry.configureScope(scope =>{
-                scope.setUser({"id": this.distinctId});
-                scope.setTags({
-                    'os': os.platform(),
-                    'version': this.extensionVersion,
-                    'vscodeversion': vscode.version,
-                    'session': vscode.env.sessionId,
-                    'vscode_machine_id': vscode.env.machineId,
-                    'machineId': machineId,
-                });
+            const scope = sentry.getCurrentScope();
+            scope.setUser({"id": this.distinctId});
+            scope.setTags({
+                'os': os.platform(),
+                'version': this.extensionVersion,
+                'vscodeversion': vscode.version,
+                'session': vscode.env.sessionId,
+                'vscode_machine_id': vscode.env.machineId,
+                'machineId': machineId,
             });
+            
         }
 
     }
