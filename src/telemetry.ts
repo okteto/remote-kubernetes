@@ -39,7 +39,7 @@ export const events = {
   };
 
 export class Reporter {
-    private enabled: boolean = true;
+    private enabled: boolean = false;
     private distinctId: string;
     private machineId: string;
     private mp: mixpanel.Mixpanel;
