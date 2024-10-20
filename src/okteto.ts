@@ -219,27 +219,6 @@ export async function down(manifest: vscode.Uri, namespace: string, name: string
   console.log('okteto down completed');
 }
 
-export async function init(manifestPath: vscode.Uri) {    
-  const name = `${terminalName}-init`;
-  disposeTerminal(name);
-  isActive.set(name, false);
-
-  const term = vscode.window.createTerminal({
-    name: name,
-    hideFromUser: false,
-    env: {
-      "OKTETO_ORIGIN":"vscode",
-    },
-    iconPath: new vscode.ThemeIcon('server-process'),
-    cwd: path.dirname(manifestPath.fsPath)
-  });
-
-  isActive.set(name, true);
-  term.sendText(`${getBinary()} init --replace --file ${manifestPath.fsPath}`, true);
-  term.show(false);
-  console.log('okteto init completed');
-}
-
 export async function deploy(namespace: string, manifestPath: string) {
   const name = `${terminalName}-${namespace}-deploy`;
   disposeTerminal(name);

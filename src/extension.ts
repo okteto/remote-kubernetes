@@ -51,7 +51,6 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('okteto.up', upCmd));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.down', downCmd));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.install', installCmd));
-    context.subscriptions.push(vscode.commands.registerCommand('okteto.create', createCmd));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.deploy', deployCmd));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.destroy', destroyCmd));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.context', contextCmd));
@@ -439,43 +438,6 @@ export function getDefaultLocationManifest(): vscode.Uri | undefined{
     const loc = vscode.Uri.file(p);
     console.log(`default location: ${loc.fsPath.toString()}`);
     return loc;
-}
-
-
-async function createCmd(){
-    try{
-        await checkPrereqs(true);
-    } catch(err: any) {   
-        vscode.window.showErrorMessage(err.message);    
-        return;
-    }
-
-    reporter.track(events.create);
-
-    const manifestUri = getDefaultLocationManifest();
-    if (!manifestUri) {
-        reporter.track(events.createFailed);
-        vscode.window.showErrorMessage(`Okteto: Create failed: Couldn't detect your project's path`);
-        return;
-    }
-
-    try {
-        await okteto.init(manifestUri);
-    } catch(err: any) {
-        reporter.track(events.oktetoInitFailed);
-        reporter.captureError(`okteto init failed: ${err.message}`, err);
-        vscode.window.showErrorMessage(`Okteto: Create failed: ${err}`);
-        return;
-    }
-
-    try {
-        await vscode.commands.executeCommand('vscode.openFolder', manifestUri.fsPath);
-    } catch (err: any) {
-        reporter.track(events.createOpenFailed);
-        reporter.captureError(`open folder failed ${err.message}`, err);
-        vscode.window.showErrorMessage(`Okteto: Create failed: Couldn't open ${manifestUri.fsPath}`);
-        return;
-    }
 }
 
 async function contextCmd(){

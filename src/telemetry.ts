@@ -28,7 +28,7 @@ export const events = {
     oktetoDownFailed: 'okteto_down_failed',
     oktetoUpStartFailed: 'okteto_up_start_failed',
     oktetoUpFailed: 'okteto_up_failed',
-    oktetoInitFailed: 'okteto_init_failed',
+
     oktetoInstallFailed: 'okteto_install_failed',
     manifestSelected: 'manifest_selected',
     manifestDismissed: 'manifest_select_dismissed',
