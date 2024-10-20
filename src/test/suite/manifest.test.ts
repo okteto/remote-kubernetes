@@ -3,7 +3,6 @@
 import * as manifest from '../../manifest';
 import * as yaml from 'yaml';
 import * as fs from 'fs';
-import path from 'path';
 import { expect } from 'chai';
 
 describe('parseManifest', () => {

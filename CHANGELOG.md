@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.5.1
+- Updated minimum required Okteto CLI version to 2.29.3
+- Removed `okteto.create` command
+- Update dependencies to latest available major version
+
 ## 0.4.15
 - Updated minimum required Okteto CLI version to 2.29.3
 - Updated dependencies  

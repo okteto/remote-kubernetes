@@ -1,6 +1,6 @@
 'use strict';
 
-import {commandSync} from 'execa';
+import {execaCommandSync} from 'execa';
 import {createHmac} from 'crypto';
 import * as os from 'os';
 
@@ -35,7 +35,7 @@ function getWin32RegBinPath(): string {
 
 export function protect(): string {
   try{
-    const result = commandSync(getCommand(), {encoding: 'utf8'});
+    const result = execaCommandSync(getCommand(), {encoding: 'utf8'});
     if (result.failed) {
       return 'na';
     }

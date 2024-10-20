@@ -3,7 +3,7 @@
 import * as mixpanel from 'mixpanel';
 import * as vscode from 'vscode';
 import * as os from 'os';
-import * as sentry from '@sentry/node';
+//import * as sentry from '@sentry/node';
 
 const dsn = 'https://3becafe2cb9040fe9b43a353a1f524c6@sentry.io/1802969';
 const mpKey = '564133a36e3c39ecedf700669282c315';
@@ -69,13 +69,13 @@ export class Reporter {
                 this.enabled = false;
             } 
 
-            sentry.init({ 
+            /*sentry.init({ 
                 dsn:  dsn,
                 integrations: defaults => defaults.filter(integration => (integration.name !== 'OnUncaughtException') && (integration.name !== 'OnUnhandledRejection')),
                 environment: environment,
                 release: `remote-kubernetes-vscode@${this.extensionVersion}`});
 
-            sentry.configureScope(scope =>{
+            sentry.withScope(scope =>{
                 scope.setUser({"id": this.distinctId});
                 scope.setTags({
                     'os': os.platform(),
@@ -85,7 +85,7 @@ export class Reporter {
                     'vscode_machine_id': vscode.env.machineId,
                     'machineId': machineId,
                 });
-            });
+            });*/
         }
 
     }
@@ -115,7 +115,7 @@ export class Reporter {
          }, (err)=> {
             if (err) {
                 console.error(`failed to send telemetry: ${err}`);
-                sentry.captureException(err);
+                //sentry.captureException(err);
             }
 
             resolve();
@@ -127,7 +127,7 @@ export class Reporter {
         return new Promise<void>(resolve =>{
             console.error(message);
             if (this.enabled) {
-                sentry.captureException(err);
+                //sentry.captureException(err);
             }
 
             resolve();

@@ -1,18 +1,19 @@
 'use strict';
 
 import * as fs from 'fs';
-import {promises} from 'fs';
-import execa from 'execa';
 import * as path from 'path';
-import commandExists from 'command-exists';
-import {protect} from './machineid';
 import * as download from './download';
 import * as vscode from 'vscode';
 import * as os from 'os';
 import * as semver from 'semver';
 import * as paths from './paths';
+import { execa } from "execa";
+import {promises} from 'fs'
 import { clearInterval, setInterval } from 'timers';
-import find from 'find-process';
+import {protect} from './machineid';
+
+import * as commandExists from 'command-exists';
+
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
@@ -84,17 +85,18 @@ async function isInstalled(binaryPath: string): Promise<boolean> {
 }
 
 async function getVersion(binary: string): Promise<string | undefined> {
-  const r = await execa(binary, ['version']);
-  if (r.failed) {
-    console.error(`okteto version failed: ${r.stdout} ${r.stderr}`);
+  
+  try{
+    var r = await execa`${binary} version show`;
+  } catch(error){
+    console.error(`okteto version failed: ${error}`);
     return undefined;
   }
-
+  
   const version = r.stdout.replace('okteto version ', '').trim();
-  if (semver.valid(version)) {
-    return version;
-  }
-
+    if (semver.valid(version)) {
+      return version;
+    }
   return undefined;
 }
 
@@ -142,7 +144,7 @@ export async function install(progress: vscode.Progress<{increment: number, mess
 
   if (source.chmod) {
     try {
-      await execa('chmod', ['a+x', installPath]);
+      await execa`chmod a+x ${installPath}`;
     } catch(err: any) {
       throw new Error(`failed to chmod ${installPath}: ${getErrorMessage(err)}`);
     }
@@ -201,18 +203,12 @@ export async function down(manifest: vscode.Uri, namespace: string, name: string
   isActive.set(`${terminalName}-${namespace}-${name}`, false);
   disposeTerminal(`${terminalName}-${namespace}-${name}`);
   
-  const r =  execa(getBinary(), ['down', serviceName, '--file', `${manifest.fsPath}`, '--namespace', `${namespace}`], {
-    env: {
-      "OKTETO_ORIGIN":"vscode"
-    },
-    cwd: path.dirname(manifest.fsPath),
-  });
-  
+      
   try{
-    await r;
+    execa({cwd: path.dirname(manifest.fsPath), env: {"OKTETO_ORIGIN":"vscode"}})`${getBinary()} down ${serviceName} --file ${manifest.fsPath} '--namespace ${namespace}`;
   } catch (err: any) {
-    console.error(`${err}: ${err.stdout}`);
-    const message = extractMessage(err.stdout);    
+    console.error(`okteto down failed: ${err}`);
+    const message = extractMessage(err);    
     throw new Error(message);
   }
 
@@ -419,24 +415,39 @@ export async function isRunning(namespace: string, name: string): Promise<boolea
     return true;
   }
 
-  const parsed = parseInt(c);
-  if (isNaN(parsed)) { 
-    console.error(`the content of ${p} is NaN: ${parsed}`)
+  const parsedPid = parseInt(c);
+  if (isNaN(parsedPid)) { 
+    console.error(`the content of ${p} is NaN: ${parsedPid}`)
     return true; 
   }
   
-  try {
-    const result = await find('pid', parsed);
-    if (result.length == 0){
-      console.log(`pid-${parsed} is not running`)
+  return isProcessRunningByPID(parsedPid);
+}
+
+async function isProcessRunningByPID(pid: number): Promise<boolean> {
+  var command = "";
+  
+  if (process.platform === 'win32') {
+    // For Windows
+    command = `tasklist /FI "PID eq ${pid}" 2>nul | find /I /N "${pid}"`;
+  } else {
+    // For Unix-like systems (Linux, macOS)
+    command = `ps -p ${pid} > /dev/null`;
+  }
+
+  try{
+    const r = await execa`${command}`;
+    if (r.exitCode === 1) {
+      // Process not found
+      console.log(`pid-${pid} is not running`)
       return false;
     }
 
-    console.log(`pid-${parsed} is running`)
+    console.log(`pid-${pid} is running`)
     return true;
-  } catch(err: any) {
-    console.error(`failed to list processes: ${err}`);
-    return true;
+  }catch(error){
+    console.error(`Error executing command: ${error}`);
+    return false;
   }
 }
 
@@ -565,7 +576,7 @@ export async function getContextList(): Promise<RuntimeItem[]>{
   const items = new Array<RuntimeItem>();
 
   try {
-    const r = await execa(getBinary(), ["context", "list", "--output", "json"])
+    const r = await execa`${getBinary()} context list --output json`
     const lines = JSON.parse(r.stdout);
     for(var i = 0; i < lines.length; i++) {
       items.push(new RuntimeItem(lines[i].name, "", lines[i].name));
