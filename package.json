@@ -158,7 +158,6 @@
     "eslint": "^9.13.0",
     "execa": "^9.4.1",
     "get-port": "^7.1.0",
-    "got": "^14.4.3",
     "mixpanel": "^0.18.0",
     "node-machine-id": "^1.1.12",
     "semver": "^7.6.3",

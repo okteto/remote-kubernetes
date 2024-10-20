@@ -2,9 +2,8 @@
 
 import * as fs from 'fs';
 import * as os from 'os';
-import { pipeline } from 'stream';
 import * as vscode from 'vscode';
-import * as got from 'got'; 
+import * as https from 'https';
 import * as path from 'path';
 
 export const minimum = '3.0.0';
@@ -50,39 +49,44 @@ export function getOktetoDownloadInfo() : {url: string, chmod: boolean} {
   return {url:`https://downloads.okteto.com/cli/stable/${minimum}/${binaryName}`, chmod: chmod};
 }
 
-export async function binary(source: string, destination: string, progress: vscode.Progress<{increment: number, message: string}>) : Promise<boolean> { 
-  const downloadStream = got.stream(source);
-  const fileWriterStream = fs.createWriteStream(destination);
-  var current = 0;
-  downloadStream
-    .on("downloadProgress", ({transferred, total, percent})=> {
-      const percentage = Math.round(percent * 100);
-      const reportedProgress = percentage - current;
-      current = percentage;
-      progress.report({increment: reportedProgress, message: ''});
-    })
-    .on("error", (error) => {
-      console.error(`Download failed: ${error.message}`);
-    });
-  
-  fileWriterStream
-  .on("error", (error) => {
-    console.error(`Could not write file to system: ${error.message}`);
-  })
-  .on("finish", () => {
-    console.log(`File downloaded to ${destination}`);
-  });
+export async function binary(sourceUrl: string, destinationPath: string, progress: vscode.Progress<{increment: number, message: string}>) : Promise<boolean> { 
+  return new Promise((resolve, reject) => {
+    const fileStream = fs.createWriteStream(destinationPath);
 
-  return new Promise((resolve, reject) =>{
-    pipeline(downloadStream, fileWriterStream, async(err)=>{
-        if (err) {
-            reject(err);
-        } else {
-            resolve(true);
+    https.get(sourceUrl, (response) => {
+      if (response.statusCode !== 200) {
+        reject(new Error(`Failed to download file: ${response.statusCode} ${response.statusMessage}`));
+        return;
+      }
 
-        }
+      const totalBytes = parseInt(response.headers['content-length'] || '0', 10);
+      let downloadedBytes = 0;
+
+      response.on('data', (chunk) => {
+        downloadedBytes += chunk.length;
+        fileStream.write(chunk);
+
+        const downloadProgress = (downloadedBytes / totalBytes) * 100
+        progress.report({increment: downloadProgress, message: ''});
+        console.log(`Downloaded ${downloadedBytes} of ${totalBytes} bytes (${downloadProgress.toFixed(2)}%)`);
+      });
+
+      response.on('end', () => {
+        fileStream.end();
+        console.log('Download completed');
+        resolve(true);
+      });
+
+    }).on('error', (error) => {
+      fs.unlink(destinationPath, () => {}); // Delete the file if download failed
+      reject(error);
     });
-  });    
+
+    fileStream.on('error', (error) => {
+      fs.unlink(destinationPath, () => {}); // Delete the file if there was an error
+      reject(error);
+    });
+  });  
 }
 
 export function getBinary(): string {
