@@ -61,14 +61,13 @@ export async function binary(sourceUrl: string, destinationPath: string, progres
 
       const totalBytes = parseInt(response.headers['content-length'] || '0', 10);
       let downloadedBytes = 0;
-
+      let currentDownloadProgress = 0;
       response.on('data', (chunk) => {
         downloadedBytes += chunk.length;
         fileStream.write(chunk);
 
-        const downloadProgress = (downloadedBytes / totalBytes) * 100
-        progress.report({increment: downloadProgress, message: ''});
-        console.log(`Downloaded ${downloadedBytes} of ${totalBytes} bytes (${downloadProgress.toFixed(2)}%)`);
+        const increment =(downloadedBytes / totalBytes) * 100;
+        progress.report({increment: increment, message: `${Math.round(increment)}%`});
       });
 
       response.on('end', () => {
