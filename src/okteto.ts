@@ -1,8 +1,8 @@
 'use strict';
 
 import * as fs from 'fs';
+import * as commandExists from 'command-exists';
 import * as path from 'path';
-import * as download from './download';
 import * as vscode from 'vscode';
 import * as os from 'os';
 import * as semver from 'semver';
@@ -10,9 +10,8 @@ import * as paths from './paths';
 import { execa } from "execa";
 import {promises} from 'fs'
 import { clearInterval, setInterval } from 'timers';
+import { getOktetoDownloadInfo, getOktetoInstallPath, downloadBinary, minimumVersion } from './download';
 import {protect} from './machineid';
-
-import * as commandExists from 'command-exists';
 
 
 const oktetoFolder = '.okteto';
@@ -51,7 +50,7 @@ export class Context {
 const isActive = new Map<string, Boolean>();
 
 export async function needsInstall(): Promise<{install: boolean, upgrade: boolean}>{
-  const binary = getBinary();
+  const binary = getBinaryPath();
 
   const installed = await isInstalled(binary);
   if (!installed) {
@@ -64,7 +63,7 @@ export async function needsInstall(): Promise<{install: boolean, upgrade: boolea
     if (!version) {
       return {install: false, upgrade: false};
     }
-    return {install: semver.lt(version, download.minimum), upgrade: true};
+    return {install: semver.lt(version, minimumVersion), upgrade: true};
   } catch {
     return {install: false, upgrade: false};
   }
@@ -101,8 +100,8 @@ async function getVersion(binary: string): Promise<string | undefined> {
 }
 
 export async function install(progress: vscode.Progress<{increment: number, message: string}>) {
-  const source = download.getOktetoDownloadInfo();
-  const installPath = download.getInstallPath();
+  const source = getOktetoDownloadInfo();
+  const installPath = getOktetoInstallPath();
   const folder = path.dirname(installPath);
   const filenameTemp = `${path.basename(installPath)}.temp`;
   const downloadPath = path.join(folder, filenameTemp);
@@ -116,7 +115,7 @@ export async function install(progress: vscode.Progress<{increment: number, mess
 
 
   try {
-    const r = await download.binary(source.url, downloadPath, progress);
+    const r = await downloadBinary(source.url, downloadPath, progress);
   } catch(err: any) {
     console.error(`download fail: ${err}`);
     if (err.code === 'EBUSY'){
@@ -180,7 +179,7 @@ export function up(manifest: vscode.Uri, namespace: string, name: string, port: 
 
 
   let finalManifest = manifest.fsPath;
-  let binary = getBinary();
+  let binary = getBinaryPath();
   if (gitBashMode()){
     console.log('using gitbash style paths');
     binary = paths.toGitBash(binary);
@@ -205,7 +204,7 @@ export async function down(manifest: vscode.Uri, namespace: string, name: string
   
       
   try{
-    execa({cwd: path.dirname(manifest.fsPath), env: {"OKTETO_ORIGIN":"vscode"}})`${getBinary()} down ${serviceName} --file ${manifest.fsPath} '--namespace ${namespace}`;
+    execa({cwd: path.dirname(manifest.fsPath), env: {"OKTETO_ORIGIN":"vscode"}})`${getBinaryPath()} down ${serviceName} --file ${manifest.fsPath} '--namespace ${namespace}`;
   } catch (err: any) {
     console.error(`okteto down failed: ${err}`);
     const message = extractMessage(err);    
@@ -230,7 +229,7 @@ export async function deploy(namespace: string, manifestPath: string) {
   });
 
   isActive.set(name, true);
-  term.sendText(`${getBinary()} deploy -f ${manifestPath} --wait`, true);
+  term.sendText(`${getBinaryPath()} deploy -f ${manifestPath} --wait`, true);
   term.show(true);
   console.log('okteto deploy completed');
 }
@@ -250,7 +249,7 @@ export async function destroy(namespace: string, manifestUri: vscode.Uri) {
   });
 
   isActive.set(name, true);
-  term.sendText(`${getBinary()} destroy -f ${manifestUri.fsPath}`, true);
+  term.sendText(`${getBinaryPath()} destroy -f ${manifestUri.fsPath}`, true);
   term.show(true);
   console.log('okteto destroy completed');
 }
@@ -270,7 +269,7 @@ export async function setContext(context: string) : Promise<boolean>{
   });
 
   isActive.set(name, true);
-  let cmd = `${getBinary()} context use ${context}`;
+  let cmd = `${getBinaryPath()} context use ${context}`;
   term.sendText(cmd, true);
   
   return new Promise<boolean>(function(resolve, reject) {
@@ -304,7 +303,7 @@ export async function setNamespace(namespace: string) {
   });
 
   isActive.set(name, true);
-  let cmd = `${getBinary()} namespace use ${namespace}`;
+  let cmd = `${getBinaryPath()} namespace use ${namespace}`;
   term.sendText(cmd, true);
   term.show(true);
 
@@ -497,7 +496,7 @@ function cleanState(namespace: string, name:string) {
   }
 }
 
-function getBinary(): string {
+function getBinaryPath(): string {
   let binary = vscode.workspace.getConfiguration('okteto').get<string>('binary');
   if (binary) {
     if (binary.trim().length > 0) {
@@ -505,7 +504,7 @@ function getBinary(): string {
     }
   }
 
-  return download.getInstallPath();
+  return getOktetoInstallPath();
 }
 
 export function getRemoteSSH(): boolean {
@@ -576,7 +575,7 @@ export async function getContextList(): Promise<RuntimeItem[]>{
   const items = new Array<RuntimeItem>();
 
   try {
-    const r = await execa`${getBinary()} context list --output json`
+    const r = await execa`${getBinaryPath()} context list --output json`
     const lines = JSON.parse(r.stdout);
     for(var i = 0; i < lines.length; i++) {
       items.push(new RuntimeItem(lines[i].name, "", lines[i].name));

@@ -6,9 +6,9 @@ import * as vscode from 'vscode';
 import * as https from 'https';
 import * as path from 'path';
 
-export const minimum = '3.0.0';
+export const minimumVersion = '3.0.0';
 
-export function getInstallPath(): string {
+export function getOktetoInstallPath(): string {
     if (os.platform() === 'win32') {
       return path.join(os.homedir(), "AppData", "Local", "Programs", "okteto.exe");
     }
@@ -46,10 +46,10 @@ export function getOktetoDownloadInfo() : {url: string, chmod: boolean} {
       }
   }
 
-  return {url:`https://downloads.okteto.com/cli/stable/${minimum}/${binaryName}`, chmod: chmod};
+  return {url:`https://downloads.okteto.com/cli/stable/${minimumVersion}/${binaryName}`, chmod: chmod};
 }
 
-export async function binary(sourceUrl: string, destinationPath: string, progress: vscode.Progress<{increment: number, message: string}>) : Promise<boolean> { 
+export async function downloadBinary(sourceUrl: string, destinationPath: string, progress: vscode.Progress<{increment: number, message: string}>) : Promise<boolean> { 
   return new Promise((resolve, reject) => {
     const fileStream = fs.createWriteStream(destinationPath);
 
@@ -60,14 +60,10 @@ export async function binary(sourceUrl: string, destinationPath: string, progres
       }
 
       const totalBytes = parseInt(response.headers['content-length'] || '0', 10);
-      let downloadedBytes = 0;
-      let currentDownloadProgress = 0;
       response.on('data', (chunk) => {
-        downloadedBytes += chunk.length;
         fileStream.write(chunk);
-
-        const increment =(downloadedBytes / totalBytes) * 100;
-        progress.report({increment: increment, message: `${Math.round(increment)}%`});
+        const increment = (chunk.length / totalBytes) * 100;
+        progress.report({increment: increment, message: ``});
       });
 
       response.on('end', () => {
@@ -88,7 +84,7 @@ export async function binary(sourceUrl: string, destinationPath: string, progres
   });  
 }
 
-export function getBinary(): string {
+export function getBinaryPath(): string {
     let binary = vscode.workspace.getConfiguration('okteto').get<string>('binary');
     if (binary) {
       if (binary.trim().length > 0) {
@@ -96,5 +92,5 @@ export function getBinary(): string {
       }
     }
   
-    return getInstallPath();
+    return getOktetoInstallPath();
   }
