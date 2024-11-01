@@ -14,7 +14,7 @@
     "gke",
     "eks"
   ],
-  "version": "0.4.15",
+  "version": "0.5.0",
   "icon": "media/icon.png",
   "author": {
     "name": "Ramiro Berrelleza",
@@ -39,11 +39,6 @@
   "main": "./dist/extension",
   "contributes": {
     "commands": [
-      {
-        "command": "okteto.create",
-        "title": "Okteto: Create Manifest",
-        "enablement": "workspaceFolderCount != 0"
-      },
       {
         "command": "okteto.down",
         "title": "Okteto: Down"
