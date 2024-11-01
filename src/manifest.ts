@@ -109,8 +109,6 @@ export function parseManifest(parsed: yaml.Document.Parsed): Manifest[] {
     
     if (isOktetoV2(manifest)) {
         return getV2Services(manifest);
-    } else if (isOktetoV1(manifest)) {
-        return getV1Service(manifest)
     } else if (isDockerCompose(manifest)) {
         return getComposeServices(manifest);
     } else {

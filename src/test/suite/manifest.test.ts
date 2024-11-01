@@ -61,9 +61,6 @@ describe('parseManifest', () => {
     const data = fs.readFileSync('src/test/suite/artifacts/legacy-manifest.yaml', {encoding: 'utf8'});
     const parsed = yaml.parseDocument(data);
     const result = manifest.parseManifest(parsed);
-    expect(result.length).to.equal(1);
-    expect(result[0].name).to.equal('api');
-    expect(result[0].workdir).to.equal('/usr/src/app');
-    expect(result[0].namespace).to.equal('test');
+    expect(result.length).to.equal(0);
   });
 });
