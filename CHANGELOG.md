@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.5.0
+- Updated minimum required Okteto CLI version to 3.0.0
+- Remove "okteto create" command since the CLI doesn't support it anymore
+- Removed support for Okteto Stacks or Okteto Manifest 1.0 since they have been fully deprecated
+- Updated dependencies
+
 ## 0.4.15
 - Updated minimum required Okteto CLI version to 2.29.3
 - Updated dependencies  
