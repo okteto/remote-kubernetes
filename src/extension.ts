@@ -162,16 +162,7 @@ async function upCmd() {
         m = choice;
         serviceName = choice.name;
     }
-
-    const ctx = okteto.getContext();
-    if (!m.namespace) {
-        if (ctx.namespace != "") {
-            m.namespace = ctx.namespace;
-        }
-    }
-
     
-
     let port = m.port;
     if (port === 0 || port === undefined) {
         try {
@@ -179,21 +170,23 @@ async function upCmd() {
         } catch(err: any) {
             reporter.track(events.sshPortFailed);
             reporter.captureError(`ssh.getPort failed: ${err.message}`, err);
-            return onOktetoFailed(`Okteto: Up failed to find an available port: ${err}`, `${m.namespace}-${m.name}`);
+            return onOktetoFailed(`Okteto: Up failed to find an available port: ${err}`, `${ctx.namespace}-${m.name}`);
         }
     }    
 
-    okteto.up(manifestPath, m.namespace, m.name, port, serviceName);
+    let namespace = await getNamespace();
+
+    okteto.up(manifestPath, namespace, m.name, port, serviceName);
     activeManifest.set(manifestUri.fsPath, manifestUri);
 
     try{
-        await waitForUp(m.namespace, m.name, port);
+        await waitForUp(namespace, m.name, port);
     } catch(err: any) {
         reporter.captureError(`okteto up failed: ${err.message}`, err);
-        return onOktetoFailed(err.message, `${m.namespace}-${m.name}`);
+        return onOktetoFailed(err.message, `${namespace}-${m.name}`);
     }
 
-    await finalizeUp(m.namespace,m.name, m.workdir);
+    await finalizeUp(namespace,m.name, m.workdir);
 }
 
 async function waitForUp(namespace: string, name: string, port: number) {
@@ -331,14 +324,10 @@ async function downCmd() {
     
 
     const ctx = okteto.getContext();
-    if (!m.namespace) {
-        if (ctx.namespace != "") {
-            m.namespace = ctx.namespace;
-        }
-    }
+    
 
     try {
-        await okteto.down(manifestPath, m.namespace, m.name, serviceName);
+        await okteto.down(manifestPath, ctx.namespace, m.name, serviceName);
         activeManifest.delete(manifestPath.fsPath);
         vscode.window.showInformationMessage("Okteto environment deactivated");
         reporter.track(events.downFinished);
@@ -368,7 +357,7 @@ async function deployCmd() {
     console.log(`user selected: ${manifestPath}`);
 
     try {
-        var namespace = await getNamespace(manifestUri);
+        var namespace = await getNamespace();
         reporter.track(events.deploy);
         await okteto.deploy(namespace, manifestPath);
     } catch(err: any) {
@@ -396,7 +385,7 @@ async function destroyCmd() {
 
     reporter.track(events.destroy);
     try {
-        var namespace = await getNamespace(manifestUri);
+        var namespace = await getNamespace();
         await okteto.destroy(namespace, manifestUri);
     } catch(err: any) {
         reporter.captureError(`okteto destroy failed: ${err.message}`, err);
@@ -565,13 +554,7 @@ async function showActiveManifestPicker() : Promise<vscode.Uri | undefined> {
     return manifestItem ? manifestItem.uri : undefined;
 }
 
-async function getNamespace(manifestPath: vscode.Uri): Promise<string> {
+async function getNamespace(): Promise<string> {
     const ctx = okteto.getContext();
-    var namespace = ctx.namespace;
-    const m  = await manifest.getManifests(manifestPath);
-    if (m.length > 0 && m[0].namespace){
-        namespace = m[0].namespace;
-    }
-
-    return namespace;
+    return ctx.namespace;
 }

@@ -1,10 +1,5 @@
-build:
-  api:
-    context: api
-  frontend:
-    context: frontend
 deploy:
-  - helm upgrade --install movies chart --set api.image=${OKTETO_BUILD_API_IMAGE} --set frontend.image=${OKTETO_BUILD_FRONTEND_IMAGE}
+  compose: docker-compose.yaml
 dev:
   api:
     command: ["bash"]

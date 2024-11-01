@@ -1,9 +1,0 @@
-name: api
-namespace: test
-command: ["bash"]
-forward:
-- 8080:8080
-- 9229:9229
-sync:
-- api:/usr/src/app
-workdir: /usr/src/app

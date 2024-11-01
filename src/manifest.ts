@@ -3,7 +3,7 @@ import * as yaml from 'yaml';
 import * as vscode from 'vscode';
 
 export class Manifest {
-    constructor(public name: string, public namespace: string, public workdir: string, public port: number) {}
+    constructor(public name: string, public workdir: string, public port: number) {}
 }
 
 function isDockerCompose(manifest: any): boolean {
@@ -36,7 +36,7 @@ function getComposeServices(manifest: any): Manifest[] {
                 if (s.length == 2) {
                     // if the volume is declared, it's not used for sync
                     if (!volumes.has(s[0])) {
-                        result.push(new Manifest(k, '', s[1], 0));
+                        result.push(new Manifest(k, s[1], 0));
                     }        
                 }
             }
@@ -62,20 +62,12 @@ function isOktetoV2(manifest: any): boolean {
     return false;
 }
 
-function isOktetoV1(manifest: any): boolean {
-    if (manifest.name) {
-        return true;
-    }
-
-    return false;
-}
-
 function getV2Services(manifest: any): Manifest[] {
     const result: Array<Manifest> = [];
     for (var k in manifest.dev) {
         const svc = manifest.dev[k];
         const workdir = getWorkdir(svc);
-        const m = new Manifest(k, manifest.namespace, workdir, svc.remote);
+        const m = new Manifest(k, workdir, svc.remote);
         result.push(m);
     }
         
@@ -94,14 +86,6 @@ function getWorkdir(devBlock :any): string {
     }
 
     return "";
-}
-
-function getV1Service(manifest: any): Manifest[] {
-    const m = new Manifest(manifest.name, manifest.namespace, manifest.workdir, manifest.remote);
-        if (!m.name){
-            throw new Error(`Invalid manifest`);
-        }
-        return [m];
 }
 
 export function parseManifest(parsed: yaml.Document.Parsed): Manifest[] {

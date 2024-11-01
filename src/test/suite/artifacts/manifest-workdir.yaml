@@ -5,7 +5,6 @@ build:
     context: frontend
 deploy:
   - helm upgrade --install movies chart --set api.image=${OKTETO_BUILD_API_IMAGE} --set frontend.image=${OKTETO_BUILD_FRONTEND_IMAGE}
-namespace: test
 dev:
   api:
     command: ["bash"]
