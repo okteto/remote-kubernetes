@@ -8,5 +8,5 @@
 		"rootDir": "src",
 		"strict": true
 	},
-	"exclude": ["node_modules", ".vscode-test", "hacks", "github", ".vscode", "docs"]
+	"exclude": ["node_modules", ".vscode-test", "hacks", ".github", ".vscode", "docs"]
 }
