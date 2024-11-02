@@ -3,7 +3,6 @@
 import * as manifest from '../../manifest';
 import * as yaml from 'yaml';
 import * as fs from 'fs';
-import path from 'path';
 import { expect } from 'chai';
 
 describe('parseManifest', () => {
@@ -15,8 +14,6 @@ describe('parseManifest', () => {
     expect(result.length).to.equal(2);
     expect(result[0].workdir).to.equal('/usr/src/app');
     expect(result[1].workdir).to.equal('/usr/src/frontend');
-    expect(result[0].namespace).to.equal('test');
-    expect(result[1].namespace).to.equal('test');
   });
 
   it('parse v2 manifest without workdir', () => {
@@ -29,8 +26,6 @@ describe('parseManifest', () => {
     expect(result[2].workdir).to.equal('');
     expect(result[3].workdir).to.equal('/usr/src/frontend');
     expect(result[4].workdir).to.equal('/usr/src/frontend');
-    expect(result[0].namespace).to.equal('test');
-    expect(result[1].namespace).to.equal('test');
   });
 
   it('parse docker-compose', () => {

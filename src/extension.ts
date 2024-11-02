@@ -163,6 +163,8 @@ async function upCmd() {
         serviceName = choice.name;
     }
     
+    let namespace = await getNamespace();
+
     let port = m.port;
     if (port === 0 || port === undefined) {
         try {
@@ -170,11 +172,9 @@ async function upCmd() {
         } catch(err: any) {
             reporter.track(events.sshPortFailed);
             reporter.captureError(`ssh.getPort failed: ${err.message}`, err);
-            return onOktetoFailed(`Okteto: Up failed to find an available port: ${err}`, `${ctx.namespace}-${m.name}`);
+            return onOktetoFailed(`Okteto: Up failed to find an available port: ${err}`, `${namespace}-${m.name}`);
         }
     }    
-
-    let namespace = await getNamespace();
 
     okteto.up(manifestPath, namespace, m.name, port, serviceName);
     activeManifest.set(manifestUri.fsPath, manifestUri);
