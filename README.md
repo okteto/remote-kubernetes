@@ -10,6 +10,7 @@ Kubernetes, Okteto and VS Code make a great development environment because you 
 - Eliminate integration issues by developing the same way code runs in production.
 - Keep using your favorite tools.
 - Forget about building images or redeploying containers to test your changes in Kubernetes.
+- Run your tests directly in Kubernetes
 
 The extension starts a development environment in your Kubernetes cluster by using https://github.com/okteto/okteto. Once the environment is ready, the extension prompts you to open it directly in VS Code using the [Visual Studio Code Remote - SSH](https://code.visualstudio.com/docs/remote/ssh) extension.
 
