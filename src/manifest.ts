@@ -106,8 +106,6 @@ function getTests(manifest :any): Array<Test> {
         for (var t in manifest.test) {
             tests.push(new Test(t));
         }
-
-        tests.push(new Test("all"));
     }
 
     return tests

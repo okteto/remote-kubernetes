@@ -37,7 +37,6 @@ describe('parseManifest', () => {
     expect(result.tests.length).to.equal(3);
     expect(result.tests[0].name).to.equal('api');
     expect(result.tests[1].name).to.equal('frontend');
-    expect(result.tests[2].name).to.equal('all');
   });
 
   it('parse docker-compose', () => {

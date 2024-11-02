@@ -586,6 +586,8 @@ async function showManifestTestPicker(tests: manifest.Test[]) : Promise<manifest
             test: t
         };
     });
+
+    items.push({label: "All tests", test: new manifest.Test("")})
     
     const testItem = await vscode.window.showQuickPick(items, {
         canPickMany: false,
