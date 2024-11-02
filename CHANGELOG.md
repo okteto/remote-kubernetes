@@ -2,7 +2,8 @@
 
 ## 0.5.0
 - Updated minimum required Okteto CLI version to 3.0.0
-- Remove "okteto create" command since the CLI doesn't support it anymore
+- Added a command to run tests using "Okteto Test"
+- Removed "okteto create" command since the CLI doesn't support it anymore
 - Removed support for Okteto Stacks or Okteto Manifest 1.0 since they have been fully deprecated
 - Namespace is no longer read from the manifest; instead, you need to set it via the `context` command
 - Updated dependencies

@@ -50,6 +50,7 @@ export function activate(context: vscode.ExtensionContext) {
     
     context.subscriptions.push(vscode.commands.registerCommand('okteto.up', upCmd));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.down', downCmd));
+    context.subscriptions.push(vscode.commands.registerCommand('okteto.test', testCmd));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.install', installCmd));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.deploy', deployCmd));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.destroy', destroyCmd));
@@ -363,6 +364,34 @@ async function deployCmd() {
     } catch(err: any) {
         reporter.captureError(`okteto deploy failed: ${err.message}`, err);
         vscode.window.showErrorMessage(`Okteto: Deploy failed: ${err.message}`);
+    }
+}
+
+async function testCmd() {
+    try{
+        await checkPrereqs(true);
+    } catch(err: any) {   
+        vscode.window.showErrorMessage(err.message);    
+        return;
+    }
+    
+    const manifestUri = await showManifestPicker();
+    if (!manifestUri) {
+        reporter.track(events.manifestDismissed);
+        return;
+    }
+
+    reporter.track(events.manifestSelected);
+    const manifestPath = manifestUri.fsPath;
+    console.log(`user selected: ${manifestPath}`);
+
+    try {
+        var namespace = await getNamespace();
+        reporter.track(events.test);
+        await okteto.test(namespace, manifestPath);
+    } catch(err: any) {
+        reporter.captureError(`okteto test failed: ${err.message}`, err);
+        vscode.window.showErrorMessage(`Okteto: Test failed: ${err.message}`);
     }
 }
 

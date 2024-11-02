@@ -280,6 +280,26 @@ export async function destroy(namespace: string, manifestUri: vscode.Uri) {
   console.log('okteto destroy completed');
 }
 
+export async function test(namespace: string, manifestPath: string) {
+  const name = `${terminalName}-${namespace}-test`;
+  disposeTerminal(name);
+  isActive.set(name, false);
+
+  const term = vscode.window.createTerminal({
+    name: name,
+    hideFromUser: false,
+    env: {
+      "OKTETO_ORIGIN":"vscode",
+    },
+    iconPath: new vscode.ThemeIcon('server-process')
+  });
+
+  isActive.set(name, true);
+  term.sendText(`${getBinary()} test -f ${manifestPath}`, true);
+  term.show(true);
+  console.log('okteto test completed');
+}
+
 export async function setContext(context: string) : Promise<boolean>{
   const name = `${terminalName}-context`;
   disposeTerminal(name);

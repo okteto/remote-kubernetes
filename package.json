@@ -66,6 +66,10 @@
       {
         "command": "okteto.destroy",
         "title": "Okteto: Destroy your development environment"
+      },
+      {
+        "command": "okteto.test",
+        "title": "Okteto: Run your tests on your development environment"
       }
     ],
     "menus": {
