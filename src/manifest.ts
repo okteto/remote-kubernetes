@@ -2,8 +2,16 @@ import {promises} from 'fs';
 import * as yaml from 'yaml';
 import * as vscode from 'vscode';
 
+export class Service {
+    constructor(public name: string, public workdir: string, public port: number) {}
+}
+
+export class Test {
+    constructor(public name: string) {}
+}
+
 export class Manifest {
-    constructor(public name: string, public namespace: string, public workdir: string, public port: number) {}
+    constructor(public services: Array<Service>, public tests: Array<Test>) {}
 }
 
 function isDockerCompose(manifest: any): boolean {
@@ -17,7 +25,7 @@ function isDockerCompose(manifest: any): boolean {
     return false;
 }
 
-function getComposeServices(manifest: any): Manifest[] {
+function getComposeServices(manifest: any): Service[] {
 
     var volumes = new Map<string, boolean>();
     if (manifest.volumes) {
@@ -36,7 +44,7 @@ function getComposeServices(manifest: any): Manifest[] {
                 if (s.length == 2) {
                     // if the volume is declared, it's not used for sync
                     if (!volumes.has(s[0])) {
-                        result.push(new Manifest(k, '', s[1], 0));
+                        result.push(new Service(k, s[1], 0));
                     }        
                 }
             }
@@ -59,23 +67,19 @@ function isOktetoV2(manifest: any): boolean {
         return true;
     }
 
-    return false;
-}
-
-function isOktetoV1(manifest: any): boolean {
-    if (manifest.name) {
+    if (manifest.test) {
         return true;
     }
 
     return false;
 }
 
-function getV2Services(manifest: any): Manifest[] {
-    const result: Array<Manifest> = [];
+function getV2Services(manifest: any): Service[] {
+    const result: Array<Service> = [];
     for (var k in manifest.dev) {
         const svc = manifest.dev[k];
         const workdir = getWorkdir(svc);
-        const m = new Manifest(k, manifest.namespace, workdir, svc.remote);
+        const m = new Service(k, workdir, svc.remote);
         result.push(m);
     }
         
@@ -96,29 +100,41 @@ function getWorkdir(devBlock :any): string {
     return "";
 }
 
-function getV1Service(manifest: any): Manifest[] {
-    const m = new Manifest(manifest.name, manifest.namespace, manifest.workdir, manifest.remote);
-        if (!m.name){
-            throw new Error(`Invalid manifest`);
+function getTests(manifest :any): Array<Test> {
+    const tests = Array<Test>();
+    if (manifest.test){
+        for (var t in manifest.test) {
+            tests.push(new Test(t));
         }
-        return [m];
+    }
+
+    return tests
 }
 
-export function parseManifest(parsed: yaml.Document.Parsed): Manifest[] {
+function parseV2Manifest(manifest: any): Manifest {
+    const services = getV2Services(manifest)
+    const tests = getTests(manifest)
+    return new Manifest(services, tests);
+}
+
+function parseComposeManifest(manifest: any): Manifest {
+    const services = getComposeServices(manifest)
+    return new Manifest(services, []);
+}
+
+export function parseManifest(parsed: yaml.Document.Parsed): Manifest  {
     const manifest = parsed.toJSON();
-    
+
     if (isOktetoV2(manifest)) {
-        return getV2Services(manifest);
-    } else if (isOktetoV1(manifest)) {
-        return getV1Service(manifest)
+        return parseV2Manifest(manifest);
     } else if (isDockerCompose(manifest)) {
-        return getComposeServices(manifest);
+        return parseComposeManifest(manifest);
     } else {
-        return [];
+        return new Manifest([],[]);
     }
 }
 
-export async function getManifests(manifestPath: vscode.Uri): Promise<Manifest[]> {
+export async function get(manifestPath: vscode.Uri): Promise<Manifest> {
     const data = await promises.readFile(manifestPath.fsPath, {encoding: 'utf8'});
     if (!data) {
         throw new Error(`${manifestPath} is not a valid Okteto manifest`);
@@ -131,7 +147,7 @@ export async function getManifests(manifestPath: vscode.Uri): Promise<Manifest[]
     }
     
     const r = parseManifest(parsed);
-    if (r.length == 0) {
+    if (r.services.length == 0 && r.tests.length == 0) {
         throw new Error(`${manifestPath} is not a valid manifest`);
     }
 

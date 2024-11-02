@@ -13,17 +13,24 @@ dev:
       - 9229:9229
     sync:
       - api:/usr/src/app
+    workdir: /usr/src/app
+test:
+  api:
+    image: node:20
+    context: api
+    caches:
+      - yarn/.cache
+      - node_modules
+    commands:
+      - yarn install
+      - yarn test
   frontend:
-    command: yarn start
-    sync:
-      - frontend:/usr/src/frontend
-  worker:
-    command: yarn start
-  env:
-    command: yarn start
-    sync:
-      - $HOME/frontend:/usr/src/frontend
-  malformed:
-    command: yarn start
-    sync:
-      - /usr/src/frontend
+    image: node:20
+    context: frontend
+    caches:
+      - yarn/.cache
+      - node_modules
+    commands:
+      - yarn install
+      - yarn test
+

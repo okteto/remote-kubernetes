@@ -18,6 +18,7 @@ export const events = {
     createFinished: 'cmd_create_success',
     deploy: 'cmd_deploy',
     destroy: 'cmd_destroy',
+    test: 'cmd_test',
     down: 'cmd_down',
     downFinished: 'cmd_down_success',
     namespace: "cmd_namespace",

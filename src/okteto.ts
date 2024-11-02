@@ -158,7 +158,7 @@ export async function install(progress: vscode.Progress<{increment: number, mess
   }
 }
 
-export function up(manifest: vscode.Uri, namespace: string, name: string, port: number, serviceName: string) {
+export function up(manifest: vscode.Uri, namespace: string, name: string, port: number) {
   console.log(`okteto up ${manifest.fsPath}`);
   disposeTerminal(`${terminalName}-${namespace}-${name}`);
   isActive.set(`${terminalName}-${namespace}-${name}`, false);
@@ -186,7 +186,7 @@ export function up(manifest: vscode.Uri, namespace: string, name: string, port: 
   }
 
   isActive.set(`${terminalName}-${namespace}-${name}`, true);
-  let cmd = `${binary} up ${serviceName} -f '${finalManifest}' --remote ${port}`;
+  let cmd = `${binary} up ${name} -f '${finalManifest}' --remote ${port}`;
 
   const config = vscode.workspace.getConfiguration('okteto');
   if (config) {
@@ -197,11 +197,11 @@ export function up(manifest: vscode.Uri, namespace: string, name: string, port: 
   term.sendText(cmd, true);
 }
 
-export async function down(manifest: vscode.Uri, namespace: string, name: string, serviceName: string) {
+export async function down(manifest: vscode.Uri, namespace: string, name: string) {
   isActive.set(`${terminalName}-${namespace}-${name}`, false);
   disposeTerminal(`${terminalName}-${namespace}-${name}`);
   
-  const r =  execa(getBinary(), ['down', serviceName, '--file', `${manifest.fsPath}`, '--namespace', `${namespace}`], {
+  const r =  execa(getBinary(), ['down', name, '--file', `${manifest.fsPath}`, '--namespace', `${namespace}`], {
     env: {
       "OKTETO_ORIGIN":"vscode"
     },
@@ -217,27 +217,6 @@ export async function down(manifest: vscode.Uri, namespace: string, name: string
   }
 
   console.log('okteto down completed');
-}
-
-export async function init(manifestPath: vscode.Uri) {    
-  const name = `${terminalName}-init`;
-  disposeTerminal(name);
-  isActive.set(name, false);
-
-  const term = vscode.window.createTerminal({
-    name: name,
-    hideFromUser: false,
-    env: {
-      "OKTETO_ORIGIN":"vscode",
-    },
-    iconPath: new vscode.ThemeIcon('server-process'),
-    cwd: path.dirname(manifestPath.fsPath)
-  });
-
-  isActive.set(name, true);
-  term.sendText(`${getBinary()} init --replace --file ${manifestPath.fsPath}`, true);
-  term.show(false);
-  console.log('okteto init completed');
 }
 
 export async function deploy(namespace: string, manifestPath: string) {
@@ -278,6 +257,26 @@ export async function destroy(namespace: string, manifestUri: vscode.Uri) {
   term.sendText(`${getBinary()} destroy -f ${manifestUri.fsPath}`, true);
   term.show(true);
   console.log('okteto destroy completed');
+}
+
+export async function test(namespace: string, manifestPath: string, test: string) {
+  const name = `${terminalName}-${namespace}-test`;
+  disposeTerminal(name);
+  isActive.set(name, false);
+
+  const term = vscode.window.createTerminal({
+    name: name,
+    hideFromUser: false,
+    env: {
+      "OKTETO_ORIGIN":"vscode",
+    },
+    iconPath: new vscode.ThemeIcon('server-process')
+  });
+
+  isActive.set(name, true);
+  term.sendText(`${getBinary()} test -f ${manifestPath} ${test}`, true);
+  term.show(true);
+  console.log('okteto test completed');
 }
 
 export async function setContext(context: string) : Promise<boolean>{
