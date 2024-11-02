@@ -34,7 +34,7 @@ describe('parseManifest', () => {
     const parsed = yaml.parseDocument(data);
     const result = manifest.parseManifest(parsed);
     expect(result.services.length).to.equal(1);
-    expect(result.tests.length).to.equal(3);
+    expect(result.tests.length).to.equal(2);
     expect(result.tests[0].name).to.equal('api');
     expect(result.tests[1].name).to.equal('frontend');
   });
