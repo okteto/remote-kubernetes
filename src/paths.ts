@@ -17,3 +17,7 @@ export function toGitBash(p: string): string {
   const newDrive = '/' + drive[0];
   return newDrive + joined.slice(2); 
 }
+
+export function isDefaultManifestPath(path: string): boolean {
+  return path.endsWith('okteto.yaml') || path.endsWith('okteto.yml');
+}

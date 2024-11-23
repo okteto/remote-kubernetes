@@ -186,22 +186,33 @@ export function up(manifest: vscode.Uri, namespace: string, name: string, port: 
   }
 
   isActive.set(`${terminalName}-${namespace}-${name}`, true);
-  let cmd = `${binary} up ${name} -f '${finalManifest}' --remote ${port}`;
+  
+  let cmd = [binary, 'up', name];
+  if (!paths.isDefaultManifestPath(finalManifest)) {
+    cmd.push('-f', finalManifest);
+  }
+  cmd.push('--remote', port.toString());
 
   const config = vscode.workspace.getConfiguration('okteto');
   if (config) {
-    const params = config.get<boolean>('upArgs') || '';
-    cmd = `${cmd} ${params}`;
+    const params = config.get<string>('upArgs') || '';
+    if (params) {
+      cmd.push(...params.split(' ').filter(p => p));
+    }
   }
   
-  term.sendText(cmd, true);
+  term.sendText(cmd.join(' '), true);
 }
 
 export async function down(manifest: vscode.Uri, namespace: string, name: string) {
   isActive.set(`${terminalName}-${namespace}-${name}`, false);
   disposeTerminal(`${terminalName}-${namespace}-${name}`);
   
-  const r =  execa(getBinary(), ['down', name, '--file', `${manifest.fsPath}`, '--namespace', `${namespace}`], {
+  const args = ['down', name, '--namespace', `${namespace}`];
+  if (!paths.isDefaultManifestPath(manifest.fsPath)) {
+    args.push('--file', manifest.fsPath);
+  }
+  const r = execa(getBinary(), args, {
     env: {
       "OKTETO_ORIGIN":"vscode"
     },
