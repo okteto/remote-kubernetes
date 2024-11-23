@@ -109,7 +109,7 @@ export async function install(progress: vscode.Progress<{increment: number, mess
     await promises.mkdir(folder, {mode: 0o700, recursive: true});
     console.log(`created ${folder}`);
   } catch(err: any) {
-    throw new Error(`failed to create dir: ${getErrorMessage(err)}`);``
+    throw new Error(`failed to create dir: ${getErrorMessage(err)}`);
   }
 
 
@@ -190,7 +190,7 @@ export function up(manifest: vscode.Uri, namespace: string, name: string, port: 
 
   const config = vscode.workspace.getConfiguration('okteto');
   if (config) {
-    const params = config.get<boolean>('upArgs') || '';
+    const params = config.get<string>('upArgs') || '';
     cmd = `${cmd} ${params}`;
   }
   
@@ -343,7 +343,7 @@ export async function setNamespace(namespace: string) {
         clearTimeout(timer);
         disposeTerminal(name);
         resolve(true);
-        console.log('okteto namespace completed');console.log('okteto namespace completed');
+        console.log('okteto namespace completed');
       }
     });
   });
