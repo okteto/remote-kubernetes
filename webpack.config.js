@@ -42,6 +42,12 @@ const config = {
         ]
       }
     ]
-  }
+  },
+  ignoreWarnings: [
+    {
+      module: /node_modules\/keyv/,
+      message: /Critical dependency: the request of a dependency is an expression/,
+    },
+  ],
 };
 module.exports = config;
