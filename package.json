@@ -30,7 +30,7 @@
   },
   "license": "SEE LICENSE IN LICENSE",
   "engines": {
-    "vscode": "^1.80.0"
+    "vscode": "^1.99.0"
   },
   "categories": [
     "Other",
@@ -140,6 +140,7 @@
     "@types/node": "^22.14.0",
     "@types/semver": "^7.7.0",
     "@types/vscode": "^1.99.1",
+    "@vscode/test-electron": "^2.5.1",
     "@vscode/vsce": "^3.3.2",
     "chai": "^5.2.0",
     "glob": "^11.0.1",
@@ -148,7 +149,6 @@
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3",
-    "vscode-test": "^1.6.1",
     "webpack": "^5.99.3",
     "webpack-cli": "^6.0.1"
   },
