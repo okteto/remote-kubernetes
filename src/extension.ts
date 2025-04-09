@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import * as manifest from './manifest';
 import * as path from 'path';
 import * as ssh from './ssh';
-
+import {sortFilePaths} from  './paths';
 import * as okteto from './okteto';
 import {Reporter, events} from './telemetry';
 import { minimum } from './download';
@@ -546,8 +546,10 @@ Please run the 'Okteto: Create Manifest' command to create it and then try again
     if (files.length === 1 ) {
         return files[0];
     }
+
+    const sortedFiles = sortFilePaths(files);
     
-    const items = files.map(file => {
+    const items = sortedFiles.map(file => {
         return {
             label: vscode.workspace.asRelativePath(file, true),
             uri: file

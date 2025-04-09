@@ -22,11 +22,20 @@ describe('parseManifest', () => {
     const result = manifest.parseManifest(parsed);
     expect(result.services.length).to.equal(5);
     expect(result.tests.length).to.equal(0);
+    expect(result.services[0].name).to.equal('api');
     expect(result.services[0].workdir).to.equal('/usr/src/app');
+
+    expect(result.services[1].name).to.equal('env');
     expect(result.services[1].workdir).to.equal('/usr/src/frontend');
-    expect(result.services[2].workdir).to.equal('');
+
+    expect(result.services[2].name).to.equal('frontend');
+    expect(result.services[2].workdir).to.equal('/usr/src/frontend');
+
+    expect(result.services[3].name).to.equal('malformed');
     expect(result.services[3].workdir).to.equal('/usr/src/frontend');
-    expect(result.services[4].workdir).to.equal('/usr/src/frontend');
+
+    expect(result.services[4].name).to.equal('worker');
+    expect(result.services[4].workdir).to.equal('');
   });
 
   it('parse v2 manifest with tests', () => {
