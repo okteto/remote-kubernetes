@@ -129,6 +129,7 @@
     "package": "vsce package",
     "pretest": "npm run compile",
     "test": "mocha -r ts-node/register src/test/suite/*.test.ts",
+    "ci": "npm ci && npm run test && npm run package",
     "publish": "vsce publish -p $VSCE_TOKEN",
     "publish-prerelease": "vsce publish -p $VSCE_TOKEN  --pre-release",
     "publish-sentry": "sentry-cli releases new $VERSION && sentry-cli releases set-commits --auto $VERSION && sentry-cli releases files $VERSION upload-sourcemaps --rewrite dist && sentry-cli releases finalize $VERSION"
