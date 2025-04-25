@@ -2,7 +2,7 @@
 
 import * as fs from 'fs';
 import {promises} from 'fs';
-import execa from 'execa';
+import {execa} from 'execa';
 import * as path from 'path';
 import commandExists from 'command-exists';
 import {protect} from './machineid';

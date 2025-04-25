@@ -42,6 +42,20 @@ const config = {
         ]
       }
     ]
-  }
+  },
+  ignoreWarnings: [
+    {
+      module: /node_modules\/keyv/,
+      message: /Critical dependency: the request of a dependency is an expression/,
+    },
+    {
+      module: /@opentelemetry\/instrumentation/, 
+      message: /Critical dependency/ ,
+    },
+    {
+      module: /require-in-the-middle/, 
+      message: /Critical dependency: require function is used in a way in which dependencies cannot be statically extracted/,
+    },
+  ],
 };
 module.exports = config;

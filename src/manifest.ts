@@ -51,6 +51,8 @@ function getComposeServices(manifest: any): Service[] {
         }
     }
 
+    result.sort((a, b) => { return a.name.localeCompare(b.name)});
+
     return result;
 }
 
@@ -82,6 +84,8 @@ function getV2Services(manifest: any): Service[] {
         const m = new Service(k, workdir, svc.remote);
         result.push(m);
     }
+
+    result.sort((a, b) => { return a.name.localeCompare(b.name)});
         
     return result;
 }
