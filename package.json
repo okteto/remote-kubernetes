@@ -14,7 +14,7 @@
     "gke",
     "eks"
   ],
-  "version": "0.5.2",
+  "version": "0.5.3",
   "icon": "media/icon.png",
   "author": {
     "name": "Ramiro Berrelleza",
