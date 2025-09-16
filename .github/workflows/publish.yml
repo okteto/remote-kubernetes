@@ -1,4 +1,6 @@
 name: publish-marketplace
+permissions:
+  contents: read
 on:
   release:
     types: 
