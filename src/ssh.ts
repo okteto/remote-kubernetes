@@ -3,25 +3,25 @@
 import gp from 'get-port';
 import * as net from 'net';
 
-var nextPort = 22100;
+let nextPort = 22100;
 
 export function getPort(): Promise<number> {
     const port = nextPort;
-    
+
     // poorman's port collision avoidance
-    nextPort++
+    nextPort++;
     return gp({host:'127.0.0.1', port: port});
 }
 
-export function isReady(port: number): Promise<Boolean> {
+export function isReady(port: number): Promise<boolean> {
     return new Promise(function(resolve, reject) {
         const timeout = 60000;
-        var timer = setTimeout(function() {
-            reject("timeout");
+        const timer = setTimeout(function() {
+            reject(new Error("timeout"));
             socket.end();
         }, timeout);
 
-        var socket = net.createConnection(port, "localhost", function() {
+        const socket = net.createConnection(port, "localhost", function() {
             clearTimeout(timer);
             resolve(true);
             socket.end();

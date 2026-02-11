@@ -139,7 +139,7 @@ async function upCmd() {
     const manifestPath = manifestUri;
     console.log(`user selected: ${manifestPath.fsPath}`);
 
-    var m: manifest.Manifest;
+    let m: manifest.Manifest;
 
     try {
         m = await manifest.get(manifestPath);
@@ -149,8 +149,8 @@ async function upCmd() {
         return onOktetoFailed(`Okteto: Up failed to load your Okteto manifest: ${err.message}`);
     }
 
-    
-    var service: manifest.Service;
+
+    let service: manifest.Service;
 
     if (m.services.length == 1) {
         service = m.services[0];
@@ -226,8 +226,8 @@ async function waitForFinalState(namespace: string, name:string, progress: vscod
     const seen = new Map<string, boolean>();
     const messages = okteto.getStateMessages();
     progress.report({  message: "Launching your development environment..." });
-    var counter = 0;
-    var timeout = 15 * 60; // 5 minutes
+    let counter = 0;
+    const timeout = 15 * 60;
     while (true) {
         const res = await okteto.getState(namespace, name);
         if (!seen.has(res.state)) {
@@ -258,7 +258,7 @@ async function waitForFinalState(namespace: string, name:string, progress: vscod
 }
 
 async function sleep(ms: number) {
-    return new Promise<void>(resolve =>  setTimeout(resolve, 1000));
+    return new Promise<void>(resolve => setTimeout(resolve, ms));
 }
 
 async function finalizeUp(namespace: string, name: string, workdir: string) {
@@ -356,7 +356,7 @@ async function deployCmd() {
     console.log(`user selected: ${manifestPath}`);
 
     try {
-        var namespace = await getNamespace();
+        const namespace = await getNamespace();
         reporter.track(events.deploy);
         await okteto.deploy(namespace, manifestPath);
     } catch(err: any) {
@@ -394,12 +394,12 @@ async function testCmd() {
     }
 
     try {
-        var test = await showManifestTestPicker(m.tests);
+        const test = await showManifestTestPicker(m.tests);
         if (!test) {
             return;
         }
 
-        var namespace = await getNamespace();
+        const namespace = await getNamespace();
         reporter.track(events.test);
         await okteto.test(namespace, manifestPath.fsPath, test.name);
     } catch(err: any) {
@@ -427,7 +427,7 @@ async function destroyCmd() {
 
     reporter.track(events.destroy);
     try {
-        var namespace = await getNamespace();
+        const namespace = await getNamespace();
         await okteto.destroy(namespace, manifestUri);
     } catch(err: any) {
         reporter.captureError(`okteto destroy failed: ${err.message}`, err);
