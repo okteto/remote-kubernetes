@@ -36,7 +36,19 @@
                 "ENV": "dev"
             }
         },
-        
-
+        {
+            "type": "extensionHost",
+            "request": "launch",
+            "name": "Extension Tests",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--extensionTestsPath=${workspaceFolder}/out/test/e2e"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js"
+            ],
+            "preLaunchTask": "npm: compile"
+        }
     ],
 }
