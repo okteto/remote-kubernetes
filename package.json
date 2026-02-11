@@ -123,9 +123,9 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "webpack --mode production",
-    "compile": "webpack --mode development",
-    "watch": "webpack --mode development --watch",
+    "vscode:prepublish": "node esbuild.js --production",
+    "compile": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
     "package": "vsce package",
     "pretest": "npm run compile",
     "test": "mocha -r ts-node/register -r src/test/mock/vscode.ts src/test/suite/*.test.ts",
@@ -148,17 +148,15 @@
     "@vscode/test-electron": "^2.5.1",
     "@vscode/vsce": "^3.7.1",
     "chai": "^6.2.2",
+    "esbuild": "^0.27.3",
     "eslint": "^10.0.0",
     "glob": "^13.0.2",
     "markdown-it": ">=14.1.1",
     "mocha": "^11.7.5",
     "sinon": "^21.0.1",
-    "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
-    "vscode-uri": "^3.1.0",
-    "webpack": "^5.105.1",
-    "webpack-cli": "^6.0.1"
+    "vscode-uri": "^3.1.0"
   },
   "dependencies": {
     "@sentry/cli": "^3.2.0",

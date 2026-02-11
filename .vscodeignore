@@ -7,6 +7,7 @@ remote-kubernetes-*/
 **/tsconfig.json
 **/tslint.json
 **/webpack.config.js
+**/esbuild.js
 
 okteto.yml
 .stignore
