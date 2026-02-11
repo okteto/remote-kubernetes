@@ -14,7 +14,7 @@
     "gke",
     "eks"
   ],
-  "version": "0.5.3",
+  "version": "0.5.4",
   "icon": "media/icon.png",
   "author": {
     "name": "Ramiro Berrelleza",
@@ -130,6 +130,7 @@
     "pretest": "npm run compile",
     "test": "mocha -r ts-node/register src/test/suite/*.test.ts",
     "test:e2e": "tsc -p tsconfig.test.json && node ./out/test/e2e/runTest.js",
+    "update-okteto": "bash scripts/update-okteto-version.sh",
     "ci": "npm ci && npm run test && npm run package",
     "publish": "vsce publish -p $VSCE_TOKEN",
     "publish-prerelease": "vsce publish -p $VSCE_TOKEN  --pre-release",
