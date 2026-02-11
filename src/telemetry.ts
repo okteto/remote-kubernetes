@@ -51,7 +51,7 @@ export class Reporter {
         
         const config = vscode.workspace.getConfiguration('okteto');
         const telemetry = config.get<boolean>('telemetry');
-        if (config && telemetry != undefined) {
+        if (config && telemetry !== undefined) {
             this.enabled = telemetry;
         }
 

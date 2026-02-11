@@ -114,7 +114,7 @@ export async function install(progress: vscode.Progress<{increment: number, mess
 
 
   try {
-    const r = await download.binary(source.url, downloadPath, progress);
+    await download.binary(source.url, downloadPath, progress);
   } catch(err: any) {
     console.error(`download fail: ${err}`);
     if (err.code === 'EBUSY'){
@@ -148,13 +148,9 @@ export async function install(progress: vscode.Progress<{increment: number, mess
     }
   }
 
-  try {
-    const version = await getVersion(installPath);
-    if (!version) {
-      throw new Error(`${installPath} wasn't correctly installed`);
-    }
-  } catch(err: any) {
-    throw err;
+  const version = await getVersion(installPath);
+  if (!version) {
+    throw new Error(`${installPath} wasn't correctly installed`);
   }
 }
 
@@ -294,7 +290,7 @@ export async function setContext(context: string) : Promise<boolean>{
   });
 
   isActive.set(name, true);
-  let cmd = `${getBinary()} context use ${context}`;
+  const cmd = `${getBinary()} context use ${context}`;
   term.sendText(cmd, true);
   
   const configFile = getContextConfigurationFile();
@@ -304,7 +300,7 @@ export async function setContext(context: string) : Promise<boolean>{
       reject(new Error('Context was not created, check your terminal for errors'));
     }, 5 * 60 * 1000);
 
-    fs.watchFile(configFile, (curr, prev) => {
+    fs.watchFile(configFile, () => {
       const ctx = getContext();
       if (ctx.name === context) {
         fs.unwatchFile(configFile);
@@ -342,7 +338,7 @@ export async function setNamespace(namespace: string) {
       reject(new Error('Namespace was not set, check your terminal for errors'));
     }, 5 * 60 * 1000);
 
-    fs.watchFile(configFile, (curr, prev) => {
+    fs.watchFile(configFile, () => {
       const ctx = getContext();
       if (ctx.namespace === namespace) {
         fs.unwatchFile(configFile);
@@ -453,7 +449,7 @@ export async function isRunning(namespace: string, name: string): Promise<boolea
   
   try {
     const result = await find('pid', parsed);
-    if (result.length == 0){
+    if (result.length === 0){
       console.log(`pid-${parsed} is not running`)
       return false;
     }
@@ -556,7 +552,7 @@ export function getContext(): Context {
     const contexts = JSON.parse(c);
     const current = contexts["current-context"];
     const ctx = contexts.contexts[current];
-    if (ctx == null) {
+    if (ctx === null || ctx === undefined) {
       return new Context("", "", "", false);
     }
 
