@@ -17,7 +17,7 @@ export class Manifest {
 function isDockerCompose(manifest: any): boolean {
     if (manifest.services) {
         const s = manifest.services;
-        for (let $_ in s){
+        for (const _key in s){
             return true;
         }
     }
@@ -41,7 +41,7 @@ function getComposeServices(manifest: any): Service[] {
             for (const v of svc.volumes) {
                 const s = v.split(':');
                 
-                if (s.length == 2) {
+                if (s.length === 2) {
                     // if the volume is declared, it's not used for sync
                     if (!volumes.has(s[0])) {
                         result.push(new Service(k, s[1], 0));
@@ -151,7 +151,7 @@ export async function get(manifestPath: vscode.Uri): Promise<Manifest> {
     }
     
     const r = parseManifest(parsed);
-    if (r.services.length == 0 && r.tests.length == 0) {
+    if (r.services.length === 0 && r.tests.length === 0) {
         throw new Error(`${manifestPath} is not a valid manifest`);
     }
 

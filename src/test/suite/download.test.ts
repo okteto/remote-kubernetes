@@ -3,7 +3,6 @@
 import { expect } from 'chai';
 import * as download from '../../download';
 import * as os from 'os';
-import * as path from 'path';
 
 describe('minimum version', () => {
   it('should be a valid semver string', () => {

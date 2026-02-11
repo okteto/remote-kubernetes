@@ -131,12 +131,14 @@
     "test": "mocha -r ts-node/register -r src/test/mock/vscode.ts src/test/suite/*.test.ts",
     "test:e2e": "tsc -p tsconfig.test.json && node ./out/test/e2e/runTest.js",
     "update-okteto": "bash scripts/update-okteto-version.sh",
-    "ci": "npm ci && npm run test && npm run package",
+    "lint": "eslint src/",
+    "ci": "npm ci && npm run lint && npm run test && npm run package",
     "publish": "vsce publish -p $VSCE_TOKEN",
     "publish-prerelease": "vsce publish -p $VSCE_TOKEN  --pre-release",
     "publish-sentry": "sentry-cli releases new $VERSION && sentry-cli releases set-commits --auto $VERSION && sentry-cli sourcemaps upload --release $VERSION dist && sentry-cli releases finalize $VERSION"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@types/chai": "^5.2.3",
     "@types/command-exists": "^1.2.3",
     "@types/glob": "^8.1.0",
@@ -149,13 +151,14 @@
     "@vscode/vsce": "^3.7.1",
     "chai": "^6.2.2",
     "esbuild": "^0.27.3",
-    "eslint": "^10.0.0",
+    "eslint": "^9.39.2",
     "glob": "^13.0.2",
     "markdown-it": ">=14.1.1",
     "mocha": "^11.7.5",
     "sinon": "^21.0.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.55.0",
     "vscode-uri": "^3.1.0"
   },
   "dependencies": {

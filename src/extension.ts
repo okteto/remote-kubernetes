@@ -64,11 +64,7 @@ export function activate(context: vscode.ExtensionContext) {
 async function checkPrereqs(checkContext: boolean) {
     const { install, upgrade } = await okteto.needsInstall();
     if (install) {
-        try {
-            await installCmd(upgrade, false);
-        } catch(err: any) {
-            throw err;
-        }
+        await installCmd(upgrade, false);
     }
 
     if (!checkContext) {
@@ -77,11 +73,7 @@ async function checkPrereqs(checkContext: boolean) {
 
     const ctx = okteto.getContext();
     if (ctx.id === '') {
-        try {
-            await contextCmd();
-        } catch(err: any) {
-            throw err;
-        }
+        await contextCmd();
     }
 }
 
@@ -152,7 +144,7 @@ async function upCmd() {
 
     let service: manifest.Service;
 
-    if (m.services.length == 1) {
+    if (m.services.length === 1) {
         service = m.services[0];
     } else {
         const choice = await showManifestServicePicker(m.services);
@@ -163,8 +155,8 @@ async function upCmd() {
 
         service = choice;
     }
-    
-    let namespace = await getNamespace();
+
+    const namespace = await getNamespace();
 
     let port = service.port;
     if (port === 0 || port === undefined) {
@@ -241,11 +233,13 @@ async function waitForFinalState(namespace: string, name:string, progress: vscod
                 return {result: true, message: ''};
             case okteto.state.failed:
                 return {result: false, message: res.message};
-            case okteto.state.starting:
+            case okteto.state.starting: {
                 const isRunning = await okteto.isRunning(namespace, name);
                 if (!isRunning && counter > upTimeout){
                     return {result: false, message: `process failed to start`};
                 }
+                break;
+            }
         }
         
         counter++;
@@ -310,7 +304,7 @@ async function downCmd() {
 
     let service: manifest.Service;
 
-    if (m.services.length == 1 ) {
+    if (m.services.length === 1 ) {
         service = m.services[0];
     } else {
         const choice = await showManifestServicePicker(m.services);
@@ -480,7 +474,7 @@ async function contextCmd(){
     }
 
     reporter.track(events.context);
-    let choice = await vscode.window.showQuickPick(okteto.getContextList(), {canPickMany: false, placeHolder: 'Select the context for all the Okteto commands'});
+    const choice = await vscode.window.showQuickPick(okteto.getContextList(), {canPickMany: false, placeHolder: 'Select the context for all the Okteto commands'});
     if (!choice) {
         return;
     }

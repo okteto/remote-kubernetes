@@ -26,7 +26,7 @@ function getWin32RegBinPath(): string {
     return '';
   }
   
-  if( process.arch === 'ia32' && process.env.hasOwnProperty('PROCESSOR_ARCHITEW6432') ) {
+  if( process.arch === 'ia32' && Object.prototype.hasOwnProperty.call(process.env, 'PROCESSOR_ARCHITEW6432') ) {
     return '%windir%\\sysnative\\cmd.exe /c %windir%\\System32';
   }
   
@@ -57,7 +57,7 @@ function expose(result: string): string {
         case 'darwin':
             return result
                 .split('IOPlatformUUID')[1]
-                .split('\n')[0].replace(/\=|\s+|\"/ig, '');
+                .split('\n')[0].replace(/=|\s+|"/ig, '');
         case 'win32':
             return result
                 .toString()

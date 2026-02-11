@@ -55,7 +55,7 @@ export async function binary(source: string, destination: string, progress: vsco
   const fileWriterStream = fs.createWriteStream(destination);
   let current = 0;
   downloadStream
-    .on("downloadProgress", ({transferred, total, percent})=> {
+    .on("downloadProgress", ({percent})=> {
       const percentage = Math.round(percent * 100);
       const reportedProgress = percentage - current;
       current = percentage;
@@ -86,7 +86,7 @@ export async function binary(source: string, destination: string, progress: vsco
 }
 
 export function getBinary(): string {
-    let binary = vscode.workspace.getConfiguration('okteto').get<string>('binary');
+    const binary = vscode.workspace.getConfiguration('okteto').get<string>('binary');
     if (binary) {
       if (binary.trim().length > 0) {
         return binary;
