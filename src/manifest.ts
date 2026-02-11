@@ -27,18 +27,18 @@ function isDockerCompose(manifest: any): boolean {
 
 function getComposeServices(manifest: any): Service[] {
 
-    var volumes = new Map<string, boolean>();
+    const volumes = new Map<string, boolean>();
     if (manifest.volumes) {
-        for (var k in manifest.volumes) {
+        for (const k in manifest.volumes) {
             volumes.set(k, true);
         }
     }
 
-    var result = [];
-    for (let k in manifest.services){   
+    const result = [];
+    for (const k in manifest.services){
         const svc = manifest.services[k];
         if (svc.volumes && svc.volumes.length > 0) {
-            for (var v of svc.volumes) {
+            for (const v of svc.volumes) {
                 const s = v.split(':');
                 
                 if (s.length == 2) {
@@ -78,7 +78,7 @@ function isOktetoV2(manifest: any): boolean {
 
 function getV2Services(manifest: any): Service[] {
     const result: Array<Service> = [];
-    for (var k in manifest.dev) {
+    for (const k in manifest.dev) {
         const svc = manifest.dev[k];
         const workdir = getWorkdir(svc);
         const m = new Service(k, workdir, svc.remote);
@@ -105,9 +105,9 @@ function getWorkdir(devBlock :any): string {
 }
 
 function getTests(manifest :any): Array<Test> {
-    const tests = Array<Test>();
+    const tests: Test[] = [];
     if (manifest.test){
-        for (var t in manifest.test) {
+        for (const t in manifest.test) {
             tests.push(new Test(t));
         }
     }

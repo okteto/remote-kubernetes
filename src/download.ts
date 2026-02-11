@@ -53,7 +53,7 @@ export function getOktetoDownloadInfo() : {url: string, chmod: boolean} {
 export async function binary(source: string, destination: string, progress: vscode.Progress<{increment: number, message: string}>) : Promise<boolean> { 
   const downloadStream = got.stream(source);
   const fileWriterStream = fs.createWriteStream(destination);
-  var current = 0;
+  let current = 0;
   downloadStream
     .on("downloadProgress", ({transferred, total, percent})=> {
       const percentage = Math.round(percent * 100);

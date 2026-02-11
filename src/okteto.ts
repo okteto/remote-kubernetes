@@ -47,7 +47,7 @@ export class Context {
   }
 }
 
-const isActive = new Map<string, Boolean>();
+const isActive = new Map<string, boolean>();
 
 export async function needsInstall(): Promise<{install: boolean, upgrade: boolean}>{
   const binary = getBinary();
@@ -297,14 +297,17 @@ export async function setContext(context: string) : Promise<boolean>{
   let cmd = `${getBinary()} context use ${context}`;
   term.sendText(cmd, true);
   
+  const configFile = getContextConfigurationFile();
   return new Promise<boolean>(function(resolve, reject) {
-    var timer = setTimeout(function () {
+    const timer = setTimeout(function () {
+      fs.unwatchFile(configFile);
       reject(new Error('Context was not created, check your terminal for errors'));
     }, 5 * 60 * 1000);
 
-    fs.watchFile(getContextConfigurationFile(), (curr, prev) => {
+    fs.watchFile(configFile, (curr, prev) => {
       const ctx = getContext();
       if (ctx.name === context) {
+        fs.unwatchFile(configFile);
         clearTimeout(timer);
         disposeTerminal(name);
         resolve(true);
@@ -328,18 +331,21 @@ export async function setNamespace(namespace: string) {
   });
 
   isActive.set(name, true);
-  let cmd = `${getBinary()} namespace use ${namespace}`;
+  const cmd = `${getBinary()} namespace use ${namespace}`;
   term.sendText(cmd, true);
   term.show(true);
 
+  const configFile = getContextConfigurationFile();
   return new Promise<boolean>(function(resolve, reject) {
-    var timer = setTimeout(function () {
-      reject(new Error('Context was not created, check your terminal for errors'));
+    const timer = setTimeout(function () {
+      fs.unwatchFile(configFile);
+      reject(new Error('Namespace was not set, check your terminal for errors'));
     }, 5 * 60 * 1000);
 
-    fs.watchFile(getContextConfigurationFile(), (curr, prev) => {
+    fs.watchFile(configFile, (curr, prev) => {
       const ctx = getContext();
       if (ctx.namespace === namespace) {
+        fs.unwatchFile(configFile);
         clearTimeout(timer);
         disposeTerminal(name);
         resolve(true);
@@ -387,7 +393,7 @@ export async function getState(namespace: string, name: string): Promise<{state:
     return {state: state.starting, message: ""};
   }
 
-  var c = '';
+  let c = '';
 
   try {
     const buffer = await promises.readFile(p, {encoding: 'utf8'});
@@ -430,7 +436,7 @@ export async function isRunning(namespace: string, name: string): Promise<boolea
     return true;
   }
 
-  var c = '';
+  let c = '';
   try {
     const buffer = await promises.readFile(p, {encoding: 'utf8'});
     c = buffer.toString();
@@ -460,14 +466,14 @@ export async function isRunning(namespace: string, name: string): Promise<boolea
   }
 }
 
-function splitStateError(state: string): {state: string, message: string} {
+export function splitStateError(state: string): {state: string, message: string} {
   const splitted = state.split(':');
 
   const st = splitted.shift() || '';
-  var msg = '';
+  let msg = '';
 
   if (splitted.length > 0) {
-    msg = splitted.join();
+    msg = splitted.join(':');
   }
 
   return {state: st, message: msg};
@@ -587,7 +593,7 @@ export async function getContextList(): Promise<RuntimeItem[]>{
   try {
     const r = await execa(getBinary(), ["context", "list", "--output", "json"])
     const lines = JSON.parse(r.stdout);
-    for(var i = 0; i < lines.length; i++) {
+    for(let i = 0; i < lines.length; i++) {
       items.push(new RuntimeItem(lines[i].name, "", lines[i].name));
     }
   } catch(err: any) {
