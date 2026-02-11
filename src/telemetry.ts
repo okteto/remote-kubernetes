@@ -44,16 +44,29 @@ export class Reporter {
     private distinctId: string;
     private machineId: string;
     private mp: mixpanel.Mixpanel;
+    private telemetryListener: vscode.Disposable;
 
     constructor(private extensionVersion: string, oktetoId: string, machineId: string) {
         this.mp = mixpanel.init(mpKey, {});
         this.machineId = machineId;
-        
+
+        // Respect both the extension's own setting and VS Code's global telemetry setting
         const config = vscode.workspace.getConfiguration('okteto');
         const telemetry = config.get<boolean>('telemetry');
         if (config && telemetry !== undefined) {
             this.enabled = telemetry;
         }
+
+        if (!vscode.env.isTelemetryEnabled) {
+            this.enabled = false;
+        }
+
+        // Listen for VS Code global telemetry changes
+        this.telemetryListener = vscode.env.onDidChangeTelemetryEnabled((enabled) => {
+            if (!enabled) {
+                this.enabled = false;
+            }
+        });
 
         if (oktetoId) {
             this.distinctId = oktetoId;
@@ -68,15 +81,15 @@ export class Reporter {
             if (process.env.ENV === 'dev') {
                 environment = 'dev';
                 this.enabled = false;
-            } 
+            }
 
-            sentry.init({ 
+            sentry.init({
                 dsn:  dsn,
                 integrations: defaults => defaults.filter(integration => (integration.name !== 'OnUncaughtException') && (integration.name !== 'OnUnhandledRejection')),
                 environment: environment,
                 release: `remote-kubernetes-vscode@${this.extensionVersion}`});
 
-        
+
             sentry.withScope(scope =>{
                 scope.setUser({"id": this.distinctId});
                 scope.setTags({
@@ -125,14 +138,14 @@ export class Reporter {
       });
     }
 
-    public captureError(message: string, err: any): Promise<void> {
-        return new Promise<void>(resolve =>{
-            console.error(message);
-            if (this.enabled) {
-                sentry.captureException(err);
-            }
+    public captureError(message: string, err: unknown): void {
+        console.error(message);
+        if (this.enabled) {
+            sentry.captureException(err);
+        }
+    }
 
-            resolve();
-        });
+    public dispose(): void {
+        this.telemetryListener.dispose();
     }
 }

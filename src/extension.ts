@@ -61,6 +61,13 @@ export function activate(context: vscode.ExtensionContext) {
 
 }
 
+export function deactivate() {
+    activeManifest.clear();
+    if (reporter) {
+        reporter.dispose();
+    }
+}
+
 async function checkPrereqs(checkContext: boolean) {
     const { install, upgrade } = await okteto.needsInstall();
     if (install) {
