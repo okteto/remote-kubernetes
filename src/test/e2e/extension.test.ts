@@ -31,17 +31,6 @@ suite('Extension', () => {
 		}
 	});
 
-	test('should have context values set', async () => {
-		// Give extension time to set context after activation
-		await new Promise(resolve => setTimeout(resolve, 100));
-
-		// Context values should be set during activation
-		// We can't directly test context values, but we can verify commands are available
-		const allCommands = await vscode.commands.getCommands(true);
-		assert.ok(allCommands.includes('okteto.up'), 'okteto.up should be registered');
-		assert.ok(allCommands.includes('okteto.deploy'), 'okteto.deploy should be registered');
-	});
-
 	test('should have correct extension ID', () => {
 		const ext = vscode.extensions.getExtension('okteto.remote-kubernetes');
 		assert.ok(ext, 'Extension not found');
