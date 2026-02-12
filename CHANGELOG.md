@@ -1,5 +1,39 @@
 # Change Log
 
+## 0.5.5 (Unreleased)
+
+### Internal Improvements
+- Migrated from webpack to esbuild for faster builds and smaller bundle size (64% reduction: 4.43 MB → 1.59 MB)
+- Replaced console.log/error with VS Code's LogOutputChannel API for better debugging
+  - Users can now access logs via Output panel > "Okteto"
+  - Structured logging with severity levels (info, debug, error)
+- Added ESLint v9 with typescript-eslint flat config for better code quality
+- Improved type safety by replacing `any` with `unknown` in catch blocks
+- Added VS Code telemetry compliance (`isTelemetryEnabled`, `onDidChangeTelemetryEnabled`)
+- Modernized async patterns using stream/promises
+
+### Bug Fixes
+- Fixed `sleep()` function ignoring the `ms` parameter
+- Fixed file watcher memory leaks in context/namespace switching
+- Fixed infinite recursion bug in error message handling
+- Fixed `splitStateError` join bug
+
+### Testing
+- Increased test coverage from 12 to 62 tests (+417%)
+  - Added 40 unit tests covering core modules
+  - Added 10 E2E tests for extension integration
+  - Added edge case tests for path handling and error parsing
+  - Added manifest validation tests
+
+### Development
+- Removed legacy files (tslint.json, .snyk, unused dependencies)
+- Improved build performance with esbuild
+- Added comprehensive developer documentation (AGENT.md, CLAUDE.md)
+
+### Dependencies
+- Updated all dependencies to latest versions
+- Fixed security vulnerabilities
+
 ## 0.5.4
 - Updated minimum required Okteto CLI version to 3.16.0
 - Updated dependencies

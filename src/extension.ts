@@ -39,6 +39,11 @@ function getExtensionVersion() : string {
     return version;
 }
 
+/**
+ * Activates the Okteto VS Code extension.
+ * Initializes the logger, telemetry reporter, and registers all commands.
+ * @param context - The VS Code extension context
+ */
 export function activate(context: vscode.ExtensionContext) {
     const version = getExtensionVersion();
 
@@ -50,8 +55,8 @@ export function activate(context: vscode.ExtensionContext) {
     const ctx = okteto.getContext();
     const machineId = okteto.getMachineId();
     reporter = new Reporter(version, ctx.id, machineId);
-    
-    
+
+
     context.subscriptions.push(vscode.commands.registerCommand('okteto.up', upCmd));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.down', downCmd));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.test', testCmd));
@@ -60,11 +65,15 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('okteto.destroy', destroyCmd));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.context', contextCmd));
     context.subscriptions.push(vscode.commands.registerCommand('okteto.namespace', namespaceCmd));
-    
+
     reporter.track(events.activated);
 
 }
 
+/**
+ * Deactivates the Okteto VS Code extension.
+ * Clears the active manifest map and disposes of resources.
+ */
 export function deactivate() {
     activeManifest.clear();
     if (reporter) {
@@ -465,6 +474,11 @@ async function getManifestOrAsk(): Promise<vscode.Uri | undefined> {
     }
 }
 
+/**
+ * Gets the default location for an Okteto manifest file.
+ * Returns the path to 'okteto.yml' in the first workspace folder, if available.
+ * @returns The URI of the default manifest location, or undefined if no workspace is open
+ */
 export function getDefaultLocationManifest(): vscode.Uri | undefined{
     if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
         return undefined;

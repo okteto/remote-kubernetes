@@ -3,14 +3,24 @@ import * as yaml from 'yaml';
 import * as vscode from 'vscode';
 import { getLogger } from './logger';
 
+/**
+ * Represents a service in an Okteto manifest.
+ */
 export class Service {
     constructor(public name: string, public workdir: string, public port: number) {}
 }
 
+/**
+ * Represents a test in an Okteto manifest.
+ */
 export class Test {
     constructor(public name: string) {}
 }
 
+/**
+ * Represents a parsed Okteto manifest file.
+ * Contains the list of services and tests defined in the manifest.
+ */
 export class Manifest {
     constructor(public services: Array<Service>, public tests: Array<Test>) {}
 }
@@ -133,6 +143,12 @@ function parseComposeManifest(manifest: ManifestData): Manifest {
     return new Manifest(services, []);
 }
 
+/**
+ * Parses an Okteto manifest from a YAML document.
+ * Supports both v2 manifests and docker-compose files.
+ * @param parsed - The parsed YAML document
+ * @returns The parsed Manifest object
+ */
 export function parseManifest(parsed: yaml.Document.Parsed): Manifest  {
     const manifest = parsed.toJSON() as ManifestData;
 
@@ -145,6 +161,13 @@ export function parseManifest(parsed: yaml.Document.Parsed): Manifest  {
     }
 }
 
+/**
+ * Reads and parses an Okteto manifest from a file URI.
+ * Validates the YAML syntax and manifest structure.
+ * @param manifestPath - URI of the manifest file to read
+ * @returns The parsed Manifest object
+ * @throws Error if the file is not valid YAML or not a valid Okteto manifest
+ */
 export async function get(manifestPath: vscode.Uri): Promise<Manifest> {
     const data = await promises.readFile(manifestPath.fsPath, {encoding: 'utf8'});
     if (!data) {
