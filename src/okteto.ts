@@ -22,6 +22,40 @@ const contextFolder = 'context';
 const contextFile = 'config.json';
 const terminalName = 'okteto';
 
+/**
+ * Represents the structure of the Okteto context configuration file (~/.okteto/context/config.json).
+ */
+interface OktetoContextConfig {
+  'current-context': string;
+  contexts: {
+    [key: string]: OktetoContextData;
+  };
+}
+
+/**
+ * Represents individual context data within the config file.
+ */
+interface OktetoContextData {
+  id: string;
+  name: string;
+  namespace: string;
+  isOkteto: boolean;
+}
+
+/**
+ * Represents the structure of the Okteto analytics file (~/.okteto/analytics.json).
+ */
+interface OktetoAnalytics {
+  MachineID: string;
+}
+
+/**
+ * Represents an individual context item from `okteto context list --output json`.
+ */
+interface OktetoContextListItem {
+  name: string;
+}
+
 export const state = {
   starting: 'starting',
   activating: 'activating',
@@ -661,9 +695,9 @@ export function showTerminal(terminalNameSuffix: string){
 export function getContext(): Context {
   try {
     const c = fs.readFileSync(getContextConfigurationFile(), {encoding: 'utf8'});
-    const contexts = JSON.parse(c);
-    const current = contexts["current-context"];
-    const ctx = contexts.contexts[current];
+    const config = JSON.parse(c) as OktetoContextConfig;
+    const current = config['current-context'];
+    const ctx = config.contexts[current];
     if (ctx === null || ctx === undefined) {
       return new Context("", "", "", false);
     }
@@ -687,8 +721,8 @@ export function getMachineId(): string {
   let machineId = "";
   try {
     const c = fs.readFileSync(analyticsFile, {encoding: 'utf8'});
-    const token = JSON.parse(c);
-    machineId = token.MachineID;
+    const analytics = JSON.parse(c) as OktetoAnalytics;
+    machineId = analytics.MachineID;
   } catch(err: unknown) {
     getLogger().error(`failed to open ${analyticsFile}: ${err}`);
     machineId = "";
@@ -711,9 +745,9 @@ export async function getContextList(): Promise<RuntimeItem[]>{
 
   try {
     const r = await execa(getBinary(), ["context", "list", "--output", "json"])
-    const lines = JSON.parse(r.stdout);
-    for(let i = 0; i < lines.length; i++) {
-      items.push(new RuntimeItem(lines[i].name, "", lines[i].name));
+    const contextList = JSON.parse(r.stdout) as OktetoContextListItem[];
+    for(let i = 0; i < contextList.length; i++) {
+      items.push(new RuntimeItem(contextList[i].name, "", contextList[i].name));
     }
   } catch(err: unknown) {
     getLogger().error(`failed to get context list from ${getContextConfigurationFile()}: ${err}`);
