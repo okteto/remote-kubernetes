@@ -1,6 +1,7 @@
 import {promises} from 'fs';
 import * as yaml from 'yaml';
 import * as vscode from 'vscode';
+import { getLogger } from './logger';
 
 export class Service {
     constructor(public name: string, public workdir: string, public port: number) {}
@@ -152,7 +153,7 @@ export async function get(manifestPath: vscode.Uri): Promise<Manifest> {
 
     const parsed = yaml.parseDocument(data);
     if (parsed.errors && parsed.errors.length > 0) {
-        console.error(`${manifestPath} is not a valid yaml file: ${parsed.errors.join(", ")}`);
+        getLogger().error(`${manifestPath} is not a valid yaml file: ${parsed.errors.join(", ")}`);
         throw new Error(`${manifestPath} is not a valid yaml file`);
     }
     

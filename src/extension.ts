@@ -8,6 +8,7 @@ import {sortFilePaths} from  './paths';
 import * as okteto from './okteto';
 import {Reporter, events} from './telemetry';
 import { minimum } from './download';
+import { initializeLogger, getLogger } from './logger';
 
 const activeManifest = new Map<string, vscode.Uri>();
 let reporter: Reporter;
@@ -41,7 +42,10 @@ function getExtensionVersion() : string {
 export function activate(context: vscode.ExtensionContext) {
     const version = getExtensionVersion();
 
-    console.log(`okteto.remote-kubernetes ${version} activated`);
+    const logger = initializeLogger();
+    context.subscriptions.push(logger);
+
+    logger.info(`okteto.remote-kubernetes ${version} activated`);
 
     const ctx = okteto.getContext();
     const machineId = okteto.getMachineId();
@@ -93,16 +97,16 @@ async function installCmd(upgrade: boolean, handleErr: boolean) {
         success = `Okteto was successfully upgraded`;
     }
 
-    console.log('installing okteto');
+    getLogger().info('installing okteto');
     reporter.track(events.install);
     await vscode.window.withProgress(
       {location: vscode.ProgressLocation.Notification, title: title},
       async (progress) => {
         try {
-            
+
             await okteto.install(progress);
         } catch(err: unknown) {
-            console.error(err)
+            getLogger().error(`${getErrorMessage(err)}`)
             reporter.track(events.oktetoInstallFailed);
             reporter.captureError(`okteto install failed: ${getErrorMessage(err)}`, err);
             if (handleErr) {
@@ -136,7 +140,7 @@ async function upCmd() {
 
     reporter.track(events.manifestSelected);
     const manifestPath = manifestUri;
-    console.log(`user selected: ${manifestPath.fsPath}`);
+    getLogger().debug(`user selected: ${manifestPath.fsPath}`);
 
     let m: manifest.Manifest;
 
@@ -201,7 +205,7 @@ async function waitForUp(namespace: string, name: string, port: number) {
               const result = await waitForFinalState(namespace, name, progress);
               if (!result.result) {
                   reporter.track(events.oktetoUpFailed);
-                  console.error(result.message);
+                  getLogger().error(result.message);
                   throw new Error(`Okteto: Up command failed: ${result.message}`);
               }
 
@@ -231,7 +235,7 @@ async function waitForFinalState(namespace: string, name:string, progress: vscod
         const res = await okteto.getState(namespace, name);
         if (!seen.has(res.state)) {
             progress.report({ message: messages.get(res.state) });
-            console.log(`okteto is ${res.state}`);
+            getLogger().debug(`okteto is ${res.state}`);
         }
 
         seen.set(res.state, true);
@@ -354,7 +358,7 @@ async function deployCmd() {
 
     reporter.track(events.manifestSelected);
     const manifestPath = manifestUri.fsPath;
-    console.log(`user selected: ${manifestPath}`);
+    getLogger().debug(`user selected: ${manifestPath}`);
 
     try {
         const namespace = await getNamespace();
@@ -382,7 +386,7 @@ async function testCmd() {
 
     reporter.track(events.manifestSelected);
     const manifestPath = manifestUri;
-    console.log(`user selected: ${manifestPath}`);
+    getLogger().debug(`user selected: ${manifestPath}`);
 
     let m: manifest.Manifest;
     
@@ -424,7 +428,7 @@ async function destroyCmd() {
     }
 
     reporter.track(events.manifestSelected);
-    console.log(`user selected: ${manifestUri.fsPath}`);
+    getLogger().debug(`user selected: ${manifestUri.fsPath}`);
 
     reporter.track(events.destroy);
     try {
@@ -468,7 +472,7 @@ export function getDefaultLocationManifest(): vscode.Uri | undefined{
 
     const p = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, 'okteto.yml');
     const loc = vscode.Uri.file(p);
-    console.log(`default location: ${loc.fsPath.toString()}`);
+    getLogger().debug(`default location: ${loc.fsPath.toString()}`);
     return loc;
 }
 

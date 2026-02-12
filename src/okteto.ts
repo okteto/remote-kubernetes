@@ -13,6 +13,7 @@ import * as semver from 'semver';
 import * as paths from './paths';
 import { clearInterval, setInterval } from 'timers';
 import find from 'find-process';
+import { getLogger } from './logger';
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
@@ -86,7 +87,7 @@ async function isInstalled(binaryPath: string): Promise<boolean> {
 async function getVersion(binary: string): Promise<string | undefined> {
   const r = await execa(binary, ['version']);
   if (r.failed) {
-    console.error(`okteto version failed: ${r.stdout} ${r.stderr}`);
+    getLogger().error(`okteto version failed: ${r.stdout} ${r.stderr}`);
     return undefined;
   }
 
@@ -107,7 +108,7 @@ export async function install(progress: vscode.Progress<{increment: number, mess
 
   try {
     await promises.mkdir(folder, {mode: 0o700, recursive: true});
-    console.log(`created ${folder}`);
+    getLogger().debug(`created ${folder}`);
   } catch(err: unknown) {
     throw new Error(`failed to create dir: ${getErrorMessage(err)}`);
   }
@@ -116,7 +117,7 @@ export async function install(progress: vscode.Progress<{increment: number, mess
   try {
     await download.binary(source.url, downloadPath, progress);
   } catch(err: unknown) {
-    console.error(`download fail: ${err}`);
+    getLogger().error(`download fail: ${err}`);
     if (hasErrorCode(err) && err.code === 'EBUSY'){
       throw new Error(`failed to install okteto, ${installPath} is in use`);
     }
@@ -129,13 +130,13 @@ export async function install(progress: vscode.Progress<{increment: number, mess
       fs.unlinkSync(installPath);
     }
   } catch(err: unknown) {
-    console.error(`delete fail: ${err}`);
+    getLogger().error(`delete fail: ${err}`);
   }
 
   try {
     fs.renameSync(downloadPath, installPath);
   } catch(err: unknown) {
-    console.error(`rename fail: ${err}`);
+    getLogger().error(`rename fail: ${err}`);
     throw new Error(`failed to download ${source} into ${installPath}: ${getErrorMessage(err)}`);
   }
 
@@ -155,7 +156,7 @@ export async function install(progress: vscode.Progress<{increment: number, mess
 }
 
 export function up(manifest: vscode.Uri, namespace: string, name: string, port: number) {
-  console.log(`okteto up ${manifest.fsPath}`);
+  getLogger().info(`okteto up ${manifest.fsPath}`);
   disposeTerminal(`${terminalName}-${namespace}-${name}`);
   isActive.set(`${terminalName}-${namespace}-${name}`, false);
 
@@ -176,7 +177,7 @@ export function up(manifest: vscode.Uri, namespace: string, name: string, port: 
   let finalManifest = manifest.fsPath;
   let binary = getBinary();
   if (gitBashMode()){
-    console.log('using gitbash style paths');
+    getLogger().debug('using gitbash style paths');
     binary = paths.toGitBash(binary);
     finalManifest = paths.toGitBash(manifest.fsPath);
   }
@@ -208,12 +209,12 @@ export async function down(manifest: vscode.Uri, namespace: string, name: string
     await r;
   } catch (err: unknown) {
     const stdout = isExecaError(err) ? err.stdout : '';
-    console.error(`${err}: ${stdout}`);
+    getLogger().error(`${err}: ${stdout}`);
     const message = extractMessage(stdout || '');
     throw new Error(message);
   }
 
-  console.log('okteto down completed');
+  getLogger().info('okteto down completed');
 }
 
 export async function deploy(namespace: string, manifestPath: string) {
@@ -233,7 +234,7 @@ export async function deploy(namespace: string, manifestPath: string) {
   isActive.set(name, true);
   term.sendText(`${getBinary()} deploy -f ${manifestPath} --wait`, true);
   term.show(true);
-  console.log('okteto deploy completed');
+  getLogger().info('okteto deploy completed');
 }
 
 export async function destroy(namespace: string, manifestUri: vscode.Uri) {
@@ -253,7 +254,7 @@ export async function destroy(namespace: string, manifestUri: vscode.Uri) {
   isActive.set(name, true);
   term.sendText(`${getBinary()} destroy -f ${manifestUri.fsPath}`, true);
   term.show(true);
-  console.log('okteto destroy completed');
+  getLogger().info('okteto destroy completed');
 }
 
 export async function test(namespace: string, manifestPath: string, test: string) {
@@ -273,7 +274,7 @@ export async function test(namespace: string, manifestPath: string, test: string
   isActive.set(name, true);
   term.sendText(`${getBinary()} test -f ${manifestPath} ${test}`, true);
   term.show(true);
-  console.log('okteto test completed');
+  getLogger().info('okteto test completed');
 }
 
 function waitForConfigChange(
@@ -354,7 +355,7 @@ export async function setNamespace(namespace: string) {
   );
 
   disposeTerminal(name);
-  console.log('okteto namespace completed');
+  getLogger().info('okteto namespace completed');
   return result;
 }
 
@@ -390,7 +391,7 @@ export async function getState(namespace: string, name: string): Promise<{state:
     await promises.access(p);
   } catch (err: unknown) {
     if (!hasErrorCode(err) || err.code !== 'ENOENT') {
-      console.log(`failed to read state file: ${err}`);
+      getLogger().debug(`failed to read state file: ${err}`);
     }
 
     return {state: state.starting, message: ""};
@@ -402,7 +403,7 @@ export async function getState(namespace: string, name: string): Promise<{state:
     const buffer = await promises.readFile(p, {encoding: 'utf8'});
     c = buffer.toString();
   } catch(err: unknown) {
-    console.error(`failed to open ${p}: ${err}`);
+    getLogger().error(`failed to open ${p}: ${err}`);
     return {state: state.unknown, message: ""};
   }
 
@@ -419,7 +420,7 @@ export async function getState(namespace: string, name: string): Promise<{state:
       case state.failed:
         return st;
       default:
-        console.error(`received unknown state: '${c}'`);
+        getLogger().error(`received unknown state: '${c}'`);
         return {state: state.unknown, message: ''};
   }
 }
@@ -431,11 +432,11 @@ export async function isRunning(namespace: string, name: string): Promise<boolea
     await promises.access(p);
   } catch (err: unknown) {
     if (hasErrorCode(err) && err.code === 'ENOENT') {
-      console.error(`${p} doesn't exist`)
+      getLogger().error(`${p} doesn't exist`)
       return false;
     }
     
-    console.error(`failed to open  pid file ${p}: ${err}`)
+    getLogger().error(`failed to open  pid file ${p}: ${err}`)
     return true;
   }
 
@@ -444,27 +445,27 @@ export async function isRunning(namespace: string, name: string): Promise<boolea
     const buffer = await promises.readFile(p, {encoding: 'utf8'});
     c = buffer.toString();
   } catch(err: unknown) {
-    console.error(`failed to open ${p}: ${err}`);
+    getLogger().error(`failed to open ${p}: ${err}`);
     return true;
   }
 
   const parsed = parseInt(c);
   if (isNaN(parsed)) { 
-    console.error(`the content of ${p} is NaN: ${parsed}`)
+    getLogger().error(`the content of ${p} is NaN: ${parsed}`)
     return true; 
   }
   
   try {
     const result = await find('pid', parsed);
     if (result.length === 0){
-      console.log(`pid-${parsed} is not running`)
+      getLogger().debug(`pid-${parsed} is not running`)
       return false;
     }
 
-    console.log(`pid-${parsed} is running`)
+    getLogger().debug(`pid-${parsed} is running`)
     return true;
   } catch(err: unknown) {
-    console.error(`failed to list processes: ${err}`);
+    getLogger().error(`failed to list processes: ${err}`);
     return true;
   }
 }
@@ -491,7 +492,7 @@ export async function notifyIfFailed(namespace: string, name:string, callback: (
     }
     
     if (c.state === state.failed) {
-      console.error(`okteto up failed: ${c.message}`);
+      getLogger().error(`okteto up failed: ${c.message}`);
       clearInterval(id);
       if (c.message) {
         callback(`${namespace}-${name}`, `Okteto: Up command failed: ${c.message}`);
@@ -510,7 +511,7 @@ function cleanState(namespace: string, name:string) {
     fs.unlinkSync(p);
   }catch(err: unknown) {
     if (!hasErrorCode(err) || err.code !== 'ENOENT'){
-      console.error(`failed to delete ${p}: ${err}`);
+      getLogger().error(`failed to delete ${p}: ${err}`);
     }
   }
 }
@@ -565,7 +566,7 @@ export function getContext(): Context {
 
     return {id: ctx.id, name: ctx.name, namespace: ctx.namespace, isOkteto: ctx.isOkteto};
   } catch(err: unknown) {
-    console.error(`failed to get current context from ${getContextConfigurationFile()}: ${err}`);
+    getLogger().error(`failed to get current context from ${getContextConfigurationFile()}: ${err}`);
   }
 
   return new Context("", "", "", false);
@@ -579,7 +580,7 @@ export function getMachineId(): string {
     const token = JSON.parse(c);
     machineId = token.MachineID;
   } catch(err: unknown) {
-    console.error(`failed to open ${analyticsFile}: ${err}`);
+    getLogger().error(`failed to open ${analyticsFile}: ${err}`);
     machineId = "";
   }
 
@@ -600,7 +601,7 @@ export async function getContextList(): Promise<RuntimeItem[]>{
       items.push(new RuntimeItem(lines[i].name, "", lines[i].name));
     }
   } catch(err: unknown) {
-    console.error(`failed to get context list from ${getContextConfigurationFile()}: ${err}`);
+    getLogger().error(`failed to get context list from ${getContextConfigurationFile()}: ${err}`);
   }
 
   items.push(new RuntimeItem("Create new context", "Create new context", "create"))

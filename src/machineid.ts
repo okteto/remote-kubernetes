@@ -3,6 +3,7 @@
 import {execaSync} from 'execa';
 import {createHmac} from 'crypto';
 import * as os from 'os';
+import { getLogger } from './logger';
 
 function getCommand(): string {
   switch (os.platform()) {
@@ -43,7 +44,7 @@ export function protect(): string {
     const id = expose(result.stdout);
     return hash(id);
   }catch(err: unknown){
-    console.log(`failed to generate machineid: ${err}`);
+    getLogger().debug(`failed to generate machineid: ${err}`);
     return 'na';
   }
 }
