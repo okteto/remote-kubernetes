@@ -101,14 +101,14 @@ async function installCmd(upgrade: boolean, handleErr: boolean) {
         try {
             
             await okteto.install(progress);
-        } catch(err: any) {
+        } catch(err: unknown) {
             console.error(err)
             reporter.track(events.oktetoInstallFailed);
-            reporter.captureError(`okteto install failed: ${err.message}`, err);
+            reporter.captureError(`okteto install failed: ${getErrorMessage(err)}`, err);
             if (handleErr) {
-                vscode.window.showErrorMessage(`Okteto was not installed: ${err.message}`);
+                vscode.window.showErrorMessage(`Okteto was not installed: ${getErrorMessage(err)}`);
             } else {
-                throw new Error(`Okteto was not installed: ${err.message}`);
+                throw new Error(`Okteto was not installed: ${getErrorMessage(err)}`);
             }
             
         }
@@ -121,8 +121,8 @@ async function installCmd(upgrade: boolean, handleErr: boolean) {
 async function upCmd() {
     try{
         await checkPrereqs(true);
-    } catch(err: any) {   
-        vscode.window.showErrorMessage(err.message);    
+    } catch(err: unknown) {   
+        vscode.window.showErrorMessage(getErrorMessage(err));    
         return;
     }
 
@@ -142,10 +142,10 @@ async function upCmd() {
 
     try {
         m = await manifest.get(manifestPath);
-    } catch(err: any) {
+    } catch(err: unknown) {
         reporter.track(events.manifestLoadFailed);
-        reporter.captureError(`load manifest failed: ${err.message}`, err);
-        return onOktetoFailed(`Okteto: Up failed to load your Okteto manifest: ${err.message}`);
+        reporter.captureError(`load manifest failed: ${getErrorMessage(err)}`, err);
+        return onOktetoFailed(`Okteto: Up failed to load your Okteto manifest: ${getErrorMessage(err)}`);
     }
 
 
@@ -169,10 +169,10 @@ async function upCmd() {
     if (port === 0 || port === undefined) {
         try {
             port = await ssh.getPort();
-        } catch(err: any) {
+        } catch(err: unknown) {
             reporter.track(events.sshPortFailed);
-            reporter.captureError(`ssh.getPort failed: ${err.message}`, err);
-            return onOktetoFailed(`Okteto: Up failed to find an available port: ${err}`, `${namespace}-${service.name}`);
+            reporter.captureError(`ssh.getPort failed: ${getErrorMessage(err)}`, err);
+            return onOktetoFailed(`Okteto: Up failed to find an available port: ${getErrorMessage(err)}`, `${namespace}-${service.name}`);
         }
     }    
 
@@ -181,9 +181,9 @@ async function upCmd() {
 
     try{
         await waitForUp(namespace, service.name, port);
-    } catch(err: any) {
-        reporter.captureError(`okteto up failed: ${err.message}`, err);
-        return onOktetoFailed(err.message, `${namespace}-${service.name}`);
+    } catch(err: unknown) {
+        reporter.captureError(`okteto up failed: ${getErrorMessage(err)}`, err);
+        return onOktetoFailed(getErrorMessage(err), `${namespace}-${service.name}`);
     }
 
     await finalizeUp(namespace,service.name, service.workdir);
@@ -207,9 +207,9 @@ async function waitForUp(namespace: string, name: string, port: number) {
 
               try {
                   await ssh.isReady(port);
-              } catch(err: any) {
+              } catch(err: unknown) {
                   reporter.track(events.sshServiceFailed);
-                  reporter.captureError(`SSH wasn't available after 60 seconds: ${err.message}`, err);
+                  reporter.captureError(`SSH wasn't available after 60 seconds: ${getErrorMessage(err)}`, err);
                   throw new Error(`Okteto: Up command failed, SSH server wasn't available after 60 seconds`);
               }
           });
@@ -278,18 +278,18 @@ async function finalizeUp(namespace: string, name: string, workdir: string) {
         await vscode.commands.executeCommand('vscode.openFolder', uri, true);
         reporter.track(events.upFinished);
         okteto.notifyIfFailed(namespace, name, onOktetoFailed);
-    } catch(err: any) {
-        reporter.captureError(`opensshremotes.openEmptyWindow failed: ${err.message}`, err);
+    } catch(err: unknown) {
+        reporter.captureError(`opensshremotes.openEmptyWindow failed: ${getErrorMessage(err)}`, err);
         reporter.track(events.sshHostSelectionFailed);
-        return onOktetoFailed(`Okteto: Up failed to open the host selector: ${err.message}`, `${namespace}-${name}`);
+        return onOktetoFailed(`Okteto: Up failed to open the host selector: ${getErrorMessage(err)}`, `${namespace}-${name}`);
     }
 }
 
 async function downCmd() {
     try{
         await checkPrereqs(true);
-    } catch(err: any) {   
-        vscode.window.showErrorMessage(err.message);    
+    } catch(err: unknown) {   
+        vscode.window.showErrorMessage(getErrorMessage(err));    
         return;
     }
 
@@ -303,10 +303,10 @@ async function downCmd() {
     
     try {
         m = await manifest.get(manifestPath);
-    } catch(err: any) {
+    } catch(err: unknown) {
         reporter.track(events.manifestLoadFailed);
-        reporter.captureError(`load manifest failed: ${err.message}`, err);
-        return onOktetoFailed(`Okteto: Down failed to load your Okteto manifest: ${err.message}`);
+        reporter.captureError(`load manifest failed: ${getErrorMessage(err)}`, err);
+        return onOktetoFailed(`Okteto: Down failed to load your Okteto manifest: ${getErrorMessage(err)}`);
     }
 
     let service: manifest.Service;
@@ -331,18 +331,18 @@ async function downCmd() {
         activeManifest.delete(manifestPath.fsPath);
         vscode.window.showInformationMessage("Okteto environment deactivated");
         reporter.track(events.downFinished);
-    } catch(err: any) {
+    } catch(err: unknown) {
         reporter.track(events.oktetoDownFailed);
-        reporter.captureError(`okteto down failed: ${err.message}`, err);
-        vscode.window.showErrorMessage(`Okteto: Down failed: ${err.message}`);
+        reporter.captureError(`okteto down failed: ${getErrorMessage(err)}`, err);
+        vscode.window.showErrorMessage(`Okteto: Down failed: ${getErrorMessage(err)}`);
     }
 }
 
 async function deployCmd() {
     try{
         await checkPrereqs(true);
-    } catch(err: any) {   
-        vscode.window.showErrorMessage(err.message);    
+    } catch(err: unknown) {   
+        vscode.window.showErrorMessage(getErrorMessage(err));    
         return;
     }
     
@@ -360,17 +360,17 @@ async function deployCmd() {
         const namespace = await getNamespace();
         reporter.track(events.deploy);
         await okteto.deploy(namespace, manifestPath);
-    } catch(err: any) {
-        reporter.captureError(`okteto deploy failed: ${err.message}`, err);
-        vscode.window.showErrorMessage(`Okteto: Deploy failed: ${err.message}`);
+    } catch(err: unknown) {
+        reporter.captureError(`okteto deploy failed: ${getErrorMessage(err)}`, err);
+        vscode.window.showErrorMessage(`Okteto: Deploy failed: ${getErrorMessage(err)}`);
     }
 }
 
 async function testCmd() {
     try{
         await checkPrereqs(true);
-    } catch(err: any) {   
-        vscode.window.showErrorMessage(err.message);    
+    } catch(err: unknown) {   
+        vscode.window.showErrorMessage(getErrorMessage(err));    
         return;
     }
     
@@ -388,10 +388,10 @@ async function testCmd() {
     
     try {
         m = await manifest.get(manifestPath);
-    } catch(err: any) {
+    } catch(err: unknown) {
         reporter.track(events.manifestLoadFailed);
-        reporter.captureError(`load manifest failed: ${err.message}`, err);
-        return onOktetoFailed(`Okteto: Down failed to load your Okteto manifest: ${err.message}`);
+        reporter.captureError(`load manifest failed: ${getErrorMessage(err)}`, err);
+        return onOktetoFailed(`Okteto: Down failed to load your Okteto manifest: ${getErrorMessage(err)}`);
     }
 
     try {
@@ -403,17 +403,17 @@ async function testCmd() {
         const namespace = await getNamespace();
         reporter.track(events.test);
         await okteto.test(namespace, manifestPath.fsPath, test.name);
-    } catch(err: any) {
-        reporter.captureError(`okteto test failed: ${err.message}`, err);
-        vscode.window.showErrorMessage(`Okteto: Test failed: ${err.message}`);
+    } catch(err: unknown) {
+        reporter.captureError(`okteto test failed: ${getErrorMessage(err)}`, err);
+        vscode.window.showErrorMessage(`Okteto: Test failed: ${getErrorMessage(err)}`);
     }
 }
 
 async function destroyCmd() {
     try{
         await checkPrereqs(true);
-    } catch(err: any) {   
-        vscode.window.showErrorMessage(err.message);    
+    } catch(err: unknown) {   
+        vscode.window.showErrorMessage(getErrorMessage(err));    
         return;
     }
 
@@ -430,9 +430,9 @@ async function destroyCmd() {
     try {
         const namespace = await getNamespace();
         await okteto.destroy(namespace, manifestUri);
-    } catch(err: any) {
-        reporter.captureError(`okteto destroy failed: ${err.message}`, err);
-        vscode.window.showErrorMessage(`Okteto: Destroy failed: ${err.message}`);
+    } catch(err: unknown) {
+        reporter.captureError(`okteto destroy failed: ${getErrorMessage(err)}`, err);
+        vscode.window.showErrorMessage(`Okteto: Destroy failed: ${getErrorMessage(err)}`);
     }
 }
 
@@ -475,8 +475,8 @@ export function getDefaultLocationManifest(): vscode.Uri | undefined{
 async function contextCmd(){
     try{
         await checkPrereqs(false);
-    } catch(err: any) {   
-        vscode.window.showErrorMessage(err.message);    
+    } catch(err: unknown) {   
+        vscode.window.showErrorMessage(getErrorMessage(err));    
         return;
     }
 
@@ -513,8 +513,8 @@ async function contextCmd(){
 async function namespaceCmd(){
     try{
         await checkPrereqs(true);
-    } catch(err: any) {   
-        vscode.window.showErrorMessage(err.message);    
+    } catch(err: unknown) {   
+        vscode.window.showErrorMessage(getErrorMessage(err));    
         return;
     }
 
@@ -601,8 +601,12 @@ async function showManifestTestPicker(tests: manifest.Test[]) : Promise<manifest
     return testItem ? testItem.test : undefined;
 }
 
+interface ManifestQuickPickItem extends vscode.QuickPickItem {
+    uri: vscode.Uri;
+}
+
 async function showActiveManifestPicker() : Promise<vscode.Uri | undefined> {
-    const items: any[] = [];
+    const items: ManifestQuickPickItem[] = [];
     activeManifest.forEach((value, key ) => {
         items.push({
             label: key,
@@ -622,4 +626,11 @@ async function showActiveManifestPicker() : Promise<vscode.Uri | undefined> {
 async function getNamespace(): Promise<string> {
     const ctx = okteto.getContext();
     return ctx.namespace;
+}
+
+function getErrorMessage(err: unknown): string {
+    if (err instanceof Error) {
+        return getErrorMessage(err);
+    }
+    return String(err);
 }
