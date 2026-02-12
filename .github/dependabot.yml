@@ -1,0 +1,92 @@
+# Dependabot configuration for automated dependency updates
+# Documentation: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  # Monitor npm dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    # Group dependency updates to reduce PR noise
+    groups:
+      # Group all minor and patch updates together
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group TypeScript-related packages
+      typescript:
+        patterns:
+          - "typescript"
+          - "@types/*"
+          - "ts-node"
+        update-types:
+          - "major"
+          - "minor"
+          - "patch"
+      # Group ESLint-related packages
+      eslint:
+        patterns:
+          - "eslint"
+          - "@eslint/*"
+          - "typescript-eslint"
+        update-types:
+          - "major"
+          - "minor"
+          - "patch"
+      # Group testing-related packages
+      testing:
+        patterns:
+          - "mocha"
+          - "chai"
+          - "sinon"
+          - "@types/mocha"
+          - "@types/chai"
+          - "@types/sinon"
+        update-types:
+          - "major"
+          - "minor"
+          - "patch"
+    # Limit PRs to avoid overwhelming maintainers
+    open-pull-requests-limit: 5
+    # Add labels for easy filtering
+    labels:
+      - "dependencies"
+      - "automated"
+    # Automatically rebase PRs when base branch updates
+    rebase-strategy: "auto"
+    # Ignore specific dependencies
+    ignore:
+      # @types/vscode must match engines.vscode - updated manually
+      - dependency-name: "@types/vscode"
+      # @types/node must stay on 22.x - updated manually
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      # ESLint v10 not yet supported by typescript-eslint
+      - dependency-name: "eslint"
+        versions: ["10.x"]
+      # @eslint/js must match eslint version
+      - dependency-name: "@eslint/js"
+        versions: ["10.x"]
+
+  # Monitor GitHub Actions versions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    # Group all GitHub Actions updates together
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    open-pull-requests-limit: 2
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "automated"
+    rebase-strategy: "auto"
