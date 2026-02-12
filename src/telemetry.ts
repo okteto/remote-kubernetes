@@ -4,6 +4,7 @@ import * as mixpanel from 'mixpanel';
 import * as vscode from 'vscode';
 import * as os from 'os';
 import * as sentry from '@sentry/node';
+import { getLogger } from './logger';
 
 const dsn = 'https://3becafe2cb9040fe9b43a353a1f524c6@sentry.io/1802969';
 const mpKey = '564133a36e3c39ecedf700669282c315';
@@ -129,7 +130,7 @@ export class Reporter {
             machine_id: this.machineId,
          }, (err)=> {
             if (err) {
-                console.error(`failed to send telemetry: ${err}`);
+                getLogger().debug(`failed to send telemetry: ${err}`);
                 sentry.captureException(err);
             }
 
@@ -139,7 +140,7 @@ export class Reporter {
     }
 
     public captureError(message: string, err: unknown): void {
-        console.error(message);
+        getLogger().error(message);
         if (this.enabled) {
             sentry.captureException(err);
         }

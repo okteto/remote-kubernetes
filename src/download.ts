@@ -6,6 +6,7 @@ import got from'got';
 import { pipeline } from 'stream/promises';
 import path from 'path';
 import * as vscode from 'vscode';
+import { getLogger } from './logger';
 
 export const minimum = '3.16.0';
 
@@ -62,15 +63,15 @@ export async function binary(source: string, destination: string, progress: vsco
       progress.report({increment: reportedProgress, message: ''});
     })
     .on("error", (error) => {
-      console.error(`Download failed: ${error.message}`);
+      getLogger().error(`Download failed: ${error.message}`);
     });
-  
+
   fileWriterStream
   .on("error", (error) => {
-    console.error(`Could not write file to system: ${error.message}`);
+    getLogger().error(`Could not write file to system: ${error.message}`);
   })
   .on("finish", () => {
-    console.log(`File downloaded to ${destination}`);
+    getLogger().info(`File downloaded to ${destination}`);
   });
 
   await pipeline(downloadStream, fileWriterStream);
