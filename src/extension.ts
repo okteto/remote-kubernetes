@@ -630,7 +630,7 @@ async function getNamespace(): Promise<string> {
 
 function getErrorMessage(err: unknown): string {
     if (err instanceof Error) {
-        return getErrorMessage(err);
+        return err.message;
     }
     return String(err);
 }
