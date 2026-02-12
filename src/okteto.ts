@@ -108,16 +108,16 @@ export async function install(progress: vscode.Progress<{increment: number, mess
   try {
     await promises.mkdir(folder, {mode: 0o700, recursive: true});
     console.log(`created ${folder}`);
-  } catch(err: any) {
+  } catch(err: unknown) {
     throw new Error(`failed to create dir: ${getErrorMessage(err)}`);
   }
 
 
   try {
     await download.binary(source.url, downloadPath, progress);
-  } catch(err: any) {
+  } catch(err: unknown) {
     console.error(`download fail: ${err}`);
-    if (err.code === 'EBUSY'){
+    if (hasErrorCode(err) && err.code === 'EBUSY'){
       throw new Error(`failed to install okteto, ${installPath} is in use`);
     }
 
@@ -128,13 +128,13 @@ export async function install(progress: vscode.Progress<{increment: number, mess
     if (fs.existsSync(installPath)) {
       fs.unlinkSync(installPath);
     }
-  } catch(err: any) {
+  } catch(err: unknown) {
     console.error(`delete fail: ${err}`);
   }
 
   try {
     fs.renameSync(downloadPath, installPath);
-  } catch(err: any) {
+  } catch(err: unknown) {
     console.error(`rename fail: ${err}`);
     throw new Error(`failed to download ${source} into ${installPath}: ${getErrorMessage(err)}`);
   }
@@ -143,7 +143,7 @@ export async function install(progress: vscode.Progress<{increment: number, mess
   if (source.chmod) {
     try {
       await execa('chmod', ['a+x', installPath]);
-    } catch(err: any) {
+    } catch(err: unknown) {
       throw new Error(`failed to chmod ${installPath}: ${getErrorMessage(err)}`);
     }
   }
@@ -206,9 +206,10 @@ export async function down(manifest: vscode.Uri, namespace: string, name: string
   
   try{
     await r;
-  } catch (err: any) {
-    console.error(`${err}: ${err.stdout}`);
-    const message = extractMessage(err.stdout);    
+  } catch (err: unknown) {
+    const stdout = isExecaError(err) ? err.stdout : '';
+    console.error(`${err}: ${stdout}`);
+    const message = extractMessage(stdout || '');
     throw new Error(message);
   }
 
@@ -381,8 +382,8 @@ export async function getState(namespace: string, name: string): Promise<{state:
 
   try{
     await promises.access(p);
-  } catch (err: any) {
-    if (err.code !== 'ENOENT') {
+  } catch (err: unknown) {
+    if (!hasErrorCode(err) || err.code !== 'ENOENT') {
       console.log(`failed to read state file: ${err}`);
     }
 
@@ -394,7 +395,7 @@ export async function getState(namespace: string, name: string): Promise<{state:
   try {
     const buffer = await promises.readFile(p, {encoding: 'utf8'});
     c = buffer.toString();
-  } catch(err: any) {
+  } catch(err: unknown) {
     console.error(`failed to open ${p}: ${err}`);
     return {state: state.unknown, message: ""};
   }
@@ -422,8 +423,8 @@ export async function isRunning(namespace: string, name: string): Promise<boolea
 
   try{
     await promises.access(p);
-  } catch (err: any) {
-    if (err.code === 'ENOENT') {
+  } catch (err: unknown) {
+    if (hasErrorCode(err) && err.code === 'ENOENT') {
       console.error(`${p} doesn't exist`)
       return false;
     }
@@ -436,7 +437,7 @@ export async function isRunning(namespace: string, name: string): Promise<boolea
   try {
     const buffer = await promises.readFile(p, {encoding: 'utf8'});
     c = buffer.toString();
-  } catch(err: any) {
+  } catch(err: unknown) {
     console.error(`failed to open ${p}: ${err}`);
     return true;
   }
@@ -456,7 +457,7 @@ export async function isRunning(namespace: string, name: string): Promise<boolea
 
     console.log(`pid-${parsed} is running`)
     return true;
-  } catch(err: any) {
+  } catch(err: unknown) {
     console.error(`failed to list processes: ${err}`);
     return true;
   }
@@ -501,15 +502,15 @@ function cleanState(namespace: string, name:string) {
 
   try{
     fs.unlinkSync(p);
-  }catch(err: any) {
-    if (err.code !== 'ENOENT'){
+  }catch(err: unknown) {
+    if (!hasErrorCode(err) || err.code !== 'ENOENT'){
       console.error(`failed to delete ${p}: ${err}`);
     }
   }
 }
 
 function getBinary(): string {
-  let binary = vscode.workspace.getConfiguration('okteto').get<string>('binary');
+  const binary = vscode.workspace.getConfiguration('okteto').get<string>('binary');
   if (binary) {
     if (binary.trim().length > 0) {
       return binary;
@@ -520,7 +521,7 @@ function getBinary(): string {
 }
 
 export function getRemoteSSH(): boolean {
-  let remoteSSH = vscode.workspace.getConfiguration('okteto').get<boolean>('remoteSSH');
+  const remoteSSH = vscode.workspace.getConfiguration('okteto').get<boolean>('remoteSSH');
   if (remoteSSH === undefined) {
     return true;
   }
@@ -557,7 +558,7 @@ export function getContext(): Context {
     }
 
     return {id: ctx.id, name: ctx.name, namespace: ctx.namespace, isOkteto: ctx.isOkteto};
-  } catch(err: any) {
+  } catch(err: unknown) {
     console.error(`failed to get current context from ${getContextConfigurationFile()}: ${err}`);
   }
 
@@ -571,7 +572,7 @@ export function getMachineId(): string {
     const c = fs.readFileSync(analyticsFile, {encoding: 'utf8'});
     const token = JSON.parse(c);
     machineId = token.MachineID;
-  } catch(err: any) {
+  } catch(err: unknown) {
     console.error(`failed to open ${analyticsFile}: ${err}`);
     machineId = "";
   }
@@ -592,7 +593,7 @@ export async function getContextList(): Promise<RuntimeItem[]>{
     for(let i = 0; i < lines.length; i++) {
       items.push(new RuntimeItem(lines[i].name, "", lines[i].name));
     }
-  } catch(err: any) {
+  } catch(err: unknown) {
     console.error(`failed to get context list from ${getContextConfigurationFile()}: ${err}`);
   }
 
@@ -625,10 +626,28 @@ function extractMessage(error :string):string {
   return message;
 }
 
-function getErrorMessage(err: any): string {
+function getErrorMessage(err: unknown): string {
   if (err instanceof Error) {
     return err.message;
   }
 
   return JSON.stringify(err);
+}
+
+interface ErrorWithCode {
+  code: string;
+}
+
+function hasErrorCode(err: unknown): err is ErrorWithCode {
+  return typeof err === 'object' && err !== null && 'code' in err;
+}
+
+interface ExecaError extends Error {
+  code?: string;
+  stdout?: string;
+  stderr?: string;
+}
+
+function isExecaError(err: unknown): err is ExecaError {
+  return err instanceof Error && ('stdout' in err || 'stderr' in err);
 }

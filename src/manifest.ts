@@ -14,7 +14,9 @@ export class Manifest {
     constructor(public services: Array<Service>, public tests: Array<Test>) {}
 }
 
-function isDockerCompose(manifest: any): boolean {
+type ManifestData = Record<string, unknown>;
+
+function isDockerCompose(manifest: ManifestData): boolean {
     if (manifest.services) {
         const s = manifest.services;
         for (const _key in s){
@@ -25,27 +27,29 @@ function isDockerCompose(manifest: any): boolean {
     return false;
 }
 
-function getComposeServices(manifest: any): Service[] {
+function getComposeServices(manifest: ManifestData): Service[] {
 
     const volumes = new Map<string, boolean>();
-    if (manifest.volumes) {
-        for (const k in manifest.volumes) {
+    if (manifest.volumes && typeof manifest.volumes === 'object') {
+        for (const k in manifest.volumes as Record<string, unknown>) {
             volumes.set(k, true);
         }
     }
 
     const result = [];
-    for (const k in manifest.services){
-        const svc = manifest.services[k];
-        if (svc.volumes && svc.volumes.length > 0) {
-            for (const v of svc.volumes) {
-                const s = v.split(':');
-                
-                if (s.length === 2) {
-                    // if the volume is declared, it's not used for sync
-                    if (!volumes.has(s[0])) {
-                        result.push(new Service(k, s[1], 0));
-                    }        
+    if (manifest.services && typeof manifest.services === 'object') {
+        for (const k in manifest.services as Record<string, unknown>){
+            const svc = (manifest.services as Record<string, any>)[k];
+            if (svc.volumes && Array.isArray(svc.volumes) && svc.volumes.length > 0) {
+                for (const v of svc.volumes) {
+                    const s = String(v).split(':');
+
+                    if (s.length === 2) {
+                        // if the volume is declared, it's not used for sync
+                        if (!volumes.has(s[0])) {
+                            result.push(new Service(k, s[1], 0));
+                        }
+                    }
                 }
             }
         }
@@ -56,7 +60,7 @@ function getComposeServices(manifest: any): Service[] {
     return result;
 }
 
-function isOktetoV2(manifest: any): boolean {
+function isOktetoV2(manifest: ManifestData): boolean {
     if (manifest.dev) {
         return true;
     }
@@ -76,27 +80,29 @@ function isOktetoV2(manifest: any): boolean {
     return false;
 }
 
-function getV2Services(manifest: any): Service[] {
+function getV2Services(manifest: ManifestData): Service[] {
     const result: Array<Service> = [];
-    for (const k in manifest.dev) {
-        const svc = manifest.dev[k];
-        const workdir = getWorkdir(svc);
-        const m = new Service(k, workdir, svc.remote);
-        result.push(m);
+    if (manifest.dev && typeof manifest.dev === 'object') {
+        for (const k in manifest.dev as Record<string, unknown>) {
+            const svc = (manifest.dev as Record<string, any>)[k];
+            const workdir = getWorkdir(svc);
+            const m = new Service(k, workdir, svc.remote);
+            result.push(m);
+        }
     }
 
     result.sort((a, b) => { return a.name.localeCompare(b.name)});
-        
+
     return result;
 }
 
-function getWorkdir(devBlock :any): string {
-    if (devBlock.workdir) {
+function getWorkdir(devBlock: Record<string, any>): string {
+    if (devBlock.workdir && typeof devBlock.workdir === 'string') {
         return devBlock.workdir;
     }
 
-    if (devBlock.sync && devBlock.sync.length > 0) {
-        const sync = devBlock.sync[0];
+    if (devBlock.sync && Array.isArray(devBlock.sync) && devBlock.sync.length > 0) {
+        const sync = String(devBlock.sync[0]);
         const w = sync.split(":");
         return w[w.length - 1];
     }
@@ -104,10 +110,10 @@ function getWorkdir(devBlock :any): string {
     return "";
 }
 
-function getTests(manifest :any): Array<Test> {
+function getTests(manifest: ManifestData): Array<Test> {
     const tests: Test[] = [];
-    if (manifest.test){
-        for (const t in manifest.test) {
+    if (manifest.test && typeof manifest.test === 'object'){
+        for (const t in manifest.test as Record<string, unknown>) {
             tests.push(new Test(t));
         }
     }
@@ -115,19 +121,19 @@ function getTests(manifest :any): Array<Test> {
     return tests
 }
 
-function parseV2Manifest(manifest: any): Manifest {
+function parseV2Manifest(manifest: ManifestData): Manifest {
     const services = getV2Services(manifest)
     const tests = getTests(manifest)
     return new Manifest(services, tests);
 }
 
-function parseComposeManifest(manifest: any): Manifest {
+function parseComposeManifest(manifest: ManifestData): Manifest {
     const services = getComposeServices(manifest)
     return new Manifest(services, []);
 }
 
 export function parseManifest(parsed: yaml.Document.Parsed): Manifest  {
-    const manifest = parsed.toJSON();
+    const manifest = parsed.toJSON() as ManifestData;
 
     if (isOktetoV2(manifest)) {
         return parseV2Manifest(manifest);
