@@ -11,12 +11,13 @@ This is a **VS Code extension** called "Remote - Kubernetes" that wraps the [Okt
 ## Quick Reference
 
 ```bash
-npm run compile       # Build (development mode via webpack)
+npm run compile       # Build (development mode via esbuild)
 npm test              # Run unit tests (compiles first via pretest hook)
 npm run test:e2e      # Run e2e tests (compiles with tsc, launches VS Code)
+npm run lint          # Run ESLint
 npm run watch         # Build + watch for changes
 npm run package       # Create .vsix extension package
-npm run ci            # Full CI pipeline: install + test + package
+npm run ci            # Full CI pipeline: install + lint + test + package
 ```
 
 ## Architecture
@@ -35,10 +36,16 @@ src/
 ├── paths.ts          # Git Bash path conversion (Windows support)
 ├── typings/          # TypeScript type definitions
 └── test/
+    ├── mock/
+    │   └── vscode.ts            # VS Code API mock for unit tests
     ├── suite/                   # Unit tests (run in plain Node.js)
     │   ├── manifest.test.ts
     │   ├── paths.test.ts
     │   ├── machineid.test.ts
+    │   ├── okteto.test.ts
+    │   ├── download.test.ts
+    │   ├── ssh.test.ts
+    │   ├── telemetry.test.ts
     │   └── artifacts/           # Test fixture YAML files
     └── e2e/                     # End-to-end tests (run inside VS Code)
         ├── runTest.ts           # Launcher: downloads VS Code via @vscode/test-electron
@@ -48,11 +55,11 @@ src/
 
 ### Build Pipeline
 
-- **Bundler:** Webpack (`webpack.config.js`)
+- **Bundler:** esbuild (`esbuild.js`)
 - **Entry:** `src/extension.ts` → **Output:** `dist/extension.js` (CommonJS, Node.js target)
 - **TypeScript:** Strict mode, ES6 target, NodeNext modules
 - The `vscode` module is externalized (provided by VS Code at runtime)
-- **E2E tests use `tsc`** (not webpack) via `tsconfig.test.json` because `@vscode/test-electron` needs individual `.js` files, not a bundle. The `tsconfig.test.json` extends the main config and adds `skipLibCheck: true` to avoid transitive type conflicts from `@types/eslint-scope` and `@types/glob`.
+- **E2E tests use `tsc`** (not esbuild) via `tsconfig.test.json` because `@vscode/test-electron` needs individual `.js` files, not a bundle. The `tsconfig.test.json` extends the main config and adds `skipLibCheck: true` to avoid transitive type conflicts from `@types/eslint-scope` and `@types/glob`.
 
 ### Key Extension Commands
 
@@ -81,13 +88,15 @@ Defined in `package.json` under `contributes.configuration`:
 
 ### Unit Tests
 
-**Framework:** Mocha + Chai + ts-node
+**Framework:** Mocha + Chai + Sinon + ts-node
 
 ```bash
-npm test    # Runs: mocha -r ts-node/register src/test/suite/*.test.ts
+npm test    # Runs: mocha -r ts-node/register -r src/test/mock/vscode.ts src/test/suite/*.test.ts
 ```
 
 Unit tests are plain TypeScript files in `src/test/suite/`. They do **not** require a running VS Code instance. Test fixtures (YAML manifests) live in `src/test/suite/artifacts/`.
+
+The `vscode` module is mocked via `src/test/mock/vscode.ts`, which intercepts Node's `Module._resolveFilename` and `Module._load` to provide a stub when any module imports `vscode`. This is required because modules like `okteto.ts`, `download.ts`, and `telemetry.ts` use `vscode` at runtime (not just for types).
 
 ### End-to-End Tests
 
@@ -103,9 +112,25 @@ The e2e Mocha bootstrap is in `src/test/e2e/index.ts` and uses the **TDD** UI (`
 
 ### Adding Tests
 
-**Unit test:** Create `src/test/suite/<name>.test.ts`, use Chai `expect` assertions with BDD syntax (`describe`/`it`).
+**Unit test:** Create `src/test/suite/<name>.test.ts`, use Chai `expect` assertions with BDD syntax (`describe`/`it`). If the module under test imports `vscode` at runtime, the mock is already loaded via the `-r src/test/mock/vscode.ts` flag in the test script.
 
 **E2e test:** Create `src/test/e2e/<name>.test.ts`, use Node.js `assert` with TDD syntax (`suite`/`test`). The file will be auto-discovered by the glob in `index.ts`.
+
+## Linting
+
+**Framework:** ESLint v9 with typescript-eslint (flat config format)
+
+```bash
+npm run lint    # Runs: eslint src/
+```
+
+Configuration is in `eslint.config.mjs`. Key rules:
+- `no-var: error`, `prefer-const: warn`, `eqeqeq: always`, `curly: error`
+- `@typescript-eslint/no-explicit-any: warn` (not error — too many existing uses)
+- `@typescript-eslint/no-require-imports: off` (needed for CommonJS interop)
+- Ignores: `dist/`, `out/`, `node_modules/`, `*.js`, `*.mjs`
+
+Linting is included in the CI pipeline (`npm run ci`).
 
 ## Code Conventions
 
@@ -115,8 +140,10 @@ The e2e Mocha bootstrap is in `src/test/e2e/index.ts` and uses the **TDD** UI (`
 - **Equality:** Use `===` (no `==`)
 - **Curly braces:** Always required for control structures
 - **Async:** Use async/await throughout (no raw Promises)
-- **Linting:** ESLint v10; legacy `tslint.json` still exists but TSLint is deprecated
-- **Module system:** ESM-style imports compiled to CommonJS via webpack
+- **Linting:** ESLint v9 with typescript-eslint flat config
+- **Module system:** ESM-style imports compiled to CommonJS via esbuild
+- **Telemetry:** Respects `vscode.env.isTelemetryEnabled` and `onDidChangeTelemetryEnabled`
+- **Lifecycle:** Extension exports both `activate()` and `deactivate()` for proper cleanup
 
 ## Dependencies of Note
 
@@ -135,6 +162,7 @@ The e2e Mocha bootstrap is in `src/test/e2e/index.ts` and uses the **TDD** UI (`
 ## CI/CD
 
 - **CI:** GitHub Actions (`.github/workflows/nodejs.yml`) - runs on every push, Node 22, Ubuntu
+- **Pipeline:** `npm ci → npm run lint → npm run test → npm run package`
 - **Publish:** `.github/workflows/publish.yml` - triggered on GitHub release, publishes to VS Code Marketplace via `vsce`
 - **Security:** CodeQL analysis on PRs to main + weekly schedule
 
