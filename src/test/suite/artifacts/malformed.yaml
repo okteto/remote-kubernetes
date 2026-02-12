@@ -1,0 +1,5 @@
+dev:
+  api:
+    image: okteto/vote:1
+    command: ["python", "app.py"
+    # Missing closing bracket - invalid YAML
