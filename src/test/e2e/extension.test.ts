@@ -30,4 +30,11 @@ suite('Extension', () => {
 			assert.ok(allCommands.includes(cmd), `Command "${cmd}" not registered`);
 		}
 	});
+
+	test('should have correct extension ID', () => {
+		const ext = vscode.extensions.getExtension('okteto.remote-kubernetes');
+		assert.ok(ext, 'Extension not found');
+		// Extension ID includes publisher: Publisher.extensionName
+		assert.strictEqual(ext.id, 'Okteto.remote-kubernetes');
+	});
 });
