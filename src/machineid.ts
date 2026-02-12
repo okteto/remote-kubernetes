@@ -34,6 +34,12 @@ function getWin32RegBinPath(): string {
   return '%windir%\\System32';
 }
 
+/**
+ * Gets a protected (hashed) machine ID for telemetry.
+ * Executes platform-specific commands to retrieve a unique machine identifier,
+ * then hashes it for anonymization.
+ * @returns Anonymized machine identifier, or 'na' if retrieval fails
+ */
 export function protect(): string {
   try{
     const result = execaSync(getCommand(), {encoding: 'utf8'});
@@ -49,6 +55,12 @@ export function protect(): string {
   }
 }
 
+/**
+ * Hashes a string using HMAC-SHA256 for anonymization.
+ * Uses 'okteto' as the HMAC key for consistent hashing.
+ * @param id - The string to hash
+ * @returns The hashed value as a hex string
+ */
 export function hash(id: string): string {
   return createHmac('sha256', id).update("okteto").digest('hex');
 }

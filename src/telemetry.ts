@@ -9,6 +9,10 @@ import { getLogger } from './logger';
 const dsn = 'https://3becafe2cb9040fe9b43a353a1f524c6@sentry.io/1802969';
 const mpKey = '564133a36e3c39ecedf700669282c315';
 
+/**
+ * Telemetry event names for tracking user actions.
+ * Used with Reporter.track() to log user interactions with the extension.
+ */
 export const events = {
     activated: 'activated',
     install: 'cmd_install',
@@ -40,6 +44,11 @@ export const events = {
     sshHostSelectionFailed: 'ssh_host_selection_failed',
   };
 
+/**
+ * Telemetry reporter for Okteto extension.
+ * Handles Sentry error reporting and Mixpanel event tracking.
+ * Respects VS Code's telemetry settings and the extension's own telemetry setting.
+ */
 export class Reporter {
     private enabled: boolean = true;
     private distinctId: string;
@@ -47,6 +56,12 @@ export class Reporter {
     private mp: mixpanel.Mixpanel;
     private telemetryListener: vscode.Disposable;
 
+    /**
+     * Creates a new telemetry reporter.
+     * @param extensionVersion - Extension version for event tracking
+     * @param oktetoId - Okteto context ID for user identification
+     * @param machineId - Machine ID for anonymous tracking
+     */
     constructor(private extensionVersion: string, oktetoId: string, machineId: string) {
         this.mp = mixpanel.init(mpKey, {});
         this.machineId = machineId;
@@ -106,6 +121,12 @@ export class Reporter {
 
     }
 
+    /**
+     * Tracks a telemetry event.
+     * Sends the event to Mixpanel if telemetry is enabled.
+     * @param event - Event name from the events constant
+     * @returns Promise that resolves when the event has been sent
+     */
     public track(event: string): Promise<void> {
       return new Promise<void>(resolve => {
           if (!this.enabled) {
@@ -139,6 +160,12 @@ export class Reporter {
       });
     }
 
+    /**
+     * Captures an error for reporting.
+     * Logs the error and sends it to Sentry if telemetry is enabled.
+     * @param message - Human-readable error message
+     * @param err - The error object to report
+     */
     public captureError(message: string, err: unknown): void {
         getLogger().error(message);
         if (this.enabled) {
@@ -146,6 +173,10 @@ export class Reporter {
         }
     }
 
+    /**
+     * Disposes of the telemetry reporter.
+     * Cleans up the telemetry change listener.
+     */
     public dispose(): void {
         this.telemetryListener.dispose();
     }

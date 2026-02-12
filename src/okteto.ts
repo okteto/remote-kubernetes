@@ -34,6 +34,9 @@ export const state = {
   failed: 'failed',
 };
 
+/**
+ * Represents an Okteto context with cluster and namespace information.
+ */
 export class Context {
   isOkteto: boolean = false;
   id: string = "";
@@ -50,6 +53,10 @@ export class Context {
 
 const isActive = new Map<string, boolean>();
 
+/**
+ * Checks if the Okteto CLI needs to be installed or upgraded.
+ * @returns Object indicating whether installation or upgrade is needed
+ */
 export async function needsInstall(): Promise<{install: boolean, upgrade: boolean}>{
   const binary = getBinary();
 
@@ -99,6 +106,12 @@ async function getVersion(binary: string): Promise<string | undefined> {
   return undefined;
 }
 
+/**
+ * Installs the Okteto CLI binary.
+ * Downloads the CLI from the official source and installs it to the platform-specific location.
+ * @param progress - VS Code progress reporter for showing installation progress
+ * @throws Error if installation fails
+ */
 export async function install(progress: vscode.Progress<{increment: number, message: string}>) {
   const source = download.getOktetoDownloadInfo();
   const installPath = download.getInstallPath();
@@ -155,6 +168,14 @@ export async function install(progress: vscode.Progress<{increment: number, mess
   }
 }
 
+/**
+ * Starts an Okteto development environment.
+ * Opens a terminal and runs `okteto up` with the specified manifest.
+ * @param manifest - URI of the Okteto manifest file
+ * @param namespace - Kubernetes namespace to use
+ * @param name - Name of the service to develop
+ * @param port - SSH port for the development container
+ */
 export function up(manifest: vscode.Uri, namespace: string, name: string, port: number) {
   getLogger().info(`okteto up ${manifest.fsPath}`);
   disposeTerminal(`${terminalName}-${namespace}-${name}`);
@@ -194,6 +215,14 @@ export function up(manifest: vscode.Uri, namespace: string, name: string, port: 
   term.sendText(cmd, true);
 }
 
+/**
+ * Stops an Okteto development environment.
+ * Runs `okteto down` to clean up the development container and resources.
+ * @param manifest - URI of the Okteto manifest file
+ * @param namespace - Kubernetes namespace
+ * @param name - Name of the service
+ * @throws Error if the down command fails
+ */
 export async function down(manifest: vscode.Uri, namespace: string, name: string) {
   isActive.set(`${terminalName}-${namespace}-${name}`, false);
   disposeTerminal(`${terminalName}-${namespace}-${name}`);
@@ -217,6 +246,12 @@ export async function down(manifest: vscode.Uri, namespace: string, name: string
   getLogger().info('okteto down completed');
 }
 
+/**
+ * Deploys an Okteto development environment.
+ * Opens a terminal and runs `okteto deploy` with the specified manifest.
+ * @param namespace - Kubernetes namespace
+ * @param manifestPath - Path to the Okteto manifest file
+ */
 export async function deploy(namespace: string, manifestPath: string) {
   const name = `${terminalName}-${namespace}-deploy`;
   disposeTerminal(name);
@@ -237,6 +272,12 @@ export async function deploy(namespace: string, manifestPath: string) {
   getLogger().info('okteto deploy completed');
 }
 
+/**
+ * Destroys an Okteto development environment.
+ * Opens a terminal and runs `okteto destroy` to remove all deployed resources.
+ * @param namespace - Kubernetes namespace
+ * @param manifestUri - URI of the Okteto manifest file
+ */
 export async function destroy(namespace: string, manifestUri: vscode.Uri) {
   const name = `${terminalName}-${namespace}-destroy`;
   disposeTerminal(name);
@@ -257,6 +298,13 @@ export async function destroy(namespace: string, manifestUri: vscode.Uri) {
   getLogger().info('okteto destroy completed');
 }
 
+/**
+ * Runs tests in an Okteto development environment.
+ * Opens a terminal and runs `okteto test` with the specified test name.
+ * @param namespace - Kubernetes namespace
+ * @param manifestPath - Path to the Okteto manifest file
+ * @param test - Name of the test to run (empty string for all tests)
+ */
 export async function test(namespace: string, manifestPath: string, test: string) {
   const name = `${terminalName}-${namespace}-test`;
   disposeTerminal(name);
@@ -299,6 +347,12 @@ function waitForConfigChange(
   });
 }
 
+/**
+ * Sets the Okteto context for all commands.
+ * Opens a terminal and runs `okteto context use` to switch contexts.
+ * @param context - Name of the context to use
+ * @returns Promise that resolves to true if the context was set successfully
+ */
 export async function setContext(context: string) : Promise<boolean>{
   const name = `${terminalName}-context`;
   disposeTerminal(name);
@@ -328,6 +382,12 @@ export async function setContext(context: string) : Promise<boolean>{
   return result;
 }
 
+/**
+ * Sets the Okteto namespace for all commands.
+ * Opens a terminal and runs `okteto namespace use` to switch namespaces.
+ * @param namespace - Name of the namespace to use
+ * @returns Promise that resolves when the namespace has been set
+ */
 export async function setNamespace(namespace: string) {
   const name = `${terminalName}-context`;
   disposeTerminal(name);
@@ -359,7 +419,11 @@ export async function setNamespace(namespace: string) {
   return result;
 }
 
-
+/**
+ * Gets user-friendly state messages for Okteto operations.
+ * Maps internal state codes to descriptive messages shown to users.
+ * @returns Map of state codes to display messages
+ */
 export function getStateMessages(): Map<string, string> {
   const messages = new Map<string, string>();
   messages.set(state.starting, "Starting your development environment...");
@@ -384,6 +448,13 @@ function getContextConfigurationFile(): string {
   return path.join(os.homedir(), oktetoFolder, contextFolder, contextFile);
 }
 
+/**
+ * Gets the current state of an Okteto development environment.
+ * Reads the state file to determine if the environment is starting, ready, or failed.
+ * @param namespace - Kubernetes namespace
+ * @param name - Name of the service
+ * @returns Object with state and error message (if any)
+ */
 export async function getState(namespace: string, name: string): Promise<{state: string, message: string}> {
   const p = getStateFile(namespace, name);
 
@@ -425,6 +496,13 @@ export async function getState(namespace: string, name: string): Promise<{state:
   }
 }
 
+/**
+ * Checks if an Okteto up process is currently running.
+ * Reads the PID file and checks if the process exists.
+ * @param namespace - Kubernetes namespace
+ * @param name - Name of the service
+ * @returns true if the process is running, false otherwise
+ */
 export async function isRunning(namespace: string, name: string): Promise<boolean> {
   const p = getPidFile(namespace, name);
 
@@ -470,6 +548,12 @@ export async function isRunning(namespace: string, name: string): Promise<boolea
   }
 }
 
+/**
+ * Splits a state string into state code and error message.
+ * State format: "state:error message"
+ * @param state - The state string to split
+ * @returns Object with separated state code and message
+ */
 export function splitStateError(state: string): {state: string, message: string} {
   const splitted = state.split(':');
 
@@ -483,6 +567,13 @@ export function splitStateError(state: string): {state: string, message: string}
   return {state: st, message: msg};
 }
 
+/**
+ * Monitors an Okteto up process and notifies if it fails.
+ * Polls the state file every second and calls the callback if failure is detected.
+ * @param namespace - Kubernetes namespace
+ * @param name - Name of the service
+ * @param callback - Function to call if the process fails, receives terminal suffix and error message
+ */
 export async function notifyIfFailed(namespace: string, name:string, callback: (n: string, m: string) => void){
   const id = setInterval(async () => {
     const c = await getState(namespace, name);
@@ -527,6 +618,10 @@ function getBinary(): string {
   return download.getInstallPath();
 }
 
+/**
+ * Gets the Remote-SSH mode setting from VS Code configuration.
+ * @returns true if Remote-SSH mode is enabled (default), false otherwise
+ */
 export function getRemoteSSH(): boolean {
   const remoteSSH = vscode.workspace.getConfiguration('okteto').get<boolean>('remoteSSH');
   if (remoteSSH === undefined) {
@@ -546,6 +641,10 @@ function disposeTerminal(terminalName: string){
   });
 }
 
+/**
+ * Shows the Okteto terminal with the specified suffix.
+ * @param terminalNameSuffix - The suffix to match in the terminal name (e.g., "namespace-service")
+ */
 export function showTerminal(terminalNameSuffix: string){
   vscode.window.terminals.forEach((t) => {
     if (t.name === `${terminalName}-${terminalNameSuffix}`) {
@@ -554,6 +653,11 @@ export function showTerminal(terminalNameSuffix: string){
   });
 }
 
+/**
+ * Gets the current Okteto context from the config file.
+ * Returns context information including name, namespace, and ID.
+ * @returns The current Okteto context
+ */
 export function getContext(): Context {
   try {
     const c = fs.readFileSync(getContextConfigurationFile(), {encoding: 'utf8'});
@@ -572,6 +676,12 @@ export function getContext(): Context {
   return new Context("", "", "", false);
 }
 
+/**
+ * Gets the machine ID for telemetry purposes.
+ * Returns a hashed and anonymized machine identifier from the Okteto analytics file.
+ * Falls back to generating a new protected ID if the file doesn't exist.
+ * @returns The protected machine ID string
+ */
 export function getMachineId(): string {
   const analyticsFile =  path.join(os.homedir(), oktetoFolder,  "analytics.json");
   let machineId = "";
@@ -591,6 +701,11 @@ export function getMachineId(): string {
   return machineId;
 }
 
+/**
+ * Gets the list of available Okteto contexts.
+ * Runs `okteto context list` and parses the JSON output.
+ * @returns Array of context items for the quick pick dialog
+ */
 export async function getContextList(): Promise<RuntimeItem[]>{
   const items = new Array<RuntimeItem>();
 
