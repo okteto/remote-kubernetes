@@ -78,4 +78,22 @@ describe('splitStateError', () => {
     expect(result.state).to.equal('');
     expect(result.message).to.equal('');
   });
+
+  it('should handle state with empty error message', () => {
+    const result = okteto.splitStateError('failed:');
+    expect(result.state).to.equal('failed');
+    expect(result.message).to.equal('');
+  });
+
+  it('should handle multiple colons in state name', () => {
+    const result = okteto.splitStateError('custom:state:name:error message here');
+    expect(result.state).to.equal('custom');
+    expect(result.message).to.equal('state:name:error message here');
+  });
+
+  it('should handle whitespace in error message', () => {
+    const result = okteto.splitStateError('failed:  spaces  everywhere  ');
+    expect(result.state).to.equal('failed');
+    expect(result.message).to.equal('  spaces  everywhere  ');
+  });
 });

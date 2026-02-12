@@ -23,6 +23,31 @@ describe('toGitBash', () => {
     expect(result).to.equal('okteto');
   });
 
+  it('should handle uppercase drive letter', () => {
+    const url = 'D:\\Projects\\MyApp';
+    const result = paths.toGitBash(url);
+    expect(result).to.equal('/D/Projects/MyApp');
+  });
+
+  it('should handle path with spaces', () => {
+    const url = 'c:\\Program Files\\My App\\app.exe';
+    const result = paths.toGitBash(url);
+    expect(result).to.equal('/c/Program Files/My App/app.exe');
+  });
+
+  it('should handle forward slashes (already Unix-style)', () => {
+    const url = '/usr/local/bin/okteto';
+    const result = paths.toGitBash(url);
+    expect(result).to.equal('/usr/local/bin/okteto');
+  });
+
+  it('should handle empty string', () => {
+    const url = '';
+    const result = paths.toGitBash(url);
+    // path.posix.join() with empty array returns '.'
+    expect(result).to.equal('.');
+  });
+
 });
 
 describe('sortFilePaths', () => {
