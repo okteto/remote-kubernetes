@@ -3,7 +3,7 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import got from'got';
-import { pipeline } from 'stream';
+import { pipeline } from 'stream/promises';
 import path from 'path';
 import * as vscode from 'vscode';
 
@@ -73,16 +73,8 @@ export async function binary(source: string, destination: string, progress: vsco
     console.log(`File downloaded to ${destination}`);
   });
 
-  return new Promise((resolve, reject) =>{
-    pipeline(downloadStream, fileWriterStream, async(err)=>{
-        if (err) {
-            reject(err);
-        } else {
-            resolve(true);
-
-        }
-    });
-  });    
+  await pipeline(downloadStream, fileWriterStream);
+  return true;
 }
 
 export function getBinary(): string {

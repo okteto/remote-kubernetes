@@ -276,6 +276,28 @@ export async function test(namespace: string, manifestPath: string, test: string
   console.log('okteto test completed');
 }
 
+function waitForConfigChange(
+  configFile: string,
+  condition: () => boolean,
+  errorMessage: string,
+  timeoutMs: number = 5 * 60 * 1000
+): Promise<boolean> {
+  return new Promise<boolean>(function(resolve, reject) {
+    const timer = setTimeout(function () {
+      fs.unwatchFile(configFile);
+      reject(new Error(errorMessage));
+    }, timeoutMs);
+
+    fs.watchFile(configFile, () => {
+      if (condition()) {
+        fs.unwatchFile(configFile);
+        clearTimeout(timer);
+        resolve(true);
+      }
+    });
+  });
+}
+
 export async function setContext(context: string) : Promise<boolean>{
   const name = `${terminalName}-context`;
   disposeTerminal(name);
@@ -293,24 +315,16 @@ export async function setContext(context: string) : Promise<boolean>{
   isActive.set(name, true);
   const cmd = `${getBinary()} context use ${context}`;
   term.sendText(cmd, true);
-  
-  const configFile = getContextConfigurationFile();
-  return new Promise<boolean>(function(resolve, reject) {
-    const timer = setTimeout(function () {
-      fs.unwatchFile(configFile);
-      reject(new Error('Context was not created, check your terminal for errors'));
-    }, 5 * 60 * 1000);
 
-    fs.watchFile(configFile, () => {
-      const ctx = getContext();
-      if (ctx.name === context) {
-        fs.unwatchFile(configFile);
-        clearTimeout(timer);
-        disposeTerminal(name);
-        resolve(true);
-      }
-    });
-  });
+  const configFile = getContextConfigurationFile();
+  const result = await waitForConfigChange(
+    configFile,
+    () => getContext().name === context,
+    'Context was not created, check your terminal for errors'
+  );
+
+  disposeTerminal(name);
+  return result;
 }
 
 export async function setNamespace(namespace: string) {
@@ -333,23 +347,15 @@ export async function setNamespace(namespace: string) {
   term.show(true);
 
   const configFile = getContextConfigurationFile();
-  return new Promise<boolean>(function(resolve, reject) {
-    const timer = setTimeout(function () {
-      fs.unwatchFile(configFile);
-      reject(new Error('Namespace was not set, check your terminal for errors'));
-    }, 5 * 60 * 1000);
+  const result = await waitForConfigChange(
+    configFile,
+    () => getContext().namespace === namespace,
+    'Namespace was not set, check your terminal for errors'
+  );
 
-    fs.watchFile(configFile, () => {
-      const ctx = getContext();
-      if (ctx.namespace === namespace) {
-        fs.unwatchFile(configFile);
-        clearTimeout(timer);
-        disposeTerminal(name);
-        resolve(true);
-        console.log('okteto namespace completed');
-      }
-    });
-  });
+  disposeTerminal(name);
+  console.log('okteto namespace completed');
+  return result;
 }
 
 
