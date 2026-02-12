@@ -4,6 +4,8 @@ import * as manifest from '../../manifest';
 import * as yaml from 'yaml';
 import * as fs from 'fs';
 import { expect } from 'chai';
+import { URI } from 'vscode-uri';
+import * as path from 'path';
 
 describe('parseManifest', () => {
   it('parse v2 manifest', () => {
@@ -78,5 +80,65 @@ describe('parseManifest', () => {
     const parsed = yaml.parseDocument(data);
     const result = manifest.parseManifest(parsed);
     expect(result.services.length).to.equal(0);
+  });
+});
+
+describe('get', () => {
+  it('should successfully load valid v2 manifest', async () => {
+    const filePath = path.resolve(__dirname, 'artifacts/simple-manifest.yaml');
+    const uri = URI.file(filePath);
+    const result = await manifest.get(uri);
+    expect(result.services.length).to.equal(2);
+    expect(result.tests.length).to.equal(0);
+  });
+
+  it('should successfully load valid docker-compose', async () => {
+    const filePath = path.resolve(__dirname, 'artifacts/docker-compose.yaml');
+    const uri = URI.file(filePath);
+    const result = await manifest.get(uri);
+    expect(result.services.length).to.equal(1);
+    expect(result.services[0].name).to.equal('vote');
+  });
+
+  it('should reject manifest with no services or tests', async () => {
+    const filePath = path.resolve(__dirname, 'artifacts/docker-compose-invalid.yaml');
+    const uri = URI.file(filePath);
+    try {
+      await manifest.get(uri);
+      expect.fail('Should have thrown error');
+    } catch (err) {
+      expect(err).to.be.an('Error');
+      if (err instanceof Error) {
+        expect(err.message).to.include('not a valid manifest');
+      }
+    }
+  });
+
+  it('should reject legacy manifest format', async () => {
+    const filePath = path.resolve(__dirname, 'artifacts/legacy-manifest.yaml');
+    const uri = URI.file(filePath);
+    try {
+      await manifest.get(uri);
+      expect.fail('Should have thrown error');
+    } catch (err) {
+      expect(err).to.be.an('Error');
+      if (err instanceof Error) {
+        expect(err.message).to.include('not a valid manifest');
+      }
+    }
+  });
+
+  it('should reject malformed YAML', async () => {
+    const filePath = path.resolve(__dirname, 'artifacts/malformed.yaml');
+    const uri = URI.file(filePath);
+    try {
+      await manifest.get(uri);
+      expect.fail('Should have thrown error');
+    } catch (err) {
+      expect(err).to.be.an('Error');
+      if (err instanceof Error) {
+        expect(err.message).to.include('not a valid yaml file');
+      }
+    }
   });
 });
