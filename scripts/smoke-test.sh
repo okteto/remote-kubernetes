@@ -173,10 +173,10 @@ cleanup() {
     if [ -n "$NAMESPACE" ]; then
         if [ $TEST_FAILED -eq 0 ]; then
             log_info "Deleting namespace: $NAMESPACE (tests passed)"
-            okteto namespace delete "$NAMESPACE" --force 2>&1 | grep -v "Deleting" || log_warn "Failed to delete namespace"
+            okteto namespace delete "$NAMESPACE" 2>&1 | grep -v "Deleting" || log_warn "Failed to delete namespace"
         else
             log_warn "Keeping namespace for debugging: $NAMESPACE (tests failed)"
-            log_warn "To delete manually: okteto namespace delete $NAMESPACE --force"
+            log_warn "To delete manually: okteto namespace delete $NAMESPACE"
         fi
     fi
 

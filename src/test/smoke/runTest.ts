@@ -1,4 +1,6 @@
 import * as path from 'path';
+import * as fs from 'fs';
+import * as os from 'os';
 import { runTests, downloadAndUnzipVSCode } from '@vscode/test-electron';
 import { execSync } from 'child_process';
 
@@ -44,6 +46,21 @@ async function main() {
             throw error;
         }
 
+        // Create temporary user data directory with custom settings
+        const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vscode-smoke-test-'));
+        const settingsDir = path.join(userDataDir, 'User');
+        fs.mkdirSync(settingsDir, { recursive: true });
+
+        // Disable Remote-SSH mode for smoke test
+        const settings = {
+            'okteto.remoteSSH': false
+        };
+        fs.writeFileSync(
+            path.join(settingsDir, 'settings.json'),
+            JSON.stringify(settings, null, 2)
+        );
+        console.log('[SMOKE TEST RUNNER] Configured VS Code with okteto.remoteSSH: false');
+
         console.log('[SMOKE TEST RUNNER] Launching VS Code for testing...');
         console.log('');
 
@@ -56,11 +73,15 @@ async function main() {
                 testWorkspace,
                 '--disable-extensions', // Disable other extensions for clean test
                 '--disable-workspace-trust', // Disable workspace trust prompt
+                `--user-data-dir=${userDataDir}`, // Use custom settings
             ],
         });
 
         console.log('');
         console.log('[SMOKE TEST RUNNER] Tests completed successfully');
+
+        // Cleanup temporary directory
+        fs.rmSync(userDataDir, { recursive: true, force: true });
 
     } catch (err) {
         console.error('');
