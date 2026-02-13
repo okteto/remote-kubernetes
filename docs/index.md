@@ -1,4 +1,10 @@
-# Troubleshooting
+# Documentation
+
+## Manifest Files
+
+- [Supported Manifest File Patterns](manifest-patterns.md) - Learn about supported filename patterns and use cases
+
+## Troubleshooting
 
 When running `Okteto: Up`, a terminal with the *okteto* label will be added to your list of terminals. This is where the process that manages your connection with Kubernetes is running. In case of error, that's the first place you should check.
 
