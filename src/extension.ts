@@ -141,7 +141,7 @@ async function upCmd() {
 
     reporter.track(events.up);
 
-    const manifestUri = await showManifestPicker();
+    const manifestUri = await showManifestPicker(supportedUpFilenames);
     if (!manifestUri) {
         reporter.track(events.manifestDismissed);
         return;
@@ -358,8 +358,8 @@ async function deployCmd() {
         vscode.window.showErrorMessage(getErrorMessage(err));    
         return;
     }
-    
-    const manifestUri = await showManifestPicker();
+
+    const manifestUri = await showManifestPicker(supportedDeployFilenames);
     if (!manifestUri) {
         reporter.track(events.manifestDismissed);
         return;
@@ -386,8 +386,8 @@ async function testCmd() {
         vscode.window.showErrorMessage(getErrorMessage(err));    
         return;
     }
-    
-    const manifestUri = await showManifestPicker();
+
+    const manifestUri = await showManifestPicker(supportedUpFilenames);
     if (!manifestUri) {
         reporter.track(events.manifestDismissed);
         return;
@@ -430,7 +430,7 @@ async function destroyCmd() {
         return;
     }
 
-    const manifestUri = await showManifestPicker();
+    const manifestUri = await showManifestPicker(supportedDeployFilenames);
     if (!manifestUri) {
         reporter.track(events.manifestDismissed);
         return;
@@ -464,7 +464,7 @@ async function getManifestOrAsk(): Promise<vscode.Uri | undefined> {
           }
         }
     } else {
-        const manifestUri = await showManifestPicker();
+        const manifestUri = await showManifestPicker(supportedUpFilenames);
         if (manifestUri) {
             reporter.track(events.manifestSelected);
             return manifestUri;
@@ -552,9 +552,16 @@ function onOktetoFailed(message: string, terminalSuffix: string | null = null) {
     }
 }
 
-async function showManifestPicker() : Promise<vscode.Uri | undefined> {
+async function showManifestPicker(supportedFilenames: string[] = supportedDeployFilenames) : Promise<vscode.Uri | undefined> {
     const files = await vscode.workspace.findFiles('**/{okteto,docker-compose,okteto-*}.{yml,yaml}', '**/node_modules/**');
-    if (files.length === 0) {
+
+    // Filter files to only include supported filenames for this command
+    const filteredFiles = files.filter(file => {
+        const basename = path.basename(file.fsPath);
+        return supportedFilenames.includes(basename);
+    });
+
+    if (filteredFiles.length === 0) {
         await vscode.window.showErrorMessage(`No manifests found in your workspace.\n
 Please run the 'Okteto: Create Manifest' command to create it and then try again.`, {
             modal: true
@@ -562,12 +569,12 @@ Please run the 'Okteto: Create Manifest' command to create it and then try again
         return;
     }
 
-    if (files.length === 1 ) {
-        return files[0];
+    if (filteredFiles.length === 1 ) {
+        return filteredFiles[0];
     }
 
-    const sortedFiles = sortFilePaths(files);
-    
+    const sortedFiles = sortFilePaths(filteredFiles);
+
     const items = sortedFiles.map(file => {
         return {
             label: vscode.workspace.asRelativePath(file, true),
