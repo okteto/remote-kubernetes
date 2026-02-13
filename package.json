@@ -130,6 +130,7 @@
     "pretest": "npm run compile",
     "test": "mocha -r ts-node/register -r src/test/mock/vscode.ts src/test/suite/*.test.ts",
     "test:e2e": "tsc -p tsconfig.test.json && node ./out/test/e2e/runTest.js",
+    "test:smoke": "tsc -p tsconfig.test.json && node ./out/test/smoke/runTest.js",
     "update-okteto": "bash scripts/update-okteto-version.sh",
     "lint": "eslint src/",
     "ci": "npm ci && npm run lint && npm run test && npm run package",
