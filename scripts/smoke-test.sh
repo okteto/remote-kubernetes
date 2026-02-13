@@ -99,7 +99,7 @@ setup_test_repo() {
     fi
 
     log_info "✓ Repository cloned successfully"
-    log_info "✓ Catalog service found at: $TEMP_DIR/movies/catalog"
+    log_info "✓ Movies repository at: $TEMP_DIR/movies"
     echo ""
 }
 
@@ -136,7 +136,8 @@ run_smoke_tests() {
     log_step "Running smoke tests..."
 
     # Set environment variables for test
-    export SMOKE_TEST_WORKSPACE="$TEMP_DIR/movies/catalog"
+    # Note: Open root movies directory, not catalog subdirectory (okteto.yml is at root)
+    export SMOKE_TEST_WORKSPACE="$TEMP_DIR/movies"
     export SMOKE_TEST_VSIX="$(pwd)/$VSIX_FILE"
     export SMOKE_TEST_NAMESPACE="$NAMESPACE"
     export SMOKE_TEST_SERVICE="$TEST_SERVICE"
@@ -146,10 +147,10 @@ run_smoke_tests() {
     mkdir -p "$SMOKE_TEST_SCREENSHOTS"
 
     log_info "Test configuration:"
-    log_info "  Workspace: $SMOKE_TEST_WORKSPACE"
+    log_info "  Workspace: $SMOKE_TEST_WORKSPACE (movies repo root)"
     log_info "  Extension: $VSIX_FILE"
     log_info "  Namespace: $NAMESPACE"
-    log_info "  Service: $TEST_SERVICE"
+    log_info "  Service: $TEST_SERVICE (catalog)"
     log_info "  Screenshots: $SMOKE_TEST_SCREENSHOTS"
     echo ""
 
