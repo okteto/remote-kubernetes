@@ -42,7 +42,9 @@ The extension automatically detects Okteto manifest files in your workspace:
 
 - **Standard manifests**: `okteto.yml`, `okteto.yaml`, `docker-compose.yml`, `docker-compose.yaml`
 - **Pipeline manifests**: `okteto-pipeline.yml`, `okteto-pipeline.yaml`
-- **Custom patterns** (Deploy commands only): `okteto-*.yml`, `okteto.*.yml` (e.g., `okteto.dev.yml`, `okteto-stack.yml`)
+- **Custom patterns**: `okteto-*.yml`, `okteto.*.yml` (e.g., `okteto.dev.yml`, `okteto-stack.yml`)
+
+All commands (`Up`, `Deploy`, `Destroy`, `Test`) support the same manifest patterns, enabling flexible project organization.
 
 See the [Manifest Patterns documentation](docs/manifest-patterns.md) for complete details and use cases.
 

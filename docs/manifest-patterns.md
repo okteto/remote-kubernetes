@@ -4,9 +4,7 @@ The Remote - Kubernetes extension automatically detects Okteto manifest files in
 
 ## Supported Patterns
 
-### All Commands (Deploy, Destroy, Test)
-
-Deploy-related commands support the widest range of manifest patterns:
+All Okteto commands (`Up`, `Deploy`, `Destroy`, `Test`) support the same manifest patterns:
 
 #### Exact Filenames
 - `okteto.yml`
@@ -32,17 +30,6 @@ Deploy-related commands support the widest range of manifest patterns:
 - `okteto.test.yaml`
 - `okteto.local.yml`
 - Any file matching the pattern `okteto.<anything>.{yml,yaml}`
-
-### Up Command Only
-
-The `Okteto: Up` command is more restrictive and only supports exact filenames:
-
-- `okteto.yml`
-- `okteto.yaml`
-- `docker-compose.yml`
-- `docker-compose.yaml`
-
-**Note:** Pipeline manifests (`okteto-pipeline.*`) and custom variants (`okteto.dev.yml`, `okteto-stack.yml`) are **not** supported for the Up command. This ensures you're always starting development environments with standard Okteto manifests.
 
 ## Use Cases
 
@@ -113,26 +100,16 @@ The extension searches for manifests using the glob pattern:
 
 ## Command Behavior
 
-### Deploy Commands
+All Okteto commands (`Okteto: Up`, `Okteto: Deploy`, `Okteto: Destroy`, `Okteto: Test`) behave the same way:
 
-`Okteto: Deploy`, `Okteto: Destroy`, `Okteto: Test`
-
-- ✅ Accept all supported patterns
-- ✅ Show all matching files in picker
-- ✅ Support custom naming schemes
-
-### Up Command
-
-`Okteto: Up`
-
-- ✅ Only accepts exact filenames
-- ❌ Rejects pipeline manifests (`okteto-pipeline.*`)
-- ❌ Rejects custom variants (`okteto.*.yml`, `okteto-*.yml`)
-- ℹ️  This ensures development environments use standard Okteto manifests
+- ✅ Accept all supported patterns (exact matches and wildcards)
+- ✅ Show all matching files in picker when multiple manifests found
+- ✅ Support custom naming schemes for flexible project organization
+- ✅ Enable environment-specific, feature-based, and component-based workflows
 
 ## Examples
 
-### Valid for Deploy Commands
+### Valid Manifest Names (All Commands)
 
 ```bash
 okteto.yml                    # ✅ Exact match
@@ -141,31 +118,25 @@ okteto.dev.yml                # ✅ Pattern match (okteto.*)
 okteto-stack.yaml             # ✅ Pattern match (okteto-*)
 okteto.feature-auth.yml       # ✅ Pattern match (okteto.*)
 okteto-microservice-api.yml   # ✅ Pattern match (okteto-*)
+docker-compose.yml            # ✅ Exact match
+docker-compose.yaml           # ✅ Exact match
 ```
 
-### Valid for Up Command
+### Invalid Manifest Names
 
 ```bash
-okteto.yml              # ✅ Exact match only
-okteto.yaml             # ✅ Exact match only
-docker-compose.yml      # ✅ Exact match only
-docker-compose.yaml     # ✅ Exact match only
-```
-
-### Invalid for Up Command
-
-```bash
-okteto-pipeline.yml     # ❌ Not in supported list
-okteto.dev.yml          # ❌ Pattern not allowed
-okteto-stack.yaml       # ❌ Pattern not allowed
+manifest.yml            # ❌ Doesn't match any pattern
+config.yaml             # ❌ Wrong prefix
+Okteto.yml              # ❌ Case sensitive
+okteto.txt              # ❌ Wrong extension
 ```
 
 ## Best Practices
 
-1. **Use standard names for development**: Stick to `okteto.yml` or `docker-compose.yml` for dev environments
-2. **Descriptive names for variants**: Use clear, descriptive names like `okteto.staging.yml`
-3. **Consistent naming**: Choose a naming convention and stick to it across your project
-4. **Document your manifests**: Add comments in manifest files explaining their purpose
+1. **Choose a clear naming convention**: Use environment-based (`okteto.dev.yml`) or component-based (`okteto-frontend.yml`) naming consistently
+2. **Descriptive names**: Use clear, descriptive names that indicate purpose (e.g., `okteto.staging.yml`, `okteto-api.yml`)
+3. **Standard names for simplicity**: Use `okteto.yml` for simple projects with single environments
+4. **Document your manifests**: Add comments in manifest files explaining their purpose and intended use
 5. **One manifest per environment**: Avoid mixing multiple environments in a single manifest
 
 ## Troubleshooting
@@ -180,38 +151,35 @@ okteto-stack.yaml       # ❌ Pattern not allowed
 3. Ensure file is not in `node_modules/` directory
 4. Check filename is case-sensitive (e.g., `Okteto.yml` won't match)
 
-### "Wrong manifest selected for Up"
+### "Wrong manifest selected"
 
-**Cause:** Multiple exact-match manifests exist
+**Cause:** Multiple manifests exist in workspace
 
-**Solution:** The extension will show a picker. Select the correct `okteto.yml` or `docker-compose.yml`
-
-### "Custom manifest not available for Up"
-
-**Cause:** Up command only accepts exact filenames
-
-**Solution:** Use `Okteto: Deploy` instead, or rename your manifest to `okteto.yml`
+**Solution:** The extension will show a picker. Select the correct manifest for your workflow
 
 ## Migration Guide
 
-If you have custom-named manifests and want to use them with different commands:
+If you have custom-named manifests, they now work with all commands:
 
 ### Before (Limited Support)
 
 ```
-okteto.yml              # Works with Up and Deploy
+okteto.yml              # Works with all commands
 okteto-custom.yml       # Only works with Deploy (if explicitly listed)
+okteto.dev.yml          # Not supported
 ```
 
 ### After (Enhanced Support)
 
 ```
-okteto.yml              # Works with Up and Deploy ✅
-okteto.dev.yml          # Works with Deploy only ✅
-okteto.staging.yml      # Works with Deploy only ✅
-okteto-stack.yml        # Works with Deploy only ✅
-okteto-custom.yml       # Works with Deploy only ✅
+okteto.yml              # Works with all commands ✅
+okteto.dev.yml          # Works with all commands ✅
+okteto.staging.yml      # Works with all commands ✅
+okteto-stack.yml        # Works with all commands ✅
+okteto-custom.yml       # Works with all commands ✅
 ```
+
+You can now use environment-specific manifests with `Okteto: Up` for local development!
 
 ## Related Documentation
 
