@@ -553,12 +553,24 @@ function onOktetoFailed(message: string, terminalSuffix: string | null = null) {
 }
 
 async function showManifestPicker(supportedFilenames: string[] = supportedDeployFilenames) : Promise<vscode.Uri | undefined> {
-    const files = await vscode.workspace.findFiles('**/{okteto,docker-compose,okteto-*}.{yml,yaml}', '**/node_modules/**');
+    const files = await vscode.workspace.findFiles('**/{okteto,docker-compose,okteto-*,okteto.*}.{yml,yaml}', '**/node_modules/**');
+
+    // Helper to check if filename matches deploy patterns
+    const isDeployPattern = (filename: string): boolean => {
+        // For deploy files, support wildcard patterns okteto-*.{yml,yaml} and okteto.*.{yml,yaml}
+        if (supportedFilenames === supportedDeployFilenames) {
+            return /^okteto-.*\.(yml|yaml)$/.test(filename) ||
+                   /^okteto\..*\.(yml|yaml)$/.test(filename) ||
+                   supportedFilenames.includes(filename);
+        }
+        // For up files, use exact match only
+        return supportedFilenames.includes(filename);
+    };
 
     // Filter files to only include supported filenames for this command
     const filteredFiles = files.filter(file => {
         const basename = path.basename(file.fsPath);
-        return supportedFilenames.includes(basename);
+        return isDeployPattern(basename);
     });
 
     if (filteredFiles.length === 0) {
