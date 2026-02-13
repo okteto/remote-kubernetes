@@ -32,9 +32,19 @@ There is a complete tutorial [here](https://okteto.com/blog/remote-kubernetes-de
 
 1. Clone https://github.com/okteto/vscode-remote-go
 1. Start VS Code
-1. Run the `Okteto: Up` command to launch your development environment in Kubernetes. When prompted, pick the `okteto.yml` manifest. 
+1. Run the `Okteto: Up` command to launch your development environment in Kubernetes. When prompted, pick the `okteto.yml` manifest.
 1. After a few seconds, you'll be asked to select a host. Pick the `vscode-remote-go.okteto` entry from the dialog to launch your remote VS Code instance.
 1. Develop directly in Kubernetes from VS Code!
+
+### Supported Manifest Files
+
+The extension automatically detects Okteto manifest files in your workspace:
+
+- **Standard manifests**: `okteto.yml`, `okteto.yaml`, `docker-compose.yml`, `docker-compose.yaml`
+- **Pipeline manifests**: `okteto-pipeline.yml`, `okteto-pipeline.yaml`
+- **Custom patterns** (Deploy commands only): `okteto-*.yml`, `okteto.*.yml` (e.g., `okteto.dev.yml`, `okteto-stack.yml`)
+
+See the [Manifest Patterns documentation](docs/manifest-patterns.md) for complete details and use cases.
 
 ## Questions and Feedback
 
