@@ -17,14 +17,36 @@ const supportedDeployFilenames = ['okteto-pipeline.yml',
 'okteto-pipeline.yaml',
 'docker-compose.yml',
 'docker-compose.yaml',
-'okteto.yml', 
+'okteto.yml',
 'okteto.yaml']
 
 const supportedUpFilenames = [
 'docker-compose.yml',
 'docker-compose.yaml',
-'okteto.yml', 
+'okteto.yml',
 'okteto.yaml']
+
+/**
+ * Checks if a filename matches the supported patterns for a given command type.
+ * @param filename - The basename of the file to check
+ * @param supportedFilenames - Array of explicitly supported filenames
+ * @param allowPatterns - Whether to allow wildcard patterns (true for deploy, false for up)
+ * @returns true if the filename is supported
+ */
+export function isManifestSupported(filename: string, supportedFilenames: string[], allowPatterns: boolean): boolean {
+    // Check exact match first
+    if (supportedFilenames.includes(filename)) {
+        return true;
+    }
+
+    // For deploy commands, also support wildcard patterns
+    if (allowPatterns) {
+        return /^okteto-.*\.(yml|yaml)$/.test(filename) ||
+               /^okteto\..*\.(yml|yaml)$/.test(filename);
+    }
+
+    return false;
+}
   
 vscode.commands.executeCommand('setContext', 'ext.supportedDeployFiles', supportedDeployFilenames);
 vscode.commands.executeCommand('setContext', 'ext.supportedUpFilenames', supportedUpFilenames);
@@ -555,22 +577,13 @@ function onOktetoFailed(message: string, terminalSuffix: string | null = null) {
 async function showManifestPicker(supportedFilenames: string[] = supportedDeployFilenames) : Promise<vscode.Uri | undefined> {
     const files = await vscode.workspace.findFiles('**/{okteto,docker-compose,okteto-*,okteto.*}.{yml,yaml}', '**/node_modules/**');
 
-    // Helper to check if filename matches deploy patterns
-    const isDeployPattern = (filename: string): boolean => {
-        // For deploy files, support wildcard patterns okteto-*.{yml,yaml} and okteto.*.{yml,yaml}
-        if (supportedFilenames === supportedDeployFilenames) {
-            return /^okteto-.*\.(yml|yaml)$/.test(filename) ||
-                   /^okteto\..*\.(yml|yaml)$/.test(filename) ||
-                   supportedFilenames.includes(filename);
-        }
-        // For up files, use exact match only
-        return supportedFilenames.includes(filename);
-    };
+    // Determine if we should allow wildcard patterns (true for deploy, false for up)
+    const allowPatterns = supportedFilenames === supportedDeployFilenames;
 
     // Filter files to only include supported filenames for this command
     const filteredFiles = files.filter(file => {
         const basename = path.basename(file.fsPath);
-        return isDeployPattern(basename);
+        return isManifestSupported(basename, supportedFilenames, allowPatterns);
     });
 
     if (filteredFiles.length === 0) {
