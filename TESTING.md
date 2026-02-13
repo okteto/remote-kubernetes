@@ -186,11 +186,11 @@ Use this checklist before releasing a new version of the Remote - Kubernetes ext
   - [ ] `okteto-pipeline.yml`
   - [ ] `docker-compose.yml`
 - [ ] Run `Okteto: Up`
-- [ ] Picker shows only `okteto.yml` and `docker-compose.yml` (not pipeline)
+- [ ] Picker shows all manifests
 - [ ] Manifests sorted by depth (shallower first)
 - [ ] Selection works correctly
 
-#### Test 8b: Custom Pattern Manifests (Deploy Commands)
+#### Test 8b: Custom Pattern Manifests
 - [ ] Create project with custom pattern manifests:
   - [ ] `okteto.dev.yml`
   - [ ] `okteto.staging.yml`
@@ -199,7 +199,7 @@ Use this checklist before releasing a new version of the Remote - Kubernetes ext
 - [ ] Run `Okteto: Deploy`
 - [ ] Picker shows all custom manifests
 - [ ] Run `Okteto: Up`
-- [ ] Picker shows error or only standard manifests (custom patterns not allowed for Up)
+- [ ] Picker shows all custom manifests (same as Deploy)
 
 #### Test 8c: Mixed Manifests
 - [ ] Create project with mix:
@@ -207,9 +207,9 @@ Use this checklist before releasing a new version of the Remote - Kubernetes ext
   - [ ] `okteto.dev.yml`
   - [ ] `okteto-pipeline.yml`
   - [ ] `okteto-custom.yaml`
-- [ ] Run `Okteto: Up` - should show only `okteto.yml`
+- [ ] Run `Okteto: Up` - should show all manifests
 - [ ] Run `Okteto: Deploy` - should show all manifests
-- [ ] Verify correct filtering per command
+- [ ] Verify both commands show the same manifest list
 
 **Issues found:**
 ```

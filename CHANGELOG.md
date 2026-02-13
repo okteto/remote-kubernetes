@@ -3,11 +3,11 @@
 ## 0.5.5 (Unreleased)
 
 ### Features
-- Expanded manifest file pattern support
+- Expanded manifest file pattern support for all commands
   - Now supports `okteto-*.yml`, `okteto-*.yaml` (e.g., `okteto-stack.yml`, `okteto-compose.yml`)
   - Now supports `okteto.*.yml`, `okteto.*.yaml` (e.g., `okteto.dev.yml`, `okteto.prod.yaml`)
-  - Deploy commands accept all matching patterns
-  - Up command restricted to exact filenames for safety (no pipeline or custom variants)
+  - All commands (Up, Deploy, Destroy, Test) support the same manifest patterns
+  - Enables environment-specific, feature-based, and component-based manifest organization
 
 ### Internal Improvements
 - Migrated from webpack to esbuild for faster builds and smaller bundle size (64% reduction: 4.43 MB → 1.59 MB)
