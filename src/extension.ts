@@ -17,14 +17,31 @@ const supportedDeployFilenames = ['okteto-pipeline.yml',
 'okteto-pipeline.yaml',
 'docker-compose.yml',
 'docker-compose.yaml',
-'okteto.yml', 
+'okteto.yml',
 'okteto.yaml']
 
 const supportedUpFilenames = [
 'docker-compose.yml',
 'docker-compose.yaml',
-'okteto.yml', 
+'okteto.yml',
 'okteto.yaml']
+
+/**
+ * Checks if a filename matches the supported patterns.
+ * @param filename - The basename of the file to check
+ * @param supportedFilenames - Array of explicitly supported filenames
+ * @returns true if the filename is supported
+ */
+export function isManifestSupported(filename: string, supportedFilenames: string[]): boolean {
+    // Check exact match first
+    if (supportedFilenames.includes(filename)) {
+        return true;
+    }
+
+    // Also support wildcard patterns
+    return /^okteto-.*\.(yml|yaml)$/.test(filename) ||
+           /^okteto\..*\.(yml|yaml)$/.test(filename);
+}
   
 vscode.commands.executeCommand('setContext', 'ext.supportedDeployFiles', supportedDeployFilenames);
 vscode.commands.executeCommand('setContext', 'ext.supportedUpFilenames', supportedUpFilenames);
@@ -553,12 +570,12 @@ function onOktetoFailed(message: string, terminalSuffix: string | null = null) {
 }
 
 async function showManifestPicker(supportedFilenames: string[] = supportedDeployFilenames) : Promise<vscode.Uri | undefined> {
-    const files = await vscode.workspace.findFiles('**/{okteto,docker-compose,okteto-*}.{yml,yaml}', '**/node_modules/**');
+    const files = await vscode.workspace.findFiles('**/{okteto,docker-compose,okteto-*,okteto.*}.{yml,yaml}', '**/node_modules/**');
 
     // Filter files to only include supported filenames for this command
     const filteredFiles = files.filter(file => {
         const basename = path.basename(file.fsPath);
-        return supportedFilenames.includes(basename);
+        return isManifestSupported(basename, supportedFilenames);
     });
 
     if (filteredFiles.length === 0) {
