@@ -154,7 +154,7 @@
     "chai": "^6.2.2",
     "esbuild": "^0.27.3",
     "eslint": "^9.39.2",
-    "glob": "^13.0.3",
+    "glob": "^13.0.6",
     "markdown-it": ">=14.1.1",
     "mocha": "^11.7.5",
     "sinon": "^21.0.1",
@@ -164,8 +164,8 @@
     "vscode-uri": "^3.1.0"
   },
   "dependencies": {
-    "@sentry/cli": "^3.2.0",
-    "@sentry/node": "^10.38.0",
+    "@sentry/cli": "^3.2.1",
+    "@sentry/node": "^10.39.0",
     "change-case": "^5.4.4",
     "command-exists": "^1.2.9",
     "execa": "^9.6.1",
