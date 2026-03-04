@@ -140,6 +140,7 @@ Use this checklist before releasing a new version of the Remote - Kubernetes ext
 - [ ] Error message is user-friendly
 - [ ] Output panel shows helpful details
 - [ ] Restore Okteto CLI
+- [ ] Reinstall/restore Okteto CLI at version 3.17.0 or newer
 
 **Issues found:**
 ```

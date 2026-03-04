@@ -11,7 +11,7 @@ import { getLogger } from './logger';
 /**
  * Minimum required Okteto CLI version.
  */
-export const minimum = '3.16.0';
+export const minimum = '3.17.0';
 
 /**
  * Gets the platform-specific installation path for the Okteto CLI binary.

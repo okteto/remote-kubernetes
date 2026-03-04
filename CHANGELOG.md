@@ -33,6 +33,8 @@
 ### Dependencies
 - Updated all dependencies to latest versions
 - Fixed security vulnerabilities
+- Updated minimum required Okteto CLI version to 3.17.0
+- Refreshed documentation references for minimum supported CLI version
 
 ## 0.5.4
 - Updated minimum required Okteto CLI version to 3.16.0

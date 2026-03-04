@@ -4,3 +4,7 @@ out
 .vscode-test
 *.vsix
 smoke-test-screenshots
+.DS_Store
+.DS_STORE
+**/.DS_Store
+**/.DS_STORE

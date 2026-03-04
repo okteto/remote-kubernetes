@@ -2,6 +2,14 @@
 
 import { expect } from 'chai';
 import { events, Reporter } from '../../telemetry';
+import * as vscode from 'vscode';
+
+type MockVSCode = typeof vscode & {
+  __mock: {
+    reset: () => void;
+    emitTelemetryEnabledChanged: (enabled: boolean) => void;
+  };
+};
 
 describe('events', () => {
   it('should have all expected event names', () => {
@@ -27,6 +35,12 @@ describe('events', () => {
 });
 
 describe('Reporter', () => {
+  const mockVSCode = vscode as unknown as MockVSCode;
+
+  beforeEach(() => {
+    mockVSCode.__mock.reset();
+  });
+
   it('should be constructable', () => {
     // The vscode mock has isTelemetryEnabled = false, so telemetry is disabled
     const reporter = new Reporter('1.0.0', 'test-id', 'machine-id');
@@ -65,5 +79,32 @@ describe('Reporter', () => {
   it('should fall back to vscode.env.machineId when both are empty', async () => {
     const reporter = new Reporter('1.0.0', '', '');
     await reporter.track('test-event');
+  });
+
+  it('should disable and re-enable tracking on telemetry off->on transitions', async () => {
+    mockVSCode.__mock.emitTelemetryEnabledChanged(true);
+    const reporter = new Reporter('1.0.0', 'test-id', 'machine-id');
+
+    let tracked = 0;
+    const reporterWithMp = reporter as unknown as {
+      mp: { track: (event: string, props: unknown, callback: (err?: unknown) => void) => void };
+    };
+    reporterWithMp.mp = {
+      track: (_event: string, _props: unknown, callback: (err?: unknown) => void) => {
+        tracked++;
+        callback();
+      },
+    };
+
+    await reporter.track('before-disable');
+    expect(tracked).to.equal(1);
+
+    mockVSCode.__mock.emitTelemetryEnabledChanged(false);
+    await reporter.track('after-disable');
+    expect(tracked).to.equal(1);
+
+    mockVSCode.__mock.emitTelemetryEnabledChanged(true);
+    await reporter.track('after-re-enable');
+    expect(tracked).to.equal(2);
   });
 });

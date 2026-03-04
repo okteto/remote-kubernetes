@@ -15,7 +15,7 @@ The smoke test validates the core extension functionality by:
 ## Prerequisites
 
 - **macOS** (script designed for macOS, uses `screencapture`)
-- **Okteto CLI** installed and in PATH
+- **Okteto CLI 3.17.0+** installed and in PATH
 - **Logged into Okteto cluster** (`okteto context` should show active context)
 - **Node.js 22.x** and npm
 - **Git** installed
@@ -68,7 +68,7 @@ The smoke test validates the core extension functionality by:
 ==========================================
 
 [STEP] Checking prerequisites...
-[INFO] ✓ Okteto CLI found: okteto version 3.16.0
+[INFO] ✓ Okteto CLI found: okteto version 3.17.0
 [INFO] ✓ Logged into Okteto: https://cloud.okteto.com
 [INFO] ✓ Node.js found: v22.x.x
 [INFO] ✓ npm found: 10.x.x
