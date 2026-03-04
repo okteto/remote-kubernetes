@@ -56,6 +56,15 @@ interface OktetoContextListItem {
   name: string;
 }
 
+/**
+ * Represents an individual namespace item from `okteto namespace list -o=json`.
+ */
+interface OktetoNamespaceListItem {
+  name?: string;
+  namespace?: string;
+  current?: boolean;
+}
+
 export const state = {
   starting: 'starting',
   activating: 'activating',
@@ -454,6 +463,27 @@ export async function setNamespace(namespace: string) {
 }
 
 /**
+ * Creates an Okteto namespace.
+ * Runs `okteto namespace create <namespace>`.
+ * @param namespace - Name of the namespace to create
+ * @returns Promise that resolves to true if the command succeeds
+ */
+export async function createNamespace(namespace: string): Promise<boolean> {
+  try {
+    const r = await execa(getBinary(), ['namespace', 'create', namespace], {
+      env: {
+        OKTETO_ORIGIN: 'vscode',
+      },
+    });
+
+    return !r.failed;
+  } catch (err: unknown) {
+    getLogger().error(`failed to create namespace ${namespace}: ${err}`);
+    throw err;
+  }
+}
+
+/**
  * Gets user-friendly state messages for Okteto operations.
  * Maps internal state codes to descriptive messages shown to users.
  * @returns Map of state codes to display messages
@@ -754,6 +784,53 @@ export async function getContextList(): Promise<RuntimeItem[]>{
   }
 
   items.push(new RuntimeItem("Create new context", "Create new context", "create"))
+  return items;
+}
+
+/**
+ * Gets the list of available Okteto namespaces.
+ * Runs `okteto namespace list -o=json` and parses the JSON output.
+ * @returns Array of namespace items for the quick pick dialog
+ */
+export async function getNamespaceList(): Promise<RuntimeItem[]>{
+  const items = new Array<RuntimeItem>();
+  const seen = new Set<string>();
+
+  try {
+    const r = await execa(getBinary(), ["namespace", "list", "-o=json"]);
+    const namespaceList = JSON.parse(r.stdout) as unknown;
+    if (Array.isArray(namespaceList)) {
+      for (const item of namespaceList) {
+        let namespace = "";
+        let description = "";
+
+        if (typeof item === 'string') {
+          namespace = item;
+        } else if (typeof item === 'object' && item !== null) {
+          const ns = item as OktetoNamespaceListItem;
+          if (typeof ns.name === 'string') {
+            namespace = ns.name;
+          } else if (typeof ns.namespace === 'string') {
+            namespace = ns.namespace;
+          }
+
+          if (ns.current === true) {
+            description = "Current namespace";
+          }
+        }
+
+        if (!namespace || seen.has(namespace)) {
+          continue;
+        }
+
+        seen.add(namespace);
+        items.push(new RuntimeItem(namespace, description, namespace));
+      }
+    }
+  } catch(err: unknown) {
+    getLogger().error(`failed to get namespace list: ${err}`);
+  }
+
   return items;
 }
 

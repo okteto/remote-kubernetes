@@ -565,6 +565,7 @@ async function namespaceCmd(){
             return;
         }
 
+        await okteto.createNamespace(customNamespace);
         ns = customNamespace;
     }
 

@@ -103,6 +103,7 @@ describe('namespace command', () => {
       { label: 'dev', description: 'Current namespace', value: 'dev' } as vscode.QuickPickItem & { value: string },
       { label: 'staging', description: '', value: 'staging' } as vscode.QuickPickItem & { value: string },
     ] as unknown as Awaited<ReturnType<typeof okteto.getNamespaceList>>);
+    const createNamespace = sinon.stub(okteto, 'createNamespace').resolves(true);
     const setNamespace = sinon.stub(okteto, 'setNamespace').resolves(true);
 
     sinon.stub(vscode.window, 'showQuickPick').resolves(
@@ -114,6 +115,7 @@ describe('namespace command', () => {
     await vscode.commands.executeCommand('okteto.namespace');
 
     expect(setNamespace.calledOnceWithExactly('staging')).to.equal(true);
+    expect(createNamespace.called).to.equal(false);
     expect(showInputBox.called).to.equal(false);
   });
 
@@ -122,6 +124,7 @@ describe('namespace command', () => {
     sinon.stub(okteto, 'getContext').returns({ id: 'ctx-id', name: 'ctx-name', namespace: 'ns', isOkteto: true });
     sinon.stub(okteto, 'getMachineId').returns('machine-id');
     sinon.stub(okteto, 'getNamespaceList').resolves([] as unknown as Awaited<ReturnType<typeof okteto.getNamespaceList>>);
+    const createNamespace = sinon.stub(okteto, 'createNamespace').resolves(true);
     const setNamespace = sinon.stub(okteto, 'setNamespace').resolves(true);
 
     sinon.stub(vscode.window, 'showQuickPick').resolves(
@@ -132,7 +135,9 @@ describe('namespace command', () => {
     activateExtension();
     await vscode.commands.executeCommand('okteto.namespace');
 
+    expect(createNamespace.calledOnceWithExactly('my-custom-namespace')).to.equal(true);
     expect(setNamespace.calledOnceWithExactly('my-custom-namespace')).to.equal(true);
+    sinon.assert.callOrder(createNamespace, setNamespace);
   });
 
   it('should not set namespace when picker is dismissed', async () => {
@@ -140,6 +145,7 @@ describe('namespace command', () => {
     sinon.stub(okteto, 'getContext').returns({ id: 'ctx-id', name: 'ctx-name', namespace: 'ns', isOkteto: true });
     sinon.stub(okteto, 'getMachineId').returns('machine-id');
     sinon.stub(okteto, 'getNamespaceList').resolves([] as unknown as Awaited<ReturnType<typeof okteto.getNamespaceList>>);
+    const createNamespace = sinon.stub(okteto, 'createNamespace').resolves(true);
     const setNamespace = sinon.stub(okteto, 'setNamespace').resolves(true);
 
     sinon.stub(vscode.window, 'showQuickPick').resolves(undefined);
@@ -148,6 +154,7 @@ describe('namespace command', () => {
     activateExtension();
     await vscode.commands.executeCommand('okteto.namespace');
 
+    expect(createNamespace.called).to.equal(false);
     expect(setNamespace.called).to.equal(false);
     expect(showInputBox.called).to.equal(false);
   });
