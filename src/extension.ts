@@ -524,6 +524,9 @@ async function contextCmd(){
 
     const machineId = okteto.getMachineId();
     const ctx = okteto.getContext();
+    if (reporter) {
+        reporter.dispose();
+    }
     reporter = new Reporter(getExtensionVersion(), ctx.id, machineId);
     reporter.track(events.activated);
 }
@@ -537,7 +540,34 @@ async function namespaceCmd(){
     }
 
     reporter.track(events.namespace);
-    const ns = await vscode.window.showInputBox({title: "Set the namespace for all the Okteto commands"})
+    const namespaceItems = await okteto.getNamespaceList();
+    const pickerItems: Array<vscode.QuickPickItem & { value: string }> = [...namespaceItems, {
+        label: "Enter namespace manually",
+        description: "Type a namespace name",
+        value: "manual",
+    }];
+
+    const selectedNamespace = await vscode.window.showQuickPick(pickerItems, {
+        canPickMany: false,
+        placeHolder: 'Select the namespace for all the Okteto commands',
+    });
+    if (!selectedNamespace) {
+        return;
+    }
+
+    let ns = selectedNamespace.value;
+    if (selectedNamespace.value === "manual") {
+        const customNamespace = await vscode.window.showInputBox({
+            title: "Set the namespace for all the Okteto commands",
+            prompt: "Specify a namespace name",
+        });
+        if (!customNamespace) {
+            return;
+        }
+
+        ns = customNamespace;
+    }
+
     if (!ns) {
         return;
     }

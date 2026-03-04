@@ -77,11 +77,12 @@ export class Reporter {
             this.enabled = false;
         }
 
-        // Listen for VS Code global telemetry changes
+        // Listen for VS Code global telemetry changes and re-evaluate effective state.
         this.telemetryListener = vscode.env.onDidChangeTelemetryEnabled((enabled) => {
-            if (!enabled) {
-                this.enabled = false;
-            }
+            const currentConfig = vscode.workspace.getConfiguration('okteto');
+            const extTelemetry = currentConfig.get<boolean>('telemetry');
+            const extEnabled = extTelemetry !== undefined ? extTelemetry : true;
+            this.enabled = enabled && extEnabled;
         });
 
         if (oktetoId) {
