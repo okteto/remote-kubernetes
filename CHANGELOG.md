@@ -2,6 +2,13 @@
 
 ## 0.5.5 (Unreleased)
 
+### Features
+- Expanded manifest file pattern support for all commands
+  - Now supports `okteto-*.yml`, `okteto-*.yaml` (e.g., `okteto-stack.yml`, `okteto-compose.yml`)
+  - Now supports `okteto.*.yml`, `okteto.*.yaml` (e.g., `okteto.dev.yml`, `okteto.prod.yaml`)
+  - All commands (Up, Deploy, Destroy, Test) support the same manifest patterns
+  - Enables environment-specific, feature-based, and component-based manifest organization
+
 ### Internal Improvements
 - Migrated from webpack to esbuild for faster builds and smaller bundle size (64% reduction: 4.43 MB → 1.59 MB)
 - Replaced console.log/error with VS Code's LogOutputChannel API for better debugging
@@ -19,11 +26,13 @@
 - Fixed `splitStateError` join bug
 
 ### Testing
-- Increased test coverage from 12 to 62 tests (+417%)
+- Increased test coverage from 12 to 66 tests (+450%)
   - Added 40 unit tests covering core modules
   - Added 10 E2E tests for extension integration
+  - Added 14 manifest pattern matching tests
   - Added edge case tests for path handling and error parsing
   - Added manifest validation tests
+  - Added automated smoke test suite for end-to-end validation
 
 ### Development
 - Removed legacy files (tslint.json, .snyk, unused dependencies)

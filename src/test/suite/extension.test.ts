@@ -5,6 +5,7 @@ import sinon from 'sinon';
 import * as vscode from 'vscode';
 import * as telemetry from '../../telemetry';
 import * as okteto from '../../okteto';
+import { isManifestSupported } from '../../extension';
 
 type MockVSCode = typeof vscode & {
   __mock: {
@@ -157,5 +158,114 @@ describe('namespace command', () => {
     expect(createNamespace.called).to.equal(false);
     expect(setNamespace.called).to.equal(false);
     expect(showInputBox.called).to.equal(false);
+  });
+});
+
+describe('isManifestSupported', () => {
+  const supportedDeployFilenames = [
+    'okteto-pipeline.yml',
+    'okteto-pipeline.yaml',
+    'docker-compose.yml',
+    'docker-compose.yaml',
+    'okteto.yml',
+    'okteto.yaml',
+  ];
+
+  const supportedUpFilenames = [
+    'docker-compose.yml',
+    'docker-compose.yaml',
+    'okteto.yml',
+    'okteto.yaml',
+  ];
+
+  describe('exact matches from supported list', () => {
+    it('should accept exact matches from deploy list', () => {
+      expect(isManifestSupported('okteto.yml', supportedDeployFilenames)).to.equal(true);
+      expect(isManifestSupported('okteto.yaml', supportedDeployFilenames)).to.equal(true);
+      expect(isManifestSupported('okteto-pipeline.yml', supportedDeployFilenames)).to.equal(true);
+      expect(isManifestSupported('okteto-pipeline.yaml', supportedDeployFilenames)).to.equal(true);
+      expect(isManifestSupported('docker-compose.yml', supportedDeployFilenames)).to.equal(true);
+      expect(isManifestSupported('docker-compose.yaml', supportedDeployFilenames)).to.equal(true);
+    });
+
+    it('should accept exact matches from up list', () => {
+      expect(isManifestSupported('okteto.yml', supportedUpFilenames)).to.equal(true);
+      expect(isManifestSupported('okteto.yaml', supportedUpFilenames)).to.equal(true);
+      expect(isManifestSupported('docker-compose.yml', supportedUpFilenames)).to.equal(true);
+      expect(isManifestSupported('docker-compose.yaml', supportedUpFilenames)).to.equal(true);
+    });
+  });
+
+  describe('okteto-* pattern files', () => {
+    it('should accept okteto-* patterns with any supported list', () => {
+      expect(isManifestSupported('okteto-stack.yml', supportedDeployFilenames)).to.equal(true);
+      expect(isManifestSupported('okteto-stack.yaml', supportedUpFilenames)).to.equal(true);
+      expect(isManifestSupported('okteto-compose.yml', supportedDeployFilenames)).to.equal(true);
+      expect(isManifestSupported('okteto-custom.yaml', supportedUpFilenames)).to.equal(true);
+      expect(isManifestSupported('okteto-frontend.yml', supportedDeployFilenames)).to.equal(true);
+      expect(isManifestSupported('okteto-backend.yaml', supportedUpFilenames)).to.equal(true);
+    });
+  });
+
+  describe('okteto.* pattern files', () => {
+    it('should accept okteto.* patterns with any supported list', () => {
+      expect(isManifestSupported('okteto.dev.yml', supportedDeployFilenames)).to.equal(true);
+      expect(isManifestSupported('okteto.dev.yaml', supportedUpFilenames)).to.equal(true);
+      expect(isManifestSupported('okteto.staging.yml', supportedDeployFilenames)).to.equal(true);
+      expect(isManifestSupported('okteto.prod.yaml', supportedUpFilenames)).to.equal(true);
+      expect(isManifestSupported('okteto.local.yml', supportedDeployFilenames)).to.equal(true);
+      expect(isManifestSupported('okteto.test.yaml', supportedUpFilenames)).to.equal(true);
+    });
+  });
+
+  describe('invalid filenames', () => {
+    it('should reject files that do not match any pattern', () => {
+      expect(isManifestSupported('manifest.yml', supportedDeployFilenames)).to.equal(false);
+      expect(isManifestSupported('config.yaml', supportedDeployFilenames)).to.equal(false);
+      expect(isManifestSupported('docker.yml', supportedDeployFilenames)).to.equal(false);
+      expect(isManifestSupported('okteto', supportedDeployFilenames)).to.equal(false);
+      expect(isManifestSupported('okteto.txt', supportedDeployFilenames)).to.equal(false);
+    });
+
+    it('should reject files with wrong extensions', () => {
+      expect(isManifestSupported('okteto.dev.json', supportedDeployFilenames)).to.equal(false);
+      expect(isManifestSupported('okteto-stack.txt', supportedDeployFilenames)).to.equal(false);
+      expect(isManifestSupported('okteto.yaml.bak', supportedDeployFilenames)).to.equal(false);
+    });
+  });
+
+  describe('edge cases', () => {
+    it('should handle edge case patterns', () => {
+      expect(isManifestSupported('okteto-.yml', supportedDeployFilenames)).to.equal(true);
+      expect(isManifestSupported('okteto..yml', supportedDeployFilenames)).to.equal(true);
+      expect(isManifestSupported('okteto-a-b-c.yml', supportedDeployFilenames)).to.equal(true);
+      expect(isManifestSupported('okteto.a.b.c.yml', supportedDeployFilenames)).to.equal(true);
+    });
+  });
+
+  describe('case sensitivity', () => {
+    it('should be case-sensitive for exact matches', () => {
+      expect(isManifestSupported('Okteto.yml', supportedDeployFilenames)).to.equal(false);
+      expect(isManifestSupported('OKTETO.YML', supportedDeployFilenames)).to.equal(false);
+      expect(isManifestSupported('Docker-Compose.yml', supportedDeployFilenames)).to.equal(false);
+    });
+
+    it('should be case-sensitive for pattern matches', () => {
+      expect(isManifestSupported('Okteto-stack.yml', supportedDeployFilenames)).to.equal(false);
+      expect(isManifestSupported('OKTETO.dev.yml', supportedDeployFilenames)).to.equal(false);
+      expect(isManifestSupported('okteto-Stack.YML', supportedDeployFilenames)).to.equal(false);
+    });
+  });
+
+  describe('empty and invalid inputs', () => {
+    it('should handle empty filename', () => {
+      expect(isManifestSupported('', supportedDeployFilenames)).to.equal(false);
+      expect(isManifestSupported('', supportedUpFilenames)).to.equal(false);
+    });
+
+    it('should handle empty supported filenames array', () => {
+      expect(isManifestSupported('okteto.yml', [])).to.equal(false);
+      expect(isManifestSupported('okteto.dev.yml', [])).to.equal(true);
+    });
   });
 });
