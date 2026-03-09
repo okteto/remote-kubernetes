@@ -164,8 +164,8 @@
     "vscode-uri": "^3.1.0"
   },
   "dependencies": {
-    "@sentry/cli": "^3.2.3",
-    "@sentry/node": "^10.40.0",
+    "@sentry/cli": "^3.3.0",
+    "@sentry/node": "^10.42.0",
     "change-case": "^5.4.4",
     "command-exists": "^1.2.9",
     "execa": "^9.6.1",
