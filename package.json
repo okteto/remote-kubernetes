@@ -150,9 +150,9 @@
     "@types/sinon": "^21.0.0",
     "@types/vscode": "^1.109.0",
     "@vscode/test-electron": "^2.5.1",
-    "@vscode/vsce": "^3.7.1",
+    "@vscode/vsce": "^3.9.1",
     "chai": "^6.2.2",
-    "esbuild": "^0.27.3",
+    "esbuild": "^0.28.0",
     "eslint": "^9.39.3",
     "glob": "^13.0.6",
     "markdown-it": ">=14.1.1",
@@ -164,17 +164,17 @@
     "vscode-uri": "^3.1.0"
   },
   "dependencies": {
-    "@sentry/cli": "^3.2.3",
-    "@sentry/node": "^10.40.0",
+    "@sentry/cli": "^3.4.2",
+    "@sentry/node": "^10.52.0",
     "change-case": "^5.4.4",
     "command-exists": "^1.2.9",
     "execa": "^9.6.1",
-    "find-process": "^2.1.0",
-    "get-port": "^7.1.0",
+    "find-process": "^2.1.1",
+    "get-port": "^7.2.0",
     "got": "^14.6.6",
-    "mixpanel": "^0.20.0",
-    "semver": "^7.7.4",
+    "mixpanel": "^0.22.0",
+    "semver": "^7.8.0",
     "tcp-ping": "^0.1.1",
-    "yaml": "^2.8.2"
+    "yaml": "^2.9.0"
   }
 }
