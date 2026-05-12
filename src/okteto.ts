@@ -1,5 +1,3 @@
-'use strict';
-
 import * as fs from 'fs';
 import {promises} from 'fs';
 import {execa} from 'execa';
@@ -15,6 +13,7 @@ import find from 'find-process';
 import { getLogger } from './logger';
 import { quote, detectShell, ShellKind } from './shell';
 import { getErrorMessage } from './errors';
+import { MtimeCache } from './cache';
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
@@ -446,7 +445,10 @@ export async function setContext(context: string) : Promise<boolean>{
   const configFile = getContextConfigurationFile();
   const result = await waitForConfigChange(
     configFile,
-    () => getContext().name === context,
+    () => {
+      invalidateContextCache();
+      return getContext().name === context;
+    },
     'Context was not created, check your terminal for errors'
   );
 
@@ -482,7 +484,10 @@ export async function setNamespace(namespace: string) {
   const configFile = getContextConfigurationFile();
   const result = await waitForConfigChange(
     configFile,
-    () => getContext().namespace === namespace,
+    () => {
+      invalidateContextCache();
+      return getContext().namespace === namespace;
+    },
     'Namespace was not set, check your terminal for errors'
   );
 
@@ -787,36 +792,68 @@ export function showTerminal(terminalNameSuffix: string){
   });
 }
 
+// Context config sits at ~/.okteto/context/config.json. It is read on every
+// command (extension.ts:checkPrereqs etc.) but only changes when the user
+// runs `okteto context use` or `okteto namespace use`, so cache it by mtime
+// and invalidate explicitly after our own write paths.
+const contextConfigCache = new MtimeCache<OktetoContextConfig>(
+  getContextConfigurationFile(),
+  (raw) => JSON.parse(raw) as OktetoContextConfig,
+);
+
+/**
+ * Invalidates the cached context configuration. Called after we've written
+ * to the context file ourselves so the next `getContext()` reflects the new
+ * state without waiting for the filesystem mtime to roll over.
+ */
+function invalidateContextCache(): void {
+  contextConfigCache.invalidate();
+}
+
 /**
  * Gets the current Okteto context from the config file.
  * Returns context information including name, namespace, and ID.
+ * Backed by a mtime cache to avoid re-parsing the JSON on every command.
  * @returns The current Okteto context
  */
 export function getContext(): Context {
+  const config = contextConfigCache.read();
+  if (!config) {
+    return new Context("", "", "", false);
+  }
+
   try {
-    const c = fs.readFileSync(getContextConfigurationFile(), {encoding: 'utf8'});
-    const config = JSON.parse(c) as OktetoContextConfig;
     const current = config['current-context'];
     const ctx = config.contexts[current];
     if (ctx === null || ctx === undefined) {
       return new Context("", "", "", false);
     }
 
-    return {id: ctx.id, name: ctx.name, namespace: ctx.namespace, isOkteto: ctx.isOkteto};
+    return new Context(ctx.id, ctx.name, ctx.namespace, ctx.isOkteto);
   } catch(err: unknown) {
-    getLogger().error(`failed to get current context from ${getContextConfigurationFile()}: ${err}`);
+    getLogger().error(`failed to read current context from ${getContextConfigurationFile()}: ${err}`);
   }
 
   return new Context("", "", "", false);
 }
 
+// Machine ID is hardware-derived (or hashed once) — it cannot change for the
+// lifetime of the process. Memoise on first call so we don't shell out to
+// ioreg / REG.exe / read /etc/machine-id repeatedly.
+let memoizedMachineId: string | undefined;
+
 /**
  * Gets the machine ID for telemetry purposes.
  * Returns a hashed and anonymized machine identifier from the Okteto analytics file.
  * Falls back to generating a new protected ID if the file doesn't exist.
+ * Memoised after the first successful resolution.
  * @returns The protected machine ID string
  */
 export function getMachineId(): string {
+  if (memoizedMachineId !== undefined) {
+    return memoizedMachineId;
+  }
+
   const analyticsFile =  path.join(os.homedir(), oktetoFolder,  "analytics.json");
   let machineId = "";
   try {
@@ -832,6 +869,7 @@ export function getMachineId(): string {
     machineId = protect();
   }
 
+  memoizedMachineId = machineId;
   return machineId;
 }
 
