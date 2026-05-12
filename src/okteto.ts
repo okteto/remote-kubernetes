@@ -13,7 +13,7 @@ import * as semver from 'semver';
 import * as paths from './paths';
 import find from 'find-process';
 import { getLogger } from './logger';
-import { posixQuote } from './shell';
+import { quote, detectShell, ShellKind } from './shell';
 import { getErrorMessage } from './errors';
 
 const oktetoFolder = '.okteto';
@@ -269,15 +269,17 @@ export function up(manifest: vscode.Uri, namespace: string, name: string, port: 
   }
 
   isActive.set(`${terminalName}-${namespace}-${name}`, true);
-  let cmd = `${posixQuote(binary)} up ${posixQuote(name)} -f ${posixQuote(finalManifest)} --remote ${port}`;
 
   const config = vscode.workspace.getConfiguration('okteto');
-  if (config) {
-    const params = config.get<string>('upArgs') || '';
-    if (params) {
-      cmd = `${cmd} ${params}`;
-    }
-  }
+  const extraArgs = config?.get<string>('upArgs') || '';
+  const cmd = buildUpCommand({
+    binary,
+    name,
+    manifest: finalManifest,
+    port,
+    extraArgs,
+    shell: getShell(),
+  });
 
   term.sendText(cmd, true);
 }
@@ -335,7 +337,7 @@ export function deploy(namespace: string, manifestPath: string): void {
   });
 
   isActive.set(name, true);
-  term.sendText(`${posixQuote(getBinary())} deploy -f ${posixQuote(manifestPath)} --wait`, true);
+  term.sendText(buildDeployCommand({binary: getBinary(), manifestPath, shell: getShell()}), true);
   term.show(true);
   getLogger().info('okteto deploy started');
 }
@@ -362,7 +364,7 @@ export function destroy(namespace: string, manifestUri: vscode.Uri): void {
   });
 
   isActive.set(name, true);
-  term.sendText(`${posixQuote(getBinary())} destroy -f ${posixQuote(manifestUri.fsPath)}`, true);
+  term.sendText(buildDestroyCommand({binary: getBinary(), manifestPath: manifestUri.fsPath, shell: getShell()}), true);
   term.show(true);
   getLogger().info('okteto destroy started');
 }
@@ -390,8 +392,7 @@ export function test(namespace: string, manifestPath: string, test: string): voi
   });
 
   isActive.set(name, true);
-  const testArg = test ? ` ${posixQuote(test)}` : '';
-  term.sendText(`${posixQuote(getBinary())} test -f ${posixQuote(manifestPath)}${testArg}`, true);
+  term.sendText(buildTestCommand({binary: getBinary(), manifestPath, test, shell: getShell()}), true);
   term.show(true);
   getLogger().info('okteto test started');
 }
@@ -439,7 +440,7 @@ export async function setContext(context: string) : Promise<boolean>{
   });
 
   isActive.set(name, true);
-  const cmd = `${posixQuote(getBinary())} context use ${posixQuote(context)}`;
+  const cmd = buildSetContextCommand({binary: getBinary(), context, shell: getShell()});
   term.sendText(cmd, true);
 
   const configFile = getContextConfigurationFile();
@@ -474,7 +475,7 @@ export async function setNamespace(namespace: string) {
   });
 
   isActive.set(name, true);
-  const cmd = `${posixQuote(getBinary())} namespace use ${posixQuote(namespace)}`;
+  const cmd = buildSetNamespaceCommand({binary: getBinary(), namespace, shell: getShell()});
   term.sendText(cmd, true);
   term.show(true);
 
@@ -915,6 +916,80 @@ function gitBashMode(): boolean {
   }
 
   return config.get<boolean>('gitBash') || false;
+}
+
+/**
+ * Picks the quoting style for the user's terminal.
+ * - If `okteto.gitBash` is enabled we always use POSIX (Git Bash is bash).
+ * - Otherwise we trust `vscode.env.shell` and fall back to a platform default
+ *   when VS Code does not report one.
+ */
+function getShell(): ShellKind {
+  if (gitBashMode()) {
+    return 'posix';
+  }
+  return detectShell(vscode.env.shell);
+}
+
+/**
+ * Builds the `okteto up` command line, with every interpolated value quoted
+ * for the target shell. Pure — exported for unit testing across shells.
+ */
+export function buildUpCommand(opts: {
+  binary: string;
+  name: string;
+  manifest: string;
+  port: number;
+  extraArgs?: string;
+  shell: ShellKind;
+}): string {
+  const { binary, name, manifest, port, extraArgs, shell } = opts;
+  let cmd = `${quote(binary, shell)} up ${quote(name, shell)} -f ${quote(manifest, shell)} --remote ${port}`;
+  if (extraArgs) {
+    cmd = `${cmd} ${extraArgs}`;
+  }
+  return cmd;
+}
+
+/**
+ * Builds the `okteto deploy` command line.
+ */
+export function buildDeployCommand(opts: {binary: string; manifestPath: string; shell: ShellKind}): string {
+  const { binary, manifestPath, shell } = opts;
+  return `${quote(binary, shell)} deploy -f ${quote(manifestPath, shell)} --wait`;
+}
+
+/**
+ * Builds the `okteto destroy` command line.
+ */
+export function buildDestroyCommand(opts: {binary: string; manifestPath: string; shell: ShellKind}): string {
+  const { binary, manifestPath, shell } = opts;
+  return `${quote(binary, shell)} destroy -f ${quote(manifestPath, shell)}`;
+}
+
+/**
+ * Builds the `okteto test` command line. An empty `test` runs all tests.
+ */
+export function buildTestCommand(opts: {binary: string; manifestPath: string; test: string; shell: ShellKind}): string {
+  const { binary, manifestPath, test, shell } = opts;
+  const testArg = test ? ` ${quote(test, shell)}` : '';
+  return `${quote(binary, shell)} test -f ${quote(manifestPath, shell)}${testArg}`;
+}
+
+/**
+ * Builds the `okteto context use` command line.
+ */
+export function buildSetContextCommand(opts: {binary: string; context: string; shell: ShellKind}): string {
+  const { binary, context, shell } = opts;
+  return `${quote(binary, shell)} context use ${quote(context, shell)}`;
+}
+
+/**
+ * Builds the `okteto namespace use` command line.
+ */
+export function buildSetNamespaceCommand(opts: {binary: string; namespace: string; shell: ShellKind}): string {
+  const { binary, namespace, shell } = opts;
+  return `${quote(binary, shell)} namespace use ${quote(namespace, shell)}`;
 }
 
 function extractMessage(error :string):string {
