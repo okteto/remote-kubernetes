@@ -11,9 +11,10 @@ import * as vscode from 'vscode';
 import * as os from 'os';
 import * as semver from 'semver';
 import * as paths from './paths';
-import { clearInterval, setInterval } from 'timers';
 import find from 'find-process';
 import { getLogger } from './logger';
+import { quote, detectShell, ShellKind } from './shell';
+import { getErrorMessage } from './errors';
 
 const oktetoFolder = '.okteto';
 const stateFile = 'okteto.state';
@@ -97,6 +98,31 @@ export class Context {
 const isActive = new Map<string, boolean>();
 
 /**
+ * Pure decision function: given whether the CLI is installed and which version
+ * is present, decides whether install/upgrade are needed. Extracted so the
+ * version-comparison logic can be tested without touching the filesystem.
+ *
+ * @param installed - whether the CLI binary is present
+ * @param installedVersion - the detected version, or undefined if it could not be parsed
+ * @param minimumVersion - the minimum required version (semver)
+ * @returns Object indicating whether installation or upgrade is needed
+ */
+export function computeInstallState(
+  installed: boolean,
+  installedVersion: string | undefined,
+  minimumVersion: string,
+): {install: boolean, upgrade: boolean} {
+  if (!installed) {
+    return {install: true, upgrade: false};
+  }
+  if (!installedVersion) {
+    return {install: false, upgrade: false};
+  }
+  const outdated = semver.lt(installedVersion, minimumVersion);
+  return {install: outdated, upgrade: outdated};
+}
+
+/**
  * Checks if the Okteto CLI needs to be installed or upgraded.
  * @returns Object indicating whether installation or upgrade is needed
  */
@@ -105,16 +131,12 @@ export async function needsInstall(): Promise<{install: boolean, upgrade: boolea
 
   const installed = await isInstalled(binary);
   if (!installed) {
-    return {install: true, upgrade: false};
+    return computeInstallState(false, undefined, download.minimum);
   }
 
-
   try {
-    const version =  await getVersion(binary);
-    if (!version) {
-      return {install: false, upgrade: false};
-    }
-    return {install: semver.lt(version, download.minimum), upgrade: true};
+    const version = await getVersion(binary);
+    return computeInstallState(true, version, download.minimum);
   } catch {
     return {install: false, upgrade: false};
   }
@@ -182,18 +204,18 @@ export async function install(progress: vscode.Progress<{increment: number, mess
   }
 
   try {
-    if (fs.existsSync(installPath)) {
-      fs.unlinkSync(installPath);
-    }
+    await promises.unlink(installPath);
   } catch(err: unknown) {
-    getLogger().error(`delete fail: ${err}`);
+    if (hasErrorCode(err) && err.code !== 'ENOENT') {
+      getLogger().error(`delete fail: ${err}`);
+    }
   }
 
   try {
-    fs.renameSync(downloadPath, installPath);
+    await promises.rename(downloadPath, installPath);
   } catch(err: unknown) {
     getLogger().error(`rename fail: ${err}`);
-    throw new Error(`failed to download ${source} into ${installPath}: ${getErrorMessage(err)}`);
+    throw new Error(`failed to download ${source.url} into ${installPath}: ${getErrorMessage(err)}`);
   }
 
 
@@ -247,14 +269,18 @@ export function up(manifest: vscode.Uri, namespace: string, name: string, port: 
   }
 
   isActive.set(`${terminalName}-${namespace}-${name}`, true);
-  let cmd = `${binary} up ${name} -f '${finalManifest}' --remote ${port}`;
 
   const config = vscode.workspace.getConfiguration('okteto');
-  if (config) {
-    const params = config.get<string>('upArgs') || '';
-    cmd = `${cmd} ${params}`;
-  }
-  
+  const extraArgs = config?.get<string>('upArgs') || '';
+  const cmd = buildUpCommand({
+    binary,
+    name,
+    manifest: finalManifest,
+    port,
+    extraArgs,
+    shell: getShell(),
+  });
+
   term.sendText(cmd, true);
 }
 
@@ -291,14 +317,15 @@ export async function down(manifest: vscode.Uri, namespace: string, name: string
 
 /**
  * Deploys an Okteto development environment.
- * Opens a terminal and runs `okteto deploy` with the specified manifest.
+ * Opens a terminal and runs `okteto deploy` with the specified manifest. The
+ * function returns once the terminal command has been dispatched; it does not
+ * wait for the deploy itself to finish.
  * @param namespace - Kubernetes namespace
  * @param manifestPath - Path to the Okteto manifest file
  */
-export async function deploy(namespace: string, manifestPath: string) {
+export function deploy(namespace: string, manifestPath: string): void {
   const name = `${terminalName}-${namespace}-deploy`;
   disposeTerminal(name);
-  isActive.set(name, false);
 
   const term = vscode.window.createTerminal({
     name: name,
@@ -310,21 +337,22 @@ export async function deploy(namespace: string, manifestPath: string) {
   });
 
   isActive.set(name, true);
-  term.sendText(`${getBinary()} deploy -f ${manifestPath} --wait`, true);
+  term.sendText(buildDeployCommand({binary: getBinary(), manifestPath, shell: getShell()}), true);
   term.show(true);
-  getLogger().info('okteto deploy completed');
+  getLogger().info('okteto deploy started');
 }
 
 /**
  * Destroys an Okteto development environment.
  * Opens a terminal and runs `okteto destroy` to remove all deployed resources.
+ * The function returns once the terminal command has been dispatched; it does
+ * not wait for the destroy itself to finish.
  * @param namespace - Kubernetes namespace
  * @param manifestUri - URI of the Okteto manifest file
  */
-export async function destroy(namespace: string, manifestUri: vscode.Uri) {
+export function destroy(namespace: string, manifestUri: vscode.Uri): void {
   const name = `${terminalName}-${namespace}-destroy`;
   disposeTerminal(name);
-  isActive.set(name, false);
 
   const term = vscode.window.createTerminal({
     name: name,
@@ -336,22 +364,23 @@ export async function destroy(namespace: string, manifestUri: vscode.Uri) {
   });
 
   isActive.set(name, true);
-  term.sendText(`${getBinary()} destroy -f ${manifestUri.fsPath}`, true);
+  term.sendText(buildDestroyCommand({binary: getBinary(), manifestPath: manifestUri.fsPath, shell: getShell()}), true);
   term.show(true);
-  getLogger().info('okteto destroy completed');
+  getLogger().info('okteto destroy started');
 }
 
 /**
  * Runs tests in an Okteto development environment.
- * Opens a terminal and runs `okteto test` with the specified test name.
+ * Opens a terminal and runs `okteto test` with the specified test name. The
+ * function returns once the terminal command has been dispatched; it does not
+ * wait for the test run itself to finish.
  * @param namespace - Kubernetes namespace
  * @param manifestPath - Path to the Okteto manifest file
  * @param test - Name of the test to run (empty string for all tests)
  */
-export async function test(namespace: string, manifestPath: string, test: string) {
+export function test(namespace: string, manifestPath: string, test: string): void {
   const name = `${terminalName}-${namespace}-test`;
   disposeTerminal(name);
-  isActive.set(name, false);
 
   const term = vscode.window.createTerminal({
     name: name,
@@ -363,9 +392,9 @@ export async function test(namespace: string, manifestPath: string, test: string
   });
 
   isActive.set(name, true);
-  term.sendText(`${getBinary()} test -f ${manifestPath} ${test}`, true);
+  term.sendText(buildTestCommand({binary: getBinary(), manifestPath, test, shell: getShell()}), true);
   term.show(true);
-  getLogger().info('okteto test completed');
+  getLogger().info('okteto test started');
 }
 
 function waitForConfigChange(
@@ -411,7 +440,7 @@ export async function setContext(context: string) : Promise<boolean>{
   });
 
   isActive.set(name, true);
-  const cmd = `${getBinary()} context use ${context}`;
+  const cmd = buildSetContextCommand({binary: getBinary(), context, shell: getShell()});
   term.sendText(cmd, true);
 
   const configFile = getContextConfigurationFile();
@@ -446,7 +475,7 @@ export async function setNamespace(namespace: string) {
   });
 
   isActive.set(name, true);
-  const cmd = `${getBinary()} namespace use ${namespace}`;
+  const cmd = buildSetNamespaceCommand({binary: getBinary(), namespace, shell: getShell()});
   term.sendText(cmd, true);
   term.show(true);
 
@@ -631,32 +660,73 @@ export function splitStateError(state: string): {state: string, message: string}
   return {state: st, message: msg};
 }
 
+export interface MonitorHandle {
+  dispose(): void;
+}
+
+export interface NotifyIfFailedOptions {
+  pollIntervalMs?: number;
+  shouldContinue?: () => boolean;
+  getStateFn?: (namespace: string, name: string) => Promise<{state: string, message: string}>;
+}
+
 /**
  * Monitors an Okteto up process and notifies if it fails.
- * Polls the state file every second and calls the callback if failure is detected.
+ * Polls the state file on an interval and invokes the callback once a failure
+ * is observed. The returned handle can be disposed to stop the monitor early.
  * @param namespace - Kubernetes namespace
  * @param name - Name of the service
- * @param callback - Function to call if the process fails, receives terminal suffix and error message
+ * @param callback - Function to call if the process fails, receives the error message and terminal suffix
+ * @param options - Override the poll interval or the "should keep polling" predicate (used in tests)
+ * @returns Disposable that cancels the monitor
  */
-export async function notifyIfFailed(namespace: string, name:string, callback: (n: string, m: string) => void){
-  const id = setInterval(async () => {
-    const c = await getState(namespace, name);
-    if (!isActive.has(`${terminalName}-${namespace}-${name}`) || !isActive.get(`${terminalName}-${namespace}-${name}`)) {
-      clearInterval(id);
+export function notifyIfFailed(
+  namespace: string,
+  name: string,
+  callback: (message: string, terminalSuffix: string) => void,
+  options: NotifyIfFailedOptions = {},
+): MonitorHandle {
+  const intervalMs = options.pollIntervalMs ?? 1000;
+  const key = `${terminalName}-${namespace}-${name}`;
+  const shouldContinue = options.shouldContinue ?? (() => isActive.get(key) === true);
+  const getStateFn = options.getStateFn ?? getState;
+
+  let stopped = false;
+  const stop = () => {
+    if (stopped) {
       return;
     }
-    
-    if (c.state === state.failed) {
-      getLogger().error(`okteto up failed: ${c.message}`);
-      clearInterval(id);
-      if (c.message) {
-        callback(`${namespace}-${name}`, `Okteto: Up command failed: ${c.message}`);
-      } else {
-        callback(`${namespace}-${name}`, `Okteto: Up command failed`);
-      }
+    stopped = true;
+    clearInterval(id);
+  };
+
+  const id = setInterval(async () => {
+    if (stopped) {
+      return;
     }
 
-  }, 1000);
+    if (!shouldContinue()) {
+      stop();
+      return;
+    }
+
+    const c = await getStateFn(namespace, name);
+    if (stopped) {
+      return;
+    }
+
+    if (c.state === state.failed) {
+      getLogger().error(`okteto up failed: ${c.message}`);
+      stop();
+      const suffix = `${namespace}-${name}`;
+      const message = c.message
+        ? `Okteto: Up command failed: ${c.message}`
+        : `Okteto: Up command failed`;
+      callback(message, suffix);
+    }
+  }, intervalMs);
+
+  return { dispose: stop };
 }
 
 function cleanState(namespace: string, name:string) {
@@ -697,12 +767,12 @@ export function getRemoteSSH(): boolean {
 
 
 
-function disposeTerminal(terminalName: string){
-  vscode.window.terminals.forEach((t) => {
-    if (t.name === `${terminalName}`) {
+function disposeTerminal(name: string){
+  for (const t of vscode.window.terminals) {
+    if (t.name === name) {
       t.dispose();
     }
-  });
+  }
 }
 
 /**
@@ -836,12 +906,7 @@ export async function getNamespaceList(): Promise<RuntimeItem[]>{
 
 
 class RuntimeItem implements vscode.QuickPickItem {
-
-	label: string;
-
-	constructor(private l: string, public description: string, public value: string) {
-		this.label = l;
-	}
+	constructor(public label: string, public description: string, public value: string) {}
 }
 
 function gitBashMode(): boolean {
@@ -853,18 +918,84 @@ function gitBashMode(): boolean {
   return config.get<boolean>('gitBash') || false;
 }
 
-function extractMessage(error :string):string {
-  let message = error.replace('x  ', '');  
-  message = message.replace('i  ', '');  
-  return message;
+/**
+ * Picks the quoting style for the user's terminal.
+ * - If `okteto.gitBash` is enabled we always use POSIX (Git Bash is bash).
+ * - Otherwise we trust `vscode.env.shell` and fall back to a platform default
+ *   when VS Code does not report one.
+ */
+function getShell(): ShellKind {
+  if (gitBashMode()) {
+    return 'posix';
+  }
+  return detectShell(vscode.env.shell);
 }
 
-function getErrorMessage(err: unknown): string {
-  if (err instanceof Error) {
-    return err.message;
+/**
+ * Builds the `okteto up` command line, with every interpolated value quoted
+ * for the target shell. Pure — exported for unit testing across shells.
+ */
+export function buildUpCommand(opts: {
+  binary: string;
+  name: string;
+  manifest: string;
+  port: number;
+  extraArgs?: string;
+  shell: ShellKind;
+}): string {
+  const { binary, name, manifest, port, extraArgs, shell } = opts;
+  let cmd = `${quote(binary, shell)} up ${quote(name, shell)} -f ${quote(manifest, shell)} --remote ${port}`;
+  if (extraArgs) {
+    cmd = `${cmd} ${extraArgs}`;
   }
+  return cmd;
+}
 
-  return JSON.stringify(err);
+/**
+ * Builds the `okteto deploy` command line.
+ */
+export function buildDeployCommand(opts: {binary: string; manifestPath: string; shell: ShellKind}): string {
+  const { binary, manifestPath, shell } = opts;
+  return `${quote(binary, shell)} deploy -f ${quote(manifestPath, shell)} --wait`;
+}
+
+/**
+ * Builds the `okteto destroy` command line.
+ */
+export function buildDestroyCommand(opts: {binary: string; manifestPath: string; shell: ShellKind}): string {
+  const { binary, manifestPath, shell } = opts;
+  return `${quote(binary, shell)} destroy -f ${quote(manifestPath, shell)}`;
+}
+
+/**
+ * Builds the `okteto test` command line. An empty `test` runs all tests.
+ */
+export function buildTestCommand(opts: {binary: string; manifestPath: string; test: string; shell: ShellKind}): string {
+  const { binary, manifestPath, test, shell } = opts;
+  const testArg = test ? ` ${quote(test, shell)}` : '';
+  return `${quote(binary, shell)} test -f ${quote(manifestPath, shell)}${testArg}`;
+}
+
+/**
+ * Builds the `okteto context use` command line.
+ */
+export function buildSetContextCommand(opts: {binary: string; context: string; shell: ShellKind}): string {
+  const { binary, context, shell } = opts;
+  return `${quote(binary, shell)} context use ${quote(context, shell)}`;
+}
+
+/**
+ * Builds the `okteto namespace use` command line.
+ */
+export function buildSetNamespaceCommand(opts: {binary: string; namespace: string; shell: ShellKind}): string {
+  const { binary, namespace, shell } = opts;
+  return `${quote(binary, shell)} namespace use ${quote(namespace, shell)}`;
+}
+
+function extractMessage(error :string):string {
+  let message = error.replace('x  ', '');
+  message = message.replace('i  ', '');
+  return message;
 }
 
 interface ErrorWithCode {

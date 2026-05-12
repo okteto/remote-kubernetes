@@ -9,8 +9,10 @@ import * as okteto from './okteto';
 import {Reporter, events} from './telemetry';
 import { minimum } from './download';
 import { initializeLogger, getLogger } from './logger';
+import { getErrorMessage } from './errors';
 
 const activeManifest = new Map<string, vscode.Uri>();
+const activeMonitors = new Set<okteto.MonitorHandle>();
 let reporter: Reporter;
 
 const supportedDeployFilenames = ['okteto-pipeline.yml',
@@ -42,9 +44,6 @@ export function isManifestSupported(filename: string, supportedFilenames: string
     return /^okteto-.*\.(yml|yaml)$/.test(filename) ||
            /^okteto\..*\.(yml|yaml)$/.test(filename);
 }
-  
-vscode.commands.executeCommand('setContext', 'ext.supportedDeployFiles', supportedDeployFilenames);
-vscode.commands.executeCommand('setContext', 'ext.supportedUpFilenames', supportedUpFilenames);
 
 function getExtensionVersion() : string {
     let version = "0.0.0";
@@ -68,6 +67,9 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(logger);
 
     logger.info(`okteto.remote-kubernetes ${version} activated`);
+
+    vscode.commands.executeCommand('setContext', 'ext.supportedDeployFiles', supportedDeployFilenames);
+    vscode.commands.executeCommand('setContext', 'ext.supportedUpFilenames', supportedUpFilenames);
 
     const ctx = okteto.getContext();
     const machineId = okteto.getMachineId();
@@ -93,6 +95,10 @@ export function activate(context: vscode.ExtensionContext) {
  */
 export function deactivate() {
     activeManifest.clear();
+    for (const monitor of activeMonitors) {
+        monitor.dispose();
+    }
+    activeMonitors.clear();
     if (reporter) {
         reporter.dispose();
     }
@@ -247,16 +253,18 @@ async function waitForUp(namespace: string, name: string, port: number) {
 
 async function waitForFinalState(namespace: string, name:string, progress: vscode.Progress<{message?: string | undefined; increment?: number | undefined}>): Promise<{result: boolean, message: string}> {
     const config = vscode.workspace.getConfiguration('okteto');
-    let upTimeout = 1000;
+    const defaultUpTimeoutSeconds = 100;
+    let upTimeoutSeconds = defaultUpTimeoutSeconds;
     if (config) {
-        upTimeout = config.get<number>('timeout') || 1000;
+        upTimeoutSeconds = config.get<number>('upTimeout') || defaultUpTimeoutSeconds;
     }
-    
+
     const seen = new Map<string, boolean>();
     const messages = okteto.getStateMessages();
     progress.report({  message: "Launching your development environment..." });
     let counter = 0;
-    const timeout = 15 * 60;
+    const overallTimeoutMinutes = 15;
+    const overallTimeoutSeconds = overallTimeoutMinutes * 60;
     while (true) {
         const res = await okteto.getState(namespace, name);
         if (!seen.has(res.state)) {
@@ -272,18 +280,18 @@ async function waitForFinalState(namespace: string, name:string, progress: vscod
                 return {result: false, message: res.message};
             case okteto.state.starting: {
                 const isRunning = await okteto.isRunning(namespace, name);
-                if (!isRunning && counter > upTimeout){
+                if (!isRunning && counter > upTimeoutSeconds){
                     return {result: false, message: `process failed to start`};
                 }
                 break;
             }
         }
-        
+
         counter++;
-        if (counter === timeout) {
-            return {result: false, message: `task didn't finish in 5 minutes`};
+        if (counter === overallTimeoutSeconds) {
+            return {result: false, message: `task didn't finish in ${overallTimeoutMinutes} minutes`};
         }
-        
+
         await sleep(1000);
     }
 }
@@ -307,7 +315,8 @@ async function finalizeUp(namespace: string, name: string, workdir: string) {
         const uri = vscode.Uri.parse(`vscode-remote://ssh-remote+${host}/${workdir}`);
         await vscode.commands.executeCommand('vscode.openFolder', uri, true);
         reporter.track(events.upFinished);
-        okteto.notifyIfFailed(namespace, name, onOktetoFailed);
+        const monitor = okteto.notifyIfFailed(namespace, name, onOktetoFailed);
+        activeMonitors.add(monitor);
     } catch(err: unknown) {
         reporter.captureError(`opensshremotes.openEmptyWindow failed: ${getErrorMessage(err)}`, err);
         reporter.track(events.sshHostSelectionFailed);
@@ -389,7 +398,7 @@ async function deployCmd() {
     try {
         const namespace = await getNamespace();
         reporter.track(events.deploy);
-        await okteto.deploy(namespace, manifestPath);
+        okteto.deploy(namespace, manifestPath);
     } catch(err: unknown) {
         reporter.captureError(`okteto deploy failed: ${getErrorMessage(err)}`, err);
         vscode.window.showErrorMessage(`Okteto: Deploy failed: ${getErrorMessage(err)}`);
@@ -421,7 +430,7 @@ async function testCmd() {
     } catch(err: unknown) {
         reporter.track(events.manifestLoadFailed);
         reporter.captureError(`load manifest failed: ${getErrorMessage(err)}`, err);
-        return onOktetoFailed(`Okteto: Down failed to load your Okteto manifest: ${getErrorMessage(err)}`);
+        return onOktetoFailed(`Okteto: Test failed to load your Okteto manifest: ${getErrorMessage(err)}`);
     }
 
     try {
@@ -432,7 +441,7 @@ async function testCmd() {
 
         const namespace = await getNamespace();
         reporter.track(events.test);
-        await okteto.test(namespace, manifestPath.fsPath, test.name);
+        okteto.test(namespace, manifestPath.fsPath, test.name);
     } catch(err: unknown) {
         reporter.captureError(`okteto test failed: ${getErrorMessage(err)}`, err);
         vscode.window.showErrorMessage(`Okteto: Test failed: ${getErrorMessage(err)}`);
@@ -459,7 +468,7 @@ async function destroyCmd() {
     reporter.track(events.destroy);
     try {
         const namespace = await getNamespace();
-        await okteto.destroy(namespace, manifestUri);
+        okteto.destroy(namespace, manifestUri);
     } catch(err: unknown) {
         reporter.captureError(`okteto destroy failed: ${getErrorMessage(err)}`, err);
         vscode.window.showErrorMessage(`Okteto: Destroy failed: ${getErrorMessage(err)}`);
@@ -699,11 +708,4 @@ async function showActiveManifestPicker() : Promise<vscode.Uri | undefined> {
 async function getNamespace(): Promise<string> {
     const ctx = okteto.getContext();
     return ctx.namespace;
-}
-
-function getErrorMessage(err: unknown): string {
-    if (err instanceof Error) {
-        return err.message;
-    }
-    return String(err);
 }

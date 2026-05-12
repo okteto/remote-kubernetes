@@ -68,36 +68,24 @@ export function getOktetoDownloadInfo() : {url: string, chmod: boolean} {
 /**
  * Downloads the Okteto CLI binary from a URL to a destination path.
  * Reports download progress to the VS Code progress indicator.
+ * Throws if the download fails (pipeline rejects on stream error).
  * @param source - The download URL
  * @param destination - The local file path where the binary should be saved
  * @param progress - VS Code progress reporter for showing download progress
- * @returns Promise that resolves to true when download completes successfully
  */
-export async function binary(source: string, destination: string, progress: vscode.Progress<{increment: number, message: string}>) : Promise<boolean> { 
+export async function binary(source: string, destination: string, progress: vscode.Progress<{increment: number, message: string}>) : Promise<void> {
   const downloadStream = got.stream(source);
   const fileWriterStream = fs.createWriteStream(destination);
   let current = 0;
-  downloadStream
-    .on("downloadProgress", ({percent})=> {
-      const percentage = Math.round(percent * 100);
-      const reportedProgress = percentage - current;
-      current = percentage;
-      progress.report({increment: reportedProgress, message: ''});
-    })
-    .on("error", (error) => {
-      getLogger().error(`Download failed: ${error.message}`);
-    });
-
-  fileWriterStream
-  .on("error", (error) => {
-    getLogger().error(`Could not write file to system: ${error.message}`);
-  })
-  .on("finish", () => {
-    getLogger().info(`File downloaded to ${destination}`);
+  downloadStream.on("downloadProgress", ({percent}) => {
+    const percentage = Math.round(percent * 100);
+    const reportedProgress = percentage - current;
+    current = percentage;
+    progress.report({increment: reportedProgress, message: ''});
   });
 
   await pipeline(downloadStream, fileWriterStream);
-  return true;
+  getLogger().info(`File downloaded to ${destination}`);
 }
 
 /**

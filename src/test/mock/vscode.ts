@@ -27,6 +27,7 @@ function resetMockState(): void {
   telemetryListeners.clear();
   vscodeStub.workspace.workspaceFolders = [];
   vscodeStub.env.isTelemetryEnabled = false;
+  vscodeStub.env.shell = undefined;
 }
 
 const vscodeStub: Record<string, any> = {
@@ -88,6 +89,7 @@ const vscodeStub: Record<string, any> = {
     machineId: 'test-machine-id',
     sessionId: 'test-session-id',
     isTelemetryEnabled: false,
+    shell: undefined as string | undefined,
     onDidChangeTelemetryEnabled: (listener: (enabled: boolean) => void) => {
       telemetryListeners.add(listener);
       return {
@@ -121,6 +123,9 @@ const vscodeStub: Record<string, any> = {
     emitTelemetryEnabledChanged: (enabled: boolean) => {
       vscodeStub.env.isTelemetryEnabled = enabled;
       telemetryListeners.forEach((listener) => listener(enabled));
+    },
+    setShell: (shellPath: string | undefined) => {
+      vscodeStub.env.shell = shellPath;
     },
     getRegisteredCommand: (command: string) => registeredCommands.get(command),
   },
