@@ -188,6 +188,7 @@ function parseComposeManifest(manifest: ManifestData): Manifest {
 export function parseManifest(parsed: yaml.Document.Parsed): Manifest  {
     const raw = parsed.toJSON() as unknown;
     if (!isObject(raw)) {
+        getLogger().debug(`manifest root is not an object (got ${raw === null ? 'null' : typeof raw}); treating as empty manifest`);
         return new Manifest([], []);
     }
     const manifest = raw;
@@ -197,6 +198,7 @@ export function parseManifest(parsed: yaml.Document.Parsed): Manifest  {
     } else if (isDockerCompose(manifest)) {
         return parseComposeManifest(manifest);
     } else {
+        getLogger().debug(`manifest does not match any known shape (no dev/deploy/build/test and no services); treating as empty`);
         return new Manifest([],[]);
     }
 }

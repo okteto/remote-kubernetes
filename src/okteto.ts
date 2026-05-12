@@ -498,7 +498,9 @@ export async function setNamespace(namespace: string) {
 
 /**
  * Creates an Okteto namespace.
- * Runs `okteto namespace create <namespace>`.
+ * Runs `okteto namespace create <namespace>`. The okteto CLI may update the
+ * context config when it creates a namespace, so the context cache is
+ * invalidated unconditionally afterwards (success or failure).
  * @param namespace - Name of the namespace to create
  * @returns Promise that resolves to true if the command succeeds
  */
@@ -514,6 +516,8 @@ export async function createNamespace(namespace: string): Promise<boolean> {
   } catch (err: unknown) {
     getLogger().error(`failed to create namespace ${namespace}: ${err}`);
     throw err;
+  } finally {
+    invalidateContextCache();
   }
 }
 
@@ -793,12 +797,30 @@ export function showTerminal(terminalNameSuffix: string){
 }
 
 // Context config sits at ~/.okteto/context/config.json. It is read on every
-// command (extension.ts:checkPrereqs etc.) but only changes when the user
-// runs `okteto context use` or `okteto namespace use`, so cache it by mtime
-// and invalidate explicitly after our own write paths.
+// command (extension.ts:checkPrereqs etc.) but only changes when something
+// runs `okteto context use`, `okteto namespace use`, or `okteto namespace
+// create`. We cache it by mtime and invalidate explicitly after every write
+// path we initiate ourselves; external mutations (the user running the CLI
+// in another terminal) are picked up by the statSync check inside read().
+//
+// Mutation paths that must call invalidateContextCache():
+//   - setContext()        (terminal-driven; invalidates inside the
+//                          waitForConfigChange condition so the wait loop
+//                          observes the new state without waiting on mtime
+//                          resolution)
+//   - setNamespace()      (same pattern as setContext)
+//   - createNamespace()   (execa-driven; invalidates in a finally block so
+//                          either success or failure refreshes the cache)
+//
+// New mutation paths must be added to this list.
 const contextConfigCache = new MtimeCache<OktetoContextConfig>(
   getContextConfigurationFile(),
   (raw) => JSON.parse(raw) as OktetoContextConfig,
+  {
+    onError: (err, kind) => {
+      getLogger().error(`failed to ${kind} context config from ${getContextConfigurationFile()}: ${err}`);
+    },
+  },
 );
 
 /**

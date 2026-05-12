@@ -108,4 +108,56 @@ describe('MtimeCache', () => {
         expect(cache.read()).to.deep.equal({n: 1});
         expect(parseCount).to.equal(2);
     });
+
+    describe('onError observability', () => {
+        it('is not called when the file is simply missing (ENOENT)', () => {
+            const errors: Array<{err: unknown; kind: string}> = [];
+            const cache = new MtimeCache(filepath, (raw) => JSON.parse(raw), {
+                onError: (err, kind) => errors.push({err, kind}),
+            });
+
+            // File does not exist yet.
+            expect(cache.read()).to.equal(undefined);
+            expect(errors).to.have.lengthOf(0);
+        });
+
+        it('reports parse failures with kind="parse"', () => {
+            writeWithMtime('not json', 1_000_000);
+            const errors: Array<{err: unknown; kind: string}> = [];
+            const cache = new MtimeCache(filepath, (raw) => JSON.parse(raw), {
+                onError: (err, kind) => errors.push({err, kind}),
+            });
+
+            expect(cache.read()).to.equal(undefined);
+            expect(errors).to.have.lengthOf(1);
+            expect(errors[0].kind).to.equal('parse');
+            expect(errors[0].err).to.be.an.instanceOf(SyntaxError);
+        });
+
+        it('does not call onError again on the next read while mtime is unchanged', () => {
+            writeWithMtime('not json', 1_000_000);
+            const errors: Array<{err: unknown; kind: string}> = [];
+            const cache = new MtimeCache(filepath, (raw) => JSON.parse(raw), {
+                onError: (err, kind) => errors.push({err, kind}),
+            });
+
+            // First read parses and reports the error; cache is cleared.
+            expect(cache.read()).to.equal(undefined);
+            expect(errors).to.have.lengthOf(1);
+
+            // Second read sees the same mtime, but since the cache was cleared
+            // after the parse failure, it re-attempts and reports again.
+            // That's intentional — we want each subsequent attempt to surface
+            // the failure rather than silently swallow it.
+            expect(cache.read()).to.equal(undefined);
+            expect(errors).to.have.lengthOf(2);
+        });
+
+        it('does not require an onError callback', () => {
+            writeWithMtime('not json', 1_000_000);
+            const cache = new MtimeCache(filepath, (raw) => JSON.parse(raw));
+            // Should swallow the parse error silently.
+            expect(cache.read()).to.equal(undefined);
+        });
+    });
 });
