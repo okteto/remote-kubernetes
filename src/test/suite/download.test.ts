@@ -1,5 +1,3 @@
-'use strict';
-
 import { expect } from 'chai';
 import * as download from '../../download';
 import * as os from 'os';

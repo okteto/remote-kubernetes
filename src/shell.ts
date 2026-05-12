@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * Identifies the quoting / escaping rules to use when building a shell command.
  * - `posix`     bash, zsh, sh, dash, fish, ksh, WSL, Git Bash, …

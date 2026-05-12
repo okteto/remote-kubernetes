@@ -1,5 +1,3 @@
-'use strict';
-
 import {execaSync} from 'execa';
 import {createHmac} from 'crypto';
 import * as os from 'os';

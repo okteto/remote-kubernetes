@@ -1,5 +1,3 @@
-'use strict';
-
 import * as machineid from '../../machineid';
 import { expect } from 'chai';
 
