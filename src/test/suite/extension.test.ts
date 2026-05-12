@@ -1,5 +1,3 @@
-'use strict';
-
 import { expect } from 'chai';
 import sinon from 'sinon';
 import * as vscode from 'vscode';
@@ -25,11 +23,40 @@ interface MutableTelemetryModule {
   Reporter: ReporterCtor;
 }
 
-function activateExtension() {
+interface ExtensionModule {
+  activate: (ctx: { subscriptions: Array<{ dispose: () => void }> }) => void;
+  deactivate: () => void;
+}
+
+function loadExtension(): ExtensionModule {
   delete require.cache[require.resolve('../../extension')];
-  const extension = require('../../extension') as { activate: (ctx: { subscriptions: Array<{ dispose: () => void }> }) => void };
+  return require('../../extension') as ExtensionModule;
+}
+
+function activateExtension() {
+  const extension = loadExtension();
   const context = { subscriptions: [] as Array<{ dispose: () => void }> };
   extension.activate(context);
+}
+
+function installFakeReporter(instances: Array<{ disposed: boolean }>): () => void {
+  const telemetryModule = telemetry as unknown as MutableTelemetryModule;
+  const originalReporter = telemetryModule.Reporter;
+
+  function FakeReporter(this: { disposed: boolean }) {
+    this.disposed = false;
+    instances.push(this);
+  }
+  (FakeReporter as unknown as ReporterCtor).prototype.track = async function () {};
+  (FakeReporter as unknown as ReporterCtor).prototype.captureError = function () {};
+  (FakeReporter as unknown as ReporterCtor).prototype.dispose = function () {
+    this.disposed = true;
+  };
+  telemetryModule.Reporter = FakeReporter as unknown as ReporterCtor;
+
+  return () => {
+    telemetryModule.Reporter = originalReporter;
+  };
 }
 
 describe('extension reporter lifecycle', () => {
@@ -46,19 +73,8 @@ describe('extension reporter lifecycle', () => {
 
   it('should dispose previous reporter when replacing it after context change', async () => {
     const reporterInstances: Array<{ disposed: boolean }> = [];
+    const restoreReporter = installFakeReporter(reporterInstances);
 
-    const telemetryModule = telemetry as unknown as MutableTelemetryModule;
-    const originalReporter = telemetryModule.Reporter;
-    function FakeReporter(this: { disposed: boolean }) {
-      this.disposed = false;
-      reporterInstances.push(this);
-    }
-    (FakeReporter as unknown as ReporterCtor).prototype.track = async function () {};
-    (FakeReporter as unknown as ReporterCtor).prototype.captureError = function () {};
-    (FakeReporter as unknown as ReporterCtor).prototype.dispose = function () {
-      this.disposed = true;
-    };
-    telemetryModule.Reporter = FakeReporter as unknown as ReporterCtor;
     try {
       sinon.stub(okteto, 'needsInstall').resolves({ install: false, upgrade: false });
       sinon.stub(okteto, 'getContext').returns({ id: 'ctx-id', name: 'ctx-name', namespace: 'ns', isOkteto: true });
@@ -79,7 +95,117 @@ describe('extension reporter lifecycle', () => {
       expect(reporterInstances[0].disposed).to.equal(true);
       expect(reporterInstances[1].disposed).to.equal(false);
     } finally {
-      telemetryModule.Reporter = originalReporter;
+      restoreReporter();
+    }
+  });
+});
+
+describe('extension activate/deactivate lifecycle', () => {
+  const mockVSCode = vscode as unknown as MockVSCode;
+
+  beforeEach(() => {
+    mockVSCode.__mock.reset();
+    sinon.restore();
+  });
+
+  afterEach(() => {
+    sinon.restore();
+  });
+
+  it('activate registers all commands on the supplied context', () => {
+    const reporterInstances: Array<{ disposed: boolean }> = [];
+    const restoreReporter = installFakeReporter(reporterInstances);
+
+    try {
+      sinon.stub(okteto, 'getContext').returns({ id: 'ctx', name: 'ctx', namespace: 'ns', isOkteto: true });
+      sinon.stub(okteto, 'getMachineId').returns('machine-id');
+
+      const extension = loadExtension();
+      const context = { subscriptions: [] as Array<{ dispose: () => void }> };
+      extension.activate(context);
+
+      // 1 LogOutputChannel + 8 command registrations = 9 disposables on the context.
+      expect(context.subscriptions.length).to.equal(9);
+      expect(reporterInstances.length).to.equal(1);
+      expect(reporterInstances[0].disposed).to.equal(false);
+    } finally {
+      restoreReporter();
+    }
+  });
+
+  it('deactivate disposes the active reporter', () => {
+    const reporterInstances: Array<{ disposed: boolean }> = [];
+    const restoreReporter = installFakeReporter(reporterInstances);
+
+    try {
+      sinon.stub(okteto, 'getContext').returns({ id: 'ctx', name: 'ctx', namespace: 'ns', isOkteto: true });
+      sinon.stub(okteto, 'getMachineId').returns('machine-id');
+
+      const extension = loadExtension();
+      extension.activate({ subscriptions: [] as Array<{ dispose: () => void }> });
+      expect(reporterInstances[0].disposed).to.equal(false);
+
+      extension.deactivate();
+      expect(reporterInstances[0].disposed).to.equal(true);
+    } finally {
+      restoreReporter();
+    }
+  });
+
+  it('deactivate is idempotent — calling twice does not throw', () => {
+    const reporterInstances: Array<{ disposed: boolean }> = [];
+    const restoreReporter = installFakeReporter(reporterInstances);
+
+    try {
+      sinon.stub(okteto, 'getContext').returns({ id: 'ctx', name: 'ctx', namespace: 'ns', isOkteto: true });
+      sinon.stub(okteto, 'getMachineId').returns('machine-id');
+
+      const extension = loadExtension();
+      extension.activate({ subscriptions: [] as Array<{ dispose: () => void }> });
+
+      extension.deactivate();
+      expect(() => extension.deactivate()).to.not.throw();
+      expect(reporterInstances[0].disposed).to.equal(true);
+    } finally {
+      restoreReporter();
+    }
+  });
+
+  it('deactivate without a prior activate does not throw', () => {
+    const extension = loadExtension();
+    expect(() => extension.deactivate()).to.not.throw();
+  });
+
+  it('survives an activate → deactivate → activate round trip with a fresh reporter', () => {
+    const reporterInstances: Array<{ disposed: boolean }> = [];
+    const restoreReporter = installFakeReporter(reporterInstances);
+
+    try {
+      sinon.stub(okteto, 'getContext').returns({ id: 'ctx', name: 'ctx', namespace: 'ns', isOkteto: true });
+      sinon.stub(okteto, 'getMachineId').returns('machine-id');
+
+      const extension = loadExtension();
+
+      // First activate cycle.
+      const ctx1 = { subscriptions: [] as Array<{ dispose: () => void }> };
+      extension.activate(ctx1);
+      expect(reporterInstances.length).to.equal(1);
+      expect(reporterInstances[0].disposed).to.equal(false);
+
+      // Tear down.
+      extension.deactivate();
+      expect(reporterInstances[0].disposed).to.equal(true);
+
+      // Re-activate. A fresh Reporter must be constructed; the previous one
+      // stays disposed.
+      const ctx2 = { subscriptions: [] as Array<{ dispose: () => void }> };
+      extension.activate(ctx2);
+      expect(reporterInstances.length).to.equal(2);
+      expect(reporterInstances[0].disposed).to.equal(true);
+      expect(reporterInstances[1].disposed).to.equal(false);
+      expect(ctx2.subscriptions.length).to.equal(9);
+    } finally {
+      restoreReporter();
     }
   });
 });

@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * Extracts a human-readable message from an unknown thrown value.
  * Returns the Error's message for Error instances; otherwise stringifies.

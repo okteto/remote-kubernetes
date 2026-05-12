@@ -1,5 +1,3 @@
-'use strict';
-
 import { expect } from 'chai';
 import { events, Reporter } from '../../telemetry';
 import * as vscode from 'vscode';

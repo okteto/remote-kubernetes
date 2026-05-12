@@ -1,5 +1,3 @@
-'use strict';
-
 import * as manifest from '../../manifest';
 import * as yaml from 'yaml';
 import * as fs from 'fs';
@@ -140,5 +138,115 @@ describe('get', () => {
         expect(err.message).to.include('not a valid yaml file');
       }
     }
+  });
+});
+
+describe('parseManifest (defensive shapes)', () => {
+  function parse(text: string): manifest.Manifest {
+    return manifest.parseManifest(yaml.parseDocument(text));
+  }
+
+  it('returns empty manifest for an empty document', () => {
+    const result = parse('');
+    expect(result.services.length).to.equal(0);
+    expect(result.tests.length).to.equal(0);
+  });
+
+  it('returns empty manifest for a YAML scalar', () => {
+    const result = parse('"just a string"');
+    expect(result.services.length).to.equal(0);
+    expect(result.tests.length).to.equal(0);
+  });
+
+  it('treats a non-object dev block as no services', () => {
+    const result = parse('dev: "not an object"');
+    // Still recognised as v2 (dev key present), but no services parsed.
+    expect(result.services.length).to.equal(0);
+    expect(result.tests.length).to.equal(0);
+  });
+
+  it('treats a non-object services block as not a compose file', () => {
+    const result = parse('services: "not a map"');
+    expect(result.services.length).to.equal(0);
+    expect(result.tests.length).to.equal(0);
+  });
+
+  it('treats a list-shaped dev entry defensively (no crash)', () => {
+    const result = parse([
+      'dev:',
+      '  api:',
+      '    - this is wrong',
+      '    - dev should be a map of objects',
+    ].join('\n'));
+    expect(result.services.length).to.equal(1);
+    expect(result.services[0].name).to.equal('api');
+    // Workdir defaults to empty when the dev value is not an object.
+    expect(result.services[0].workdir).to.equal('');
+    expect(result.services[0].port).to.equal(0);
+  });
+
+  it('coerces a non-numeric "remote" field to port 0', () => {
+    const result = parse([
+      'dev:',
+      '  api:',
+      '    workdir: /app',
+      '    remote: "twenty-two"',
+    ].join('\n'));
+    expect(result.services[0].port).to.equal(0);
+  });
+
+  it('keeps a numeric "remote" field as the port', () => {
+    const result = parse([
+      'dev:',
+      '  api:',
+      '    workdir: /app',
+      '    remote: 2222',
+    ].join('\n'));
+    expect(result.services[0].port).to.equal(2222);
+  });
+
+  it('falls back to the trailing segment of sync when workdir is missing', () => {
+    const result = parse([
+      'dev:',
+      '  api:',
+      '    sync:',
+      '      - .:/usr/src/app',
+    ].join('\n'));
+    expect(result.services[0].workdir).to.equal('/usr/src/app');
+  });
+
+  it('skips compose volumes that point at a declared named volume', () => {
+    const result = parse([
+      'volumes:',
+      '  cache: {}',
+      'services:',
+      '  web:',
+      '    volumes:',
+      '      - cache:/var/cache',
+      '      - ./code:/usr/src/app',
+    ].join('\n'));
+    expect(result.services.length).to.equal(1);
+    expect(result.services[0].name).to.equal('web');
+    expect(result.services[0].workdir).to.equal('/usr/src/app');
+  });
+
+  it('returns no services for compose services with no parseable volumes', () => {
+    const result = parse([
+      'services:',
+      '  web:',
+      '    image: nginx',
+    ].join('\n'));
+    expect(result.services.length).to.equal(0);
+  });
+
+  it('parses test names from a v2 test block while ignoring non-object values', () => {
+    const result = parse([
+      'test:',
+      '  unit:',
+      '    command: npm test',
+      '  integration:',
+      '    command: npm run it',
+    ].join('\n'));
+    expect(result.tests.map(t => t.name)).to.deep.equal(['unit', 'integration']);
   });
 });

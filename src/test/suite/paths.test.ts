@@ -1,5 +1,3 @@
-'use strict';
-
 import * as paths from '../../paths';
 import { expect } from 'chai';
 import { URI } from 'vscode-uri';
