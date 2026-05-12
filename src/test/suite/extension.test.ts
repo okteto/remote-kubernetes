@@ -3,11 +3,12 @@ import sinon from 'sinon';
 import * as vscode from 'vscode';
 import * as telemetry from '../../telemetry';
 import * as okteto from '../../okteto';
-import { isManifestSupported } from '../../extension';
+import { isManifestSupported, getUpTimeoutSeconds } from '../../extension';
 
 type MockVSCode = typeof vscode & {
   __mock: {
     reset: () => void;
+    setConfiguration: (section: string, key: string, value: unknown) => void;
   };
 };
 
@@ -287,6 +288,38 @@ describe('namespace command', () => {
   });
 });
 
+describe('down command (manifest picker dismissed)', () => {
+  const mockVSCode = vscode as unknown as MockVSCode;
+
+  beforeEach(() => {
+    mockVSCode.__mock.reset();
+    sinon.restore();
+  });
+
+  afterEach(() => {
+    sinon.restore();
+  });
+
+  it('returns without invoking okteto.down when no manifests exist in the workspace', async () => {
+    // Regression for getManifestOrAsk dismissed path. With an empty workspace
+    // and no active manifest, showManifestPicker shows an error and returns
+    // undefined; downCmd must exit without calling okteto.down.
+    sinon.stub(okteto, 'needsInstall').resolves({ install: false, upgrade: false });
+    sinon.stub(okteto, 'getContext').returns({ id: 'ctx', name: 'ctx', namespace: 'ns', isOkteto: true });
+    sinon.stub(okteto, 'getMachineId').returns('machine-id');
+    const downStub = sinon.stub(okteto, 'down').resolves();
+
+    // The mock workspace.findFiles returns [] by default, so showManifestPicker
+    // hits its "No manifests found" branch and returns undefined.
+    sinon.stub(vscode.window, 'showErrorMessage').resolves(undefined);
+
+    activateExtension();
+    await vscode.commands.executeCommand('okteto.down');
+
+    expect(downStub.called).to.equal(false);
+  });
+});
+
 describe('isManifestSupported', () => {
   const supportedDeployFilenames = [
     'okteto-pipeline.yml',
@@ -393,5 +426,35 @@ describe('isManifestSupported', () => {
       expect(isManifestSupported('okteto.yml', [])).to.equal(false);
       expect(isManifestSupported('okteto.dev.yml', [])).to.equal(true);
     });
+  });
+});
+
+describe('getUpTimeoutSeconds', () => {
+  const mockVSCode = vscode as unknown as MockVSCode;
+
+  beforeEach(() => {
+    mockVSCode.__mock.reset();
+  });
+
+  it('returns the package.json default (100) when the setting is not configured', () => {
+    expect(getUpTimeoutSeconds()).to.equal(100);
+  });
+
+  it('returns the user-configured value when set', () => {
+    mockVSCode.__mock.setConfiguration('okteto', 'upTimeout', 250);
+    expect(getUpTimeoutSeconds()).to.equal(250);
+  });
+
+  it('falls back to 100 when the setting is 0 (treats falsy as "use default")', () => {
+    mockVSCode.__mock.setConfiguration('okteto', 'upTimeout', 0);
+    expect(getUpTimeoutSeconds()).to.equal(100);
+  });
+
+  it('does not read from the unrelated `okteto.timeout` key', () => {
+    // Regression for round-1 fix: code used to read 'okteto.timeout' which
+    // was never the documented setting. Putting a value under that key must
+    // have no effect now.
+    mockVSCode.__mock.setConfiguration('okteto', 'timeout', 7);
+    expect(getUpTimeoutSeconds()).to.equal(100);
   });
 });

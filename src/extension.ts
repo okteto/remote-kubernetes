@@ -6,7 +6,7 @@ import {sortFilePaths} from  './paths';
 import * as okteto from './okteto';
 import {Reporter, events} from './telemetry';
 import { minimum } from './download';
-import { initializeLogger, getLogger } from './logger';
+import { initializeLogger, getLogger, disposeLogger } from './logger';
 import { getErrorMessage } from './errors';
 
 const activeManifest = new Map<string, vscode.Uri>();
@@ -121,6 +121,7 @@ export function deactivate() {
     activeMonitors.clear();
     currentReporter?.dispose();
     currentReporter = undefined;
+    disposeLogger();
 }
 
 async function checkPrereqs(checkContext: boolean) {
@@ -270,13 +271,26 @@ async function waitForUp(namespace: string, name: string, port: number) {
           });
 }
 
-async function waitForFinalState(namespace: string, name:string, progress: vscode.Progress<{message?: string | undefined; increment?: number | undefined}>): Promise<{result: boolean, message: string}> {
-    const config = vscode.workspace.getConfiguration('okteto');
+/**
+ * Reads the `okteto.upTimeout` setting (in seconds) used by `waitForFinalState`
+ * to decide how long to keep polling a `starting` state before declaring the
+ * process failed-to-start. Falls back to 100s when the setting is missing or
+ * set to a falsy value, matching the default declared in package.json.
+ *
+ * Exported so the config-reading behaviour can be tested without driving the
+ * full up-command flow.
+ */
+export function getUpTimeoutSeconds(): number {
     const defaultUpTimeoutSeconds = 100;
-    let upTimeoutSeconds = defaultUpTimeoutSeconds;
-    if (config) {
-        upTimeoutSeconds = config.get<number>('upTimeout') || defaultUpTimeoutSeconds;
+    const config = vscode.workspace.getConfiguration('okteto');
+    if (!config) {
+        return defaultUpTimeoutSeconds;
     }
+    return config.get<number>('upTimeout') || defaultUpTimeoutSeconds;
+}
+
+async function waitForFinalState(namespace: string, name:string, progress: vscode.Progress<{message?: string | undefined; increment?: number | undefined}>): Promise<{result: boolean, message: string}> {
+    const upTimeoutSeconds = getUpTimeoutSeconds();
 
     const seen = new Map<string, boolean>();
     const messages = okteto.getStateMessages();
@@ -495,28 +509,21 @@ async function destroyCmd() {
 }
 
 async function getManifestOrAsk(): Promise<vscode.Uri | undefined> {
-    if (activeManifest.size > 0) {
-        if (activeManifest.size === 1) {
-            const manifestUri = activeManifest.values().next().value;
-            return manifestUri;
-        } else {
-          const manifestUri = await showActiveManifestPicker();
-          if (manifestUri) {
-            reporter().track(events.manifestSelected);
-            return manifestUri;
-          } else {
-            reporter().track(events.manifestDismissed);
-          }
-        }
-    } else {
-        const manifestUri = await showManifestPicker(supportedUpFilenames);
-        if (manifestUri) {
-            reporter().track(events.manifestSelected);
-            return manifestUri;
-        } else {
-            reporter().track(events.manifestDismissed);
-        }
+    if (activeManifest.size === 1) {
+        return activeManifest.values().next().value;
     }
+
+    const manifestUri = activeManifest.size > 1
+        ? await showActiveManifestPicker()
+        : await showManifestPicker(supportedUpFilenames);
+
+    if (manifestUri) {
+        reporter().track(events.manifestSelected);
+        return manifestUri;
+    }
+
+    reporter().track(events.manifestDismissed);
+    return undefined;
 }
 
 /**
@@ -625,7 +632,7 @@ function onOktetoFailed(message: string, terminalSuffix: string | null = null) {
     }
 }
 
-async function showManifestPicker(supportedFilenames: string[] = supportedDeployFilenames) : Promise<vscode.Uri | undefined> {
+async function showManifestPicker(supportedFilenames: string[]) : Promise<vscode.Uri | undefined> {
     const files = await vscode.workspace.findFiles('**/{okteto,docker-compose,okteto-*,okteto.*}.{yml,yaml}', '**/node_modules/**');
 
     // Filter files to only include supported filenames for this command
