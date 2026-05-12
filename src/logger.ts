@@ -27,3 +27,21 @@ export function getLogger(): vscode.LogOutputChannel {
 	}
 	return outputChannel;
 }
+
+/**
+ * Disposes the module-level LogOutputChannel and clears the cached reference.
+ *
+ * Pairs with `getLogger()`'s auto-init fallback: if a module calls `getLogger()`
+ * before the extension's `activate()` ever pushed the channel onto
+ * `context.subscriptions`, the auto-created channel would otherwise stay
+ * referenced by this module past `deactivate()`. Calling `disposeLogger()` from
+ * `deactivate()` (and again from tests that tear down) guarantees the next
+ * `activate()` builds a fresh channel.
+ *
+ * Safe to call multiple times — `LogOutputChannel.dispose()` is idempotent.
+ */
+export function disposeLogger(): void {
+	outputChannel?.dispose();
+	outputChannel = undefined;
+}
+

@@ -7,6 +7,7 @@ import Module from 'module';
 const configuration: Record<string, Record<string, unknown>> = {};
 const registeredCommands = new Map<string, (...args: unknown[]) => unknown>();
 const telemetryListeners = new Set<(enabled: boolean) => void>();
+const outputChannels: Array<{name: string; disposed: boolean; dispose: () => void}> = [];
 
 function getConfigValue(section: string, key: string): unknown {
   return configuration[section]?.[key];
@@ -25,6 +26,7 @@ function resetMockState(): void {
   }
   registeredCommands.clear();
   telemetryListeners.clear();
+  outputChannels.length = 0;
   vscodeStub.workspace.workspaceFolders = [];
   vscodeStub.env.isTelemetryEnabled = false;
   vscodeStub.env.shell = undefined;
@@ -49,19 +51,25 @@ const vscodeStub: Record<string, any> = {
       show: () => {},
       dispose: () => {},
     }),
-    createOutputChannel: () => ({
-      appendLine: () => {},
-      append: () => {},
-      clear: () => {},
-      show: () => {},
-      hide: () => {},
-      dispose: () => {},
-      info: () => {},
-      debug: () => {},
-      error: () => {},
-      warn: () => {},
-      trace: () => {},
-    }),
+    createOutputChannel: (name: string) => {
+      const channel = {
+        name,
+        disposed: false,
+        appendLine: () => {},
+        append: () => {},
+        clear: () => {},
+        show: () => {},
+        hide: () => {},
+        info: () => {},
+        debug: () => {},
+        error: () => {},
+        warn: () => {},
+        trace: () => {},
+        dispose: function () { this.disposed = true; },
+      };
+      outputChannels.push(channel);
+      return channel;
+    },
     terminals: [],
   },
   commands: {
@@ -128,6 +136,7 @@ const vscodeStub: Record<string, any> = {
       vscodeStub.env.shell = shellPath;
     },
     getRegisteredCommand: (command: string) => registeredCommands.get(command),
+    getOutputChannels: () => outputChannels.slice(),
   },
 };
 

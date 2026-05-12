@@ -82,6 +82,10 @@ function isDockerCompose(manifest: ManifestData): boolean {
     return services !== undefined && Object.keys(services).length > 0;
 }
 
+function compareByName(a: {name: string}, b: {name: string}): number {
+    return a.name.localeCompare(b.name);
+}
+
 function getComposeServices(manifest: ManifestData): Service[] {
     const services = getServicesMap(manifest);
     if (!services) {
@@ -119,7 +123,7 @@ function getComposeServices(manifest: ManifestData): Service[] {
         }
     }
 
-    result.sort((a, b) => a.name.localeCompare(b.name));
+    result.sort(compareByName);
     return result;
 }
 
@@ -159,7 +163,7 @@ function getV2Services(manifest: ManifestData): Service[] {
         result.push(new Service(name, getWorkdir(svc), getPort(svc)));
     }
 
-    result.sort((a, b) => a.name.localeCompare(b.name));
+    result.sort(compareByName);
     return result;
 }
 
