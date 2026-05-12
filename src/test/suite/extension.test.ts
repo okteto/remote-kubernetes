@@ -457,4 +457,49 @@ describe('getUpTimeoutSeconds', () => {
     mockVSCode.__mock.setConfiguration('okteto', 'timeout', 7);
     expect(getUpTimeoutSeconds()).to.equal(100);
   });
+
+  describe('malformed config values (settings.json edited by hand)', () => {
+    it('falls back to 100 for a string value', () => {
+      mockVSCode.__mock.setConfiguration('okteto', 'upTimeout', 'abc');
+      expect(getUpTimeoutSeconds()).to.equal(100);
+    });
+
+    it('falls back to 100 for a negative number', () => {
+      // Critical: an unvalidated negative would make `counter > upTimeoutSeconds`
+      // true on the first iteration of the wait loop and produce a spurious
+      // "process failed to start" before the dev container has any chance.
+      mockVSCode.__mock.setConfiguration('okteto', 'upTimeout', -5);
+      expect(getUpTimeoutSeconds()).to.equal(100);
+    });
+
+    it('falls back to 100 for NaN', () => {
+      mockVSCode.__mock.setConfiguration('okteto', 'upTimeout', Number.NaN);
+      expect(getUpTimeoutSeconds()).to.equal(100);
+    });
+
+    it('falls back to 100 for Infinity', () => {
+      mockVSCode.__mock.setConfiguration('okteto', 'upTimeout', Number.POSITIVE_INFINITY);
+      expect(getUpTimeoutSeconds()).to.equal(100);
+    });
+
+    it('falls back to 100 for a boolean', () => {
+      mockVSCode.__mock.setConfiguration('okteto', 'upTimeout', true);
+      expect(getUpTimeoutSeconds()).to.equal(100);
+    });
+
+    it('falls back to 100 for null', () => {
+      mockVSCode.__mock.setConfiguration('okteto', 'upTimeout', null);
+      expect(getUpTimeoutSeconds()).to.equal(100);
+    });
+
+    it('falls back to 100 for an object', () => {
+      mockVSCode.__mock.setConfiguration('okteto', 'upTimeout', {seconds: 250});
+      expect(getUpTimeoutSeconds()).to.equal(100);
+    });
+
+    it('accepts a positive float as-is', () => {
+      mockVSCode.__mock.setConfiguration('okteto', 'upTimeout', 42.5);
+      expect(getUpTimeoutSeconds()).to.equal(42.5);
+    });
+  });
 });

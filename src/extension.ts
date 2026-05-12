@@ -83,6 +83,14 @@ function getExtensionVersion() : string {
 export function activate(context: vscode.ExtensionContext) {
     const version = getExtensionVersion();
 
+    // The log output channel has two registered disposal paths:
+    //   1. context.subscriptions.push(logger) below — VS Code calls dispose()
+    //      when the extension is unloaded / the host shuts down.
+    //   2. disposeLogger() from deactivate() — covers the case where a module
+    //      called getLogger() at import time (which auto-creates a channel)
+    //      and never made it onto context.subscriptions because activate()
+    //      hadn't run yet.
+    // Both paths invoke LogOutputChannel.dispose(), which is idempotent.
     const logger = initializeLogger();
     context.subscriptions.push(logger);
 
@@ -212,7 +220,10 @@ async function upCmd() {
     } else {
         const choice = await showManifestServicePicker(m.services);
         if (!choice) {
-            reporter().track(events.manifestDismissed);
+            // The user already accepted the manifest picker (we tracked
+            // manifestSelected above); dismissing the *service* picker is a
+            // different action and is not part of the manifest-picker funnel.
+            // Match downCmd's behaviour and return silently.
             return;
         }
 
@@ -274,8 +285,15 @@ async function waitForUp(namespace: string, name: string, port: number) {
 /**
  * Reads the `okteto.upTimeout` setting (in seconds) used by `waitForFinalState`
  * to decide how long to keep polling a `starting` state before declaring the
- * process failed-to-start. Falls back to 100s when the setting is missing or
- * set to a falsy value, matching the default declared in package.json.
+ * process failed-to-start. Falls back to 100s — matching the default declared
+ * in package.json — whenever the setting is missing, falsy, or set to a value
+ * that isn't a finite positive number.
+ *
+ * `config.get<number>(...)` is a TypeScript cast, not a runtime check: a user
+ * editing settings.json by hand can place a string, a negative number, or
+ * something else under this key and it will surface here as-is. Validate so a
+ * bad value can't make the polling loop misbehave (e.g. a negative value would
+ * cause the "process failed to start" branch to fire on the first iteration).
  *
  * Exported so the config-reading behaviour can be tested without driving the
  * full up-command flow.
@@ -286,7 +304,12 @@ export function getUpTimeoutSeconds(): number {
     if (!config) {
         return defaultUpTimeoutSeconds;
     }
-    return config.get<number>('upTimeout') || defaultUpTimeoutSeconds;
+
+    const value = config.get('upTimeout');
+    if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+        return value;
+    }
+    return defaultUpTimeoutSeconds;
 }
 
 async function waitForFinalState(namespace: string, name:string, progress: vscode.Progress<{message?: string | undefined; increment?: number | undefined}>): Promise<{result: boolean, message: string}> {
