@@ -28,11 +28,8 @@ export class Manifest {
 type ManifestData = Record<string, unknown>;
 
 function isDockerCompose(manifest: ManifestData): boolean {
-    if (manifest.services) {
-        const s = manifest.services;
-        for (const _key in s){
-            return true;
-        }
+    if (manifest.services && typeof manifest.services === 'object') {
+        return Object.keys(manifest.services as Record<string, unknown>).length > 0;
     }
 
     return false;

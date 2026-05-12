@@ -1,6 +1,7 @@
 'use strict';
 
 import { expect } from 'chai';
+import sinon from 'sinon';
 import * as okteto from '../../okteto';
 
 describe('Context', () => {
@@ -95,5 +96,156 @@ describe('splitStateError', () => {
     const result = okteto.splitStateError('failed:  spaces  everywhere  ');
     expect(result.state).to.equal('failed');
     expect(result.message).to.equal('  spaces  everywhere  ');
+  });
+});
+
+describe('computeInstallState', () => {
+  const minimum = '3.17.0';
+
+  it('requires install when the binary is not present', () => {
+    expect(okteto.computeInstallState(false, undefined, minimum)).to.deep.equal({
+      install: true,
+      upgrade: false,
+    });
+  });
+
+  it('does nothing when installed and the version cannot be parsed', () => {
+    expect(okteto.computeInstallState(true, undefined, minimum)).to.deep.equal({
+      install: false,
+      upgrade: false,
+    });
+  });
+
+  it('does nothing when the installed version meets the minimum', () => {
+    expect(okteto.computeInstallState(true, '3.17.0', minimum)).to.deep.equal({
+      install: false,
+      upgrade: false,
+    });
+  });
+
+  it('does nothing when the installed version exceeds the minimum', () => {
+    expect(okteto.computeInstallState(true, '3.20.1', minimum)).to.deep.equal({
+      install: false,
+      upgrade: false,
+    });
+  });
+
+  it('reports both install and upgrade when the installed version is outdated', () => {
+    expect(okteto.computeInstallState(true, '3.16.0', minimum)).to.deep.equal({
+      install: true,
+      upgrade: true,
+    });
+  });
+
+  it('does not return upgrade=true alongside install=false', () => {
+    // Regression: needsInstall used to always return upgrade=true regardless
+    // of whether the installed version was outdated.
+    const result = okteto.computeInstallState(true, '3.20.0', minimum);
+    expect(result.install).to.equal(false);
+    expect(result.upgrade).to.equal(false);
+  });
+});
+
+describe('notifyIfFailed', () => {
+  let clock: sinon.SinonFakeTimers;
+
+  beforeEach(() => {
+    clock = sinon.useFakeTimers();
+  });
+
+  afterEach(() => {
+    clock.restore();
+    sinon.restore();
+  });
+
+  it('passes (message, suffix) — not (suffix, message) — to the callback', async () => {
+    const getStateFn = sinon.stub().resolves({ state: okteto.state.failed, message: 'kaboom' });
+    const callback = sinon.spy();
+
+    const handle = okteto.notifyIfFailed('my-ns', 'my-svc', callback, {
+      pollIntervalMs: 10,
+      shouldContinue: () => true,
+      getStateFn,
+    });
+
+    await clock.tickAsync(10);
+    await clock.tickAsync(0);
+
+    expect(callback.calledOnce).to.equal(true);
+    const [first, second] = callback.firstCall.args;
+    expect(first).to.equal('Okteto: Up command failed: kaboom');
+    expect(second).to.equal('my-ns-my-svc');
+
+    handle.dispose();
+  });
+
+  it('uses a fallback message when failure has no detail', async () => {
+    const getStateFn = sinon.stub().resolves({ state: okteto.state.failed, message: '' });
+    const callback = sinon.spy();
+
+    const handle = okteto.notifyIfFailed('ns', 'svc', callback, {
+      pollIntervalMs: 5,
+      shouldContinue: () => true,
+      getStateFn,
+    });
+
+    await clock.tickAsync(5);
+    await clock.tickAsync(0);
+
+    expect(callback.calledOnce).to.equal(true);
+    expect(callback.firstCall.args[0]).to.equal('Okteto: Up command failed');
+    expect(callback.firstCall.args[1]).to.equal('ns-svc');
+
+    handle.dispose();
+  });
+
+  it('stops polling after dispose() is called', async () => {
+    const getStateFn = sinon.stub().resolves({ state: okteto.state.starting, message: '' });
+    const callback = sinon.spy();
+
+    const handle = okteto.notifyIfFailed('ns', 'svc', callback, {
+      pollIntervalMs: 5,
+      shouldContinue: () => true,
+      getStateFn,
+    });
+
+    await clock.tickAsync(5);
+    await clock.tickAsync(0);
+    const callsBefore = getStateFn.callCount;
+    expect(callsBefore).to.be.greaterThan(0);
+
+    handle.dispose();
+
+    await clock.tickAsync(100);
+    await clock.tickAsync(0);
+
+    expect(getStateFn.callCount).to.equal(callsBefore);
+    expect(callback.called).to.equal(false);
+  });
+
+  it('stops polling when shouldContinue returns false', async () => {
+    const getStateFn = sinon.stub().resolves({ state: okteto.state.starting, message: '' });
+    let active = true;
+    const callback = sinon.spy();
+
+    okteto.notifyIfFailed('ns', 'svc', callback, {
+      pollIntervalMs: 5,
+      shouldContinue: () => active,
+      getStateFn,
+    });
+
+    await clock.tickAsync(5);
+    await clock.tickAsync(0);
+    expect(getStateFn.callCount).to.be.greaterThan(0);
+
+    active = false;
+    const callsAtStop = getStateFn.callCount;
+
+    await clock.tickAsync(50);
+    await clock.tickAsync(0);
+
+    // The next tick observes shouldContinue=false and stops without calling getStateFn.
+    expect(getStateFn.callCount).to.equal(callsAtStop);
+    expect(callback.called).to.equal(false);
   });
 });

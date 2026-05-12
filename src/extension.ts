@@ -9,8 +9,10 @@ import * as okteto from './okteto';
 import {Reporter, events} from './telemetry';
 import { minimum } from './download';
 import { initializeLogger, getLogger } from './logger';
+import { getErrorMessage } from './errors';
 
 const activeManifest = new Map<string, vscode.Uri>();
+const activeMonitors = new Set<okteto.MonitorHandle>();
 let reporter: Reporter;
 
 const supportedDeployFilenames = ['okteto-pipeline.yml',
@@ -42,9 +44,6 @@ export function isManifestSupported(filename: string, supportedFilenames: string
     return /^okteto-.*\.(yml|yaml)$/.test(filename) ||
            /^okteto\..*\.(yml|yaml)$/.test(filename);
 }
-  
-vscode.commands.executeCommand('setContext', 'ext.supportedDeployFiles', supportedDeployFilenames);
-vscode.commands.executeCommand('setContext', 'ext.supportedUpFilenames', supportedUpFilenames);
 
 function getExtensionVersion() : string {
     let version = "0.0.0";
@@ -68,6 +67,9 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(logger);
 
     logger.info(`okteto.remote-kubernetes ${version} activated`);
+
+    vscode.commands.executeCommand('setContext', 'ext.supportedDeployFiles', supportedDeployFilenames);
+    vscode.commands.executeCommand('setContext', 'ext.supportedUpFilenames', supportedUpFilenames);
 
     const ctx = okteto.getContext();
     const machineId = okteto.getMachineId();
@@ -93,6 +95,10 @@ export function activate(context: vscode.ExtensionContext) {
  */
 export function deactivate() {
     activeManifest.clear();
+    for (const monitor of activeMonitors) {
+        monitor.dispose();
+    }
+    activeMonitors.clear();
     if (reporter) {
         reporter.dispose();
     }
@@ -309,7 +315,8 @@ async function finalizeUp(namespace: string, name: string, workdir: string) {
         const uri = vscode.Uri.parse(`vscode-remote://ssh-remote+${host}/${workdir}`);
         await vscode.commands.executeCommand('vscode.openFolder', uri, true);
         reporter.track(events.upFinished);
-        okteto.notifyIfFailed(namespace, name, onOktetoFailed);
+        const monitor = okteto.notifyIfFailed(namespace, name, onOktetoFailed);
+        activeMonitors.add(monitor);
     } catch(err: unknown) {
         reporter.captureError(`opensshremotes.openEmptyWindow failed: ${getErrorMessage(err)}`, err);
         reporter.track(events.sshHostSelectionFailed);
@@ -391,7 +398,7 @@ async function deployCmd() {
     try {
         const namespace = await getNamespace();
         reporter.track(events.deploy);
-        await okteto.deploy(namespace, manifestPath);
+        okteto.deploy(namespace, manifestPath);
     } catch(err: unknown) {
         reporter.captureError(`okteto deploy failed: ${getErrorMessage(err)}`, err);
         vscode.window.showErrorMessage(`Okteto: Deploy failed: ${getErrorMessage(err)}`);
@@ -434,7 +441,7 @@ async function testCmd() {
 
         const namespace = await getNamespace();
         reporter.track(events.test);
-        await okteto.test(namespace, manifestPath.fsPath, test.name);
+        okteto.test(namespace, manifestPath.fsPath, test.name);
     } catch(err: unknown) {
         reporter.captureError(`okteto test failed: ${getErrorMessage(err)}`, err);
         vscode.window.showErrorMessage(`Okteto: Test failed: ${getErrorMessage(err)}`);
@@ -461,7 +468,7 @@ async function destroyCmd() {
     reporter.track(events.destroy);
     try {
         const namespace = await getNamespace();
-        await okteto.destroy(namespace, manifestUri);
+        okteto.destroy(namespace, manifestUri);
     } catch(err: unknown) {
         reporter.captureError(`okteto destroy failed: ${getErrorMessage(err)}`, err);
         vscode.window.showErrorMessage(`Okteto: Destroy failed: ${getErrorMessage(err)}`);
@@ -701,11 +708,4 @@ async function showActiveManifestPicker() : Promise<vscode.Uri | undefined> {
 async function getNamespace(): Promise<string> {
     const ctx = okteto.getContext();
     return ctx.namespace;
-}
-
-function getErrorMessage(err: unknown): string {
-    if (err instanceof Error) {
-        return err.message;
-    }
-    return String(err);
 }
