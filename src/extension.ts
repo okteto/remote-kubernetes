@@ -247,16 +247,18 @@ async function waitForUp(namespace: string, name: string, port: number) {
 
 async function waitForFinalState(namespace: string, name:string, progress: vscode.Progress<{message?: string | undefined; increment?: number | undefined}>): Promise<{result: boolean, message: string}> {
     const config = vscode.workspace.getConfiguration('okteto');
-    let upTimeout = 1000;
+    const defaultUpTimeoutSeconds = 100;
+    let upTimeoutSeconds = defaultUpTimeoutSeconds;
     if (config) {
-        upTimeout = config.get<number>('timeout') || 1000;
+        upTimeoutSeconds = config.get<number>('upTimeout') || defaultUpTimeoutSeconds;
     }
-    
+
     const seen = new Map<string, boolean>();
     const messages = okteto.getStateMessages();
     progress.report({  message: "Launching your development environment..." });
     let counter = 0;
-    const timeout = 15 * 60;
+    const overallTimeoutMinutes = 15;
+    const overallTimeoutSeconds = overallTimeoutMinutes * 60;
     while (true) {
         const res = await okteto.getState(namespace, name);
         if (!seen.has(res.state)) {
@@ -272,18 +274,18 @@ async function waitForFinalState(namespace: string, name:string, progress: vscod
                 return {result: false, message: res.message};
             case okteto.state.starting: {
                 const isRunning = await okteto.isRunning(namespace, name);
-                if (!isRunning && counter > upTimeout){
+                if (!isRunning && counter > upTimeoutSeconds){
                     return {result: false, message: `process failed to start`};
                 }
                 break;
             }
         }
-        
+
         counter++;
-        if (counter === timeout) {
-            return {result: false, message: `task didn't finish in 5 minutes`};
+        if (counter === overallTimeoutSeconds) {
+            return {result: false, message: `task didn't finish in ${overallTimeoutMinutes} minutes`};
         }
-        
+
         await sleep(1000);
     }
 }
@@ -421,7 +423,7 @@ async function testCmd() {
     } catch(err: unknown) {
         reporter.track(events.manifestLoadFailed);
         reporter.captureError(`load manifest failed: ${getErrorMessage(err)}`, err);
-        return onOktetoFailed(`Okteto: Down failed to load your Okteto manifest: ${getErrorMessage(err)}`);
+        return onOktetoFailed(`Okteto: Test failed to load your Okteto manifest: ${getErrorMessage(err)}`);
     }
 
     try {

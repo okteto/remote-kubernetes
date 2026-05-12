@@ -114,7 +114,8 @@ export async function needsInstall(): Promise<{install: boolean, upgrade: boolea
     if (!version) {
       return {install: false, upgrade: false};
     }
-    return {install: semver.lt(version, download.minimum), upgrade: true};
+    const outdated = semver.lt(version, download.minimum);
+    return {install: outdated, upgrade: outdated};
   } catch {
     return {install: false, upgrade: false};
   }
@@ -636,23 +637,24 @@ export function splitStateError(state: string): {state: string, message: string}
  * Polls the state file every second and calls the callback if failure is detected.
  * @param namespace - Kubernetes namespace
  * @param name - Name of the service
- * @param callback - Function to call if the process fails, receives terminal suffix and error message
+ * @param callback - Function to call if the process fails, receives the error message and terminal suffix
  */
-export async function notifyIfFailed(namespace: string, name:string, callback: (n: string, m: string) => void){
+export async function notifyIfFailed(namespace: string, name:string, callback: (message: string, terminalSuffix: string) => void){
   const id = setInterval(async () => {
     const c = await getState(namespace, name);
     if (!isActive.has(`${terminalName}-${namespace}-${name}`) || !isActive.get(`${terminalName}-${namespace}-${name}`)) {
       clearInterval(id);
       return;
     }
-    
+
     if (c.state === state.failed) {
       getLogger().error(`okteto up failed: ${c.message}`);
       clearInterval(id);
+      const suffix = `${namespace}-${name}`;
       if (c.message) {
-        callback(`${namespace}-${name}`, `Okteto: Up command failed: ${c.message}`);
+        callback(`Okteto: Up command failed: ${c.message}`, suffix);
       } else {
-        callback(`${namespace}-${name}`, `Okteto: Up command failed`);
+        callback(`Okteto: Up command failed`, suffix);
       }
     }
 

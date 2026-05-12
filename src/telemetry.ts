@@ -55,6 +55,7 @@ export class Reporter {
     private machineId: string;
     private mp: mixpanel.Mixpanel;
     private telemetryListener: vscode.Disposable;
+    private isDev: boolean;
 
     /**
      * Creates a new telemetry reporter.
@@ -65,6 +66,7 @@ export class Reporter {
     constructor(private extensionVersion: string, oktetoId: string, machineId: string) {
         this.mp = mixpanel.init(mpKey, {});
         this.machineId = machineId;
+        this.isDev = process.env.ENV === 'dev';
 
         // Respect both the extension's own setting and VS Code's global telemetry setting
         const config = vscode.workspace.getConfiguration('okteto');
@@ -77,8 +79,16 @@ export class Reporter {
             this.enabled = false;
         }
 
+        if (this.isDev) {
+            this.enabled = false;
+        }
+
         // Listen for VS Code global telemetry changes and re-evaluate effective state.
         this.telemetryListener = vscode.env.onDidChangeTelemetryEnabled((enabled) => {
+            if (this.isDev) {
+                this.enabled = false;
+                return;
+            }
             const currentConfig = vscode.workspace.getConfiguration('okteto');
             const extTelemetry = currentConfig.get<boolean>('telemetry');
             const extEnabled = extTelemetry !== undefined ? extTelemetry : true;
@@ -94,16 +104,10 @@ export class Reporter {
         }
 
         if (this.enabled) {
-            let environment = 'prod';
-            if (process.env.ENV === 'dev') {
-                environment = 'dev';
-                this.enabled = false;
-            }
-
             sentry.init({
                 dsn:  dsn,
                 integrations: defaults => defaults.filter(integration => (integration.name !== 'OnUncaughtException') && (integration.name !== 'OnUnhandledRejection')),
-                environment: environment,
+                environment: 'prod',
                 release: `remote-kubernetes-vscode@${this.extensionVersion}`});
 
 

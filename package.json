@@ -116,7 +116,7 @@
         },
         "okteto.upTimeout": {
           "type": "number",
-          "default": "100",
+          "default": 100,
           "description": "Timeout, in seconds, of the up command"
         }
       }
