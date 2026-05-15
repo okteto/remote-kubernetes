@@ -15,22 +15,27 @@ jobs:
     - name: get tag
       id: vars
       run: echo "release_tag=$(echo ${GITHUB_REF:11})" > $GITHUB_ENV
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 11
     - name: Use Node.js 22
       uses: actions/setup-node@v6
       with:
         node-version: 22
-    - run: npm run ci
+        cache: 'pnpm'
+    - run: pnpm run ci
     - name: publish
       if: github.event.release.prerelease != true
-      run: npm run publish
+      run: pnpm run publish
       env:
           VSCE_TOKEN: ${{secrets.VSCE_TOKEN}}
     - name: publish-prerelease
       if: github.event.release.prerelease == true
-      run: npm run publish-prerelease
+      run: pnpm run publish-prerelease
       env:
           VSCE_TOKEN: ${{secrets.VSCE_TOKEN}}
-    - run: npm run publish-sentry 
+    - run: pnpm run publish-sentry 
       env:
           VERSION: remote-kubernetes-code@${{ env.release_tag }}
           SENTRY_AUTH_TOKEN: ${{secrets.SENTRY_AUTH_TOKEN}}
