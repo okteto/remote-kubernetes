@@ -16,6 +16,7 @@ on:
     branches: [ main ]
   schedule:
     - cron: '35 20 * * 6'
+  workflow_dispatch:
 
 jobs:
   analyze:
@@ -23,6 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      security-events: write
 
     strategy:
       fail-fast: false
