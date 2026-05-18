@@ -18,7 +18,7 @@ jobs:
       id: vars
       run: echo "release_tag=$(echo ${GITHUB_REF:11})" > $GITHUB_ENV
     - name: Install pnpm
-      uses: pnpm/action-setup@v4
+      uses: pnpm/action-setup@v6
     - name: Use Node.js 22
       uses: actions/setup-node@v6
       with:
