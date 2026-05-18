@@ -153,7 +153,7 @@
     "@vscode/test-electron": "^2.5.1",
     "@vscode/vsce": "^3.7.1",
     "chai": "^6.2.2",
-    "esbuild": "^0.27.3",
+    "esbuild": "^0.28.0",
     "eslint": "^9.39.3",
     "glob": "^13.0.6",
     "markdown-it": ">=14.1.1",
@@ -173,7 +173,7 @@
     "find-process": "^2.1.0",
     "get-port": "^7.1.0",
     "got": "^14.6.6",
-    "mixpanel": "^0.20.0",
+    "mixpanel": "^0.22.0",
     "semver": "^7.7.4",
     "tcp-ping": "^0.1.1",
     "yaml": "^2.8.2"
