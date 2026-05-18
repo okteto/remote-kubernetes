@@ -9,6 +9,44 @@ const registeredCommands = new Map<string, (...args: unknown[]) => unknown>();
 const telemetryListeners = new Set<(enabled: boolean) => void>();
 const outputChannels: Array<{name: string; disposed: boolean; dispose: () => void}> = [];
 
+type ModuleInternals = typeof Module & {
+  _resolveFilename: (
+    request: string,
+    parent: unknown,
+    isMain: boolean,
+    options: unknown,
+  ) => string;
+  _load: (request: string, parent: unknown, isMain: boolean) => unknown;
+};
+
+type MockWorkspace = {
+  getConfiguration: (section: string) => { get: (key: string) => unknown };
+  findFiles: () => Promise<unknown[]>;
+  workspaceFolders: unknown[];
+};
+
+type MockEnv = {
+  machineId: string;
+  sessionId: string;
+  isTelemetryEnabled: boolean;
+  shell: string | undefined;
+  onDidChangeTelemetryEnabled: (listener: (enabled: boolean) => void) => { dispose: () => void };
+};
+
+type MockVscode = {
+  workspace: MockWorkspace;
+  window: Record<string, unknown> & { terminals: Array<{ name: string }> };
+  commands: Record<string, unknown>;
+  extensions: Record<string, unknown>;
+  env: MockEnv;
+  version: string;
+  Uri: Record<string, unknown>;
+  ThemeIcon: unknown;
+  ProgressLocation: Record<string, unknown>;
+  EventEmitter: unknown;
+  __mock: Record<string, unknown>;
+};
+
 function getConfigValue(section: string, key: string): unknown {
   return configuration[section]?.[key];
 }
@@ -32,7 +70,7 @@ function resetMockState(): void {
   vscodeStub.env.shell = undefined;
 }
 
-const vscodeStub: Record<string, any> = {
+const vscodeStub: MockVscode = {
   workspace: {
     getConfiguration: (section: string) => ({
       get: (key: string) => getConfigValue(section, key),
@@ -141,12 +179,13 @@ const vscodeStub: Record<string, any> = {
 };
 
 // Override Node's module resolution to intercept 'vscode' requires
-const originalResolveFilename = (Module as any)._resolveFilename;
-(Module as any)._resolveFilename = function (
+const moduleInternals = Module as ModuleInternals;
+const originalResolveFilename = moduleInternals._resolveFilename;
+moduleInternals._resolveFilename = function (
   request: string,
-  parent: any,
+  parent: unknown,
   isMain: boolean,
-  options: any,
+  options: unknown,
 ) {
   if (request === 'vscode') {
     // Return a sentinel that we intercept in _load
@@ -155,8 +194,8 @@ const originalResolveFilename = (Module as any)._resolveFilename;
   return originalResolveFilename.call(this, request, parent, isMain, options);
 };
 
-const originalLoad = (Module as any)._load;
-(Module as any)._load = function (request: string, parent: any, isMain: boolean) {
+const originalLoad = moduleInternals._load;
+moduleInternals._load = function (request: string, parent: unknown, isMain: boolean) {
   if (request === 'vscode') {
     return vscodeStub;
   }

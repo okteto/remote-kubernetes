@@ -5,6 +5,21 @@ import * as fs from 'fs';
 import * as os from 'os';
 import { execSync } from 'child_process';
 
+type ServicePickItem = {
+    label?: string;
+    service?: {
+        name?: string;
+    };
+};
+
+type MutableWindow = typeof vscode.window & {
+    showQuickPick: (
+        items: ServicePickItem[] | Thenable<ServicePickItem[]>,
+        options?: vscode.QuickPickOptions
+    ) => Promise<ServicePickItem | undefined>;
+    showInputBox: (options?: vscode.InputBoxOptions) => Promise<string | undefined>;
+};
+
 suite('Smoke Test Suite', function() {
     // Longer timeout for real Okteto operations
     this.timeout(10 * 60 * 1000); // 10 minutes
@@ -23,7 +38,10 @@ suite('Smoke Test Suite', function() {
         originalShowInputBox = vscode.window.showInputBox;
 
         // Stub showQuickPick to auto-select first option or specific ones
-        (vscode.window as any).showQuickPick = async function(items: any, options?: any): Promise<any> {
+        (vscode.window as MutableWindow).showQuickPick = async function(
+            items: ServicePickItem[] | Thenable<ServicePickItem[]>,
+            options?: vscode.QuickPickOptions
+        ): Promise<ServicePickItem | undefined> {
             const itemsArray = Array.isArray(items) ? items : await items;
 
             if (!itemsArray || itemsArray.length === 0) {
@@ -37,7 +55,7 @@ suite('Smoke Test Suite', function() {
                 return itemsArray[0];
             } else if (options?.placeHolder?.includes('service')) {
                 // Select catalog service
-                const catalogItem = itemsArray.find((item: any) =>
+                const catalogItem = itemsArray.find((item: ServicePickItem) =>
                     item.label === service || item.service?.name === service
                 );
                 console.log(`[SMOKE TEST] Auto-selecting service: ${service}`);
@@ -54,7 +72,9 @@ suite('Smoke Test Suite', function() {
         };
 
         // Stub showInputBox to provide predetermined values
-        (vscode.window as any).showInputBox = async function(_options?: any): Promise<string | undefined> {
+        (vscode.window as MutableWindow).showInputBox = async function(
+            _options?: vscode.InputBoxOptions
+        ): Promise<string | undefined> {
             console.log('[SMOKE TEST] Auto-providing input');
             return 'test-input';
         };
@@ -62,8 +82,8 @@ suite('Smoke Test Suite', function() {
 
     suiteTeardown(function() {
         // Restore original functions
-        (vscode.window as any).showQuickPick = originalShowQuickPick;
-        (vscode.window as any).showInputBox = originalShowInputBox;
+        (vscode.window as MutableWindow).showQuickPick = originalShowQuickPick as MutableWindow['showQuickPick'];
+        (vscode.window as MutableWindow).showInputBox = originalShowInputBox as MutableWindow['showInputBox'];
     });
 
     test('Full smoke test workflow', async function() {
@@ -177,7 +197,7 @@ suite('Smoke Test Suite', function() {
             const content = fs.readFileSync(stateFile, 'utf8').trim();
             const state = content.split(':')[0];
             return state || 'unknown';
-        } catch (error) {
+        } catch {
             // File doesn't exist yet or can't be read
             return 'starting';
         }
