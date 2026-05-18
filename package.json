@@ -29,6 +29,7 @@
     "url": "https://github.com/okteto/remote-kubernetes.git"
   },
   "license": "SEE LICENSE IN LICENSE",
+  "packageManager": "pnpm@11.1.2",
   "engines": {
     "vscode": "^1.109.0"
   },
@@ -126,17 +127,17 @@
     "vscode:prepublish": "node esbuild.js --production",
     "compile": "node esbuild.js",
     "watch": "node esbuild.js --watch",
-    "package": "vsce package",
-    "pretest": "npm run compile",
+    "package": "vsce package --no-dependencies",
+    "pretest": "pnpm run compile",
     "test": "mocha -r ts-node/register -r src/test/mock/vscode.ts src/test/suite/*.test.ts",
     "test:e2e": "tsc -p tsconfig.test.json && node ./out/test/e2e/runTest.js",
     "test:smoke": "tsc -p tsconfig.test.json && node ./out/test/smoke/runTest.js",
     "smoke": "bash scripts/smoke-test.sh",
     "update-okteto": "bash scripts/update-okteto-version.sh",
     "lint": "eslint src/",
-    "ci": "npm ci && npm run lint && npm run test && npm run package",
-    "publish": "vsce publish -p $VSCE_TOKEN",
-    "publish-prerelease": "vsce publish -p $VSCE_TOKEN  --pre-release",
+    "ci": "pnpm install --frozen-lockfile && pnpm run lint && pnpm run test && pnpm run package",
+    "publish": "vsce publish --no-dependencies -p $VSCE_TOKEN",
+    "publish-prerelease": "vsce publish --no-dependencies -p $VSCE_TOKEN --pre-release",
     "publish-sentry": "sentry-cli releases new $VERSION && sentry-cli releases set-commits --auto $VERSION && sentry-cli sourcemaps upload --release $VERSION dist && sentry-cli releases finalize $VERSION"
   },
   "devDependencies": {

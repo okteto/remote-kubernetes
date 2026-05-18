@@ -11,13 +11,15 @@ jobs:
 
     steps:
     - uses: actions/checkout@v6
-    
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
     - name: Use Node.js 22
       uses: actions/setup-node@v6
       with:
         node-version: 22
-    - name: npm install, build, and test
-      run: npm run ci
+        cache: 'pnpm'
+    - name: Install, build, and test
+      run: pnpm run ci
       env:
         CI: "true"
     - uses: actions/upload-artifact@v7

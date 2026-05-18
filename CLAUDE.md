@@ -7,21 +7,21 @@ VS Code extension for remote Kubernetes development with Okteto. See AGENT.md fo
 ## Commands
 
 ```bash
-npm run compile         # Dev build (esbuild)
-npm test                # Unit tests (Mocha + Chai + Sinon, plain Node.js)
-npm run test:e2e        # E2E tests (launches real VS Code via @vscode/test-electron)
-npm run lint            # ESLint (typescript-eslint flat config)
-npm run package         # Build .vsix (runs esbuild production build first)
-npm run ci              # Full CI: install + lint + test + package
+pnpm run compile        # Dev build (esbuild)
+pnpm test               # Unit tests (Mocha + Chai + Sinon, plain Node.js)
+pnpm run test:e2e       # E2E tests (launches real VS Code via @vscode/test-electron)
+pnpm run lint           # ESLint (typescript-eslint flat config)
+pnpm run package        # Build .vsix (runs esbuild production build first)
+pnpm run ci             # Full CI: install + lint + test + package
 ```
 
 ## Verification Checklist
 
 After any code change, verify with:
-1. `npm run lint` — no lint errors
-2. `npm test` — unit tests pass
-3. `npm run test:e2e` — e2e tests pass
-4. `npm run package` — extension packages successfully
+1. `pnpm run lint` — no lint errors
+2. `pnpm test` — unit tests pass
+3. `pnpm run test:e2e` — e2e tests pass
+4. `pnpm run package` — extension packages successfully
 
 ## Key Gotchas
 
