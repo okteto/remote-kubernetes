@@ -156,7 +156,7 @@
     "esbuild": "^0.28.0",
     "eslint": "^9.39.4",
     "glob": "^13.0.6",
-    "markdown-it": ">=14.1.1",
+    "markdown-it": ">=14.2.0",
     "mocha": "^11.7.5",
     "sinon": "^22.0.0",
     "ts-node": "^10.9.2",
@@ -165,7 +165,7 @@
     "vscode-uri": "^3.1.0"
   },
   "dependencies": {
-    "@sentry/cli": "^3.4.2",
+    "@sentry/cli": "^3.4.3",
     "@sentry/node": "^10.40.0",
     "change-case": "^5.4.4",
     "command-exists": "^1.2.9",
@@ -174,7 +174,7 @@
     "get-port": "^7.2.0",
     "got": "^14.6.6",
     "mixpanel": "^0.22.0",
-    "semver": "^7.8.0",
+    "semver": "^7.8.1",
     "tcp-ping": "^0.1.1",
     "yaml": "^2.9.0"
   }
