@@ -1,6 +1,6 @@
 # Supported Manifest File Patterns
 
-The Remote - Kubernetes extension automatically detects Okteto manifest files in your workspace using pattern matching. Different commands support different filename patterns based on their purpose.
+The Remote - Kubernetes extension automatically detects Okteto manifest files in your workspace using pattern matching. All Okteto commands support the same filename patterns.
 
 ## Supported Patterns
 
@@ -84,7 +84,7 @@ If your workspace contains multiple matching manifest files, the extension will:
 The picker dialog displays:
 - Filename
 - Relative path from workspace root
-- Sorted alphabetically for easy selection
+- Sorted by directory depth first, then alphabetically
 
 ## File Discovery
 
@@ -185,4 +185,4 @@ You can now use environment-specific manifests with `Okteto: Up` for local devel
 
 - [Okteto Manifest Documentation](https://www.okteto.com/docs/reference/okteto-manifest/)
 - [Docker Compose in Okteto](https://www.okteto.com/docs/reference/docker-compose/)
-- [Extension Commands](../readme.md#getting-started)
+- [Extension Commands](../README.md#getting-started)

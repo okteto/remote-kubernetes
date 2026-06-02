@@ -21,30 +21,30 @@ We follow the standard [GitHub pull request process](https://help.github.com/art
 
 2. **Install dependencies**
    ```bash
-   npm install
+   pnpm install
    ```
 
 3. **Build the extension**
    ```bash
-   npm run compile
+   pnpm run compile
    ```
 
 4. **Run tests**
    ```bash
-   npm test              # Unit tests
-   npm run test:e2e      # End-to-end tests
+   pnpm test             # Unit tests
+   pnpm run test:e2e     # End-to-end tests
    ```
 
 5. **Package the extension**
    ```bash
-   npm run package       # Builds .vsix file
+   pnpm run package      # Builds .vsix file
    ```
 
 ### Development Workflow
 
 1. **Make your changes**
    - Edit source files in `src/`
-   - Run `npm run compile` to rebuild
+   - Run `pnpm run compile` to rebuild
 
 2. **Debug the extension**
    - Open the project in VS Code
@@ -53,10 +53,10 @@ We follow the standard [GitHub pull request process](https://help.github.com/art
 
 3. **Run tests**
    ```bash
-   npm run lint          # Check code style
-   npm test              # Run unit tests
-   npm run test:e2e      # Run E2E tests
-   npm run package       # Verify packaging works
+   pnpm run lint         # Check code style
+   pnpm test             # Run unit tests
+   pnpm run test:e2e     # Run E2E tests
+   pnpm run package      # Verify packaging works
    ```
 
 4. **Submit a pull request**
@@ -90,12 +90,12 @@ remote-kubernetes/
 
 | Command | Description |
 |---------|-------------|
-| `npm run compile` | Build the extension (dev mode) |
-| `npm run watch` | Build with file watching |
-| `npm test` | Run unit tests |
-| `npm run test:e2e` | Run end-to-end tests |
-| `npm run lint` | Check code style with ESLint |
-| `npm run package` | Create .vsix package |
+| `pnpm run compile` | Build the extension (dev mode) |
+| `pnpm run watch` | Build with file watching |
+| `pnpm test` | Run unit tests |
+| `pnpm run test:e2e` | Run end-to-end tests |
+| `pnpm run lint` | Check code style with ESLint |
+| `pnpm run package` | Create .vsix package |
 
 ### Code Style
 
@@ -125,7 +125,7 @@ remote-kubernetes/
 
 Not ready to contribute code, but see something that needs work? While we encourage everyone to contribute code, it is also appreciated when someone reports an issue. We use [GitHub issues](https://github.com/okteto/remote-kubernetes/issues) for this.
 
-Also, check our [troubleshooting section](docs/troubleshooting.md) for known issues.
+Also, check our [documentation](docs/index.md) for known issues.
 
 ## Code of Conduct
 

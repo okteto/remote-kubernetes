@@ -316,20 +316,20 @@ cat package.json | grep version
 # Expected: "version": "X.X.X"
 
 # 2. Run full test suite
-npm run lint          # Should have 11 warnings (expected)
-npm test              # Should have 52 passing
-npm run test:e2e      # Should have 10 passing
+pnpm run lint         # Should pass with no errors
+pnpm test             # Should have 216 passing
+pnpm run test:e2e     # Should pass
 
 # 3. Build and inspect package
-npm run package
+pnpm run package
 # Should create remote-kubernetes-X.X.X.vsix
 # Should be ~1.59 MB
 ```
 
 - [ ] Version number correct in package.json
-- [ ] Lint: 11 warnings (expected)
-- [ ] Unit tests: 52 passing
-- [ ] E2E tests: 10 passing
+- [ ] Lint passes with no errors
+- [ ] Unit tests: 216 passing
+- [ ] E2E tests pass
 - [ ] Package builds: ~1.59 MB
 - [ ] CHANGELOG.md updated for this version
 - [ ] No uncommitted changes

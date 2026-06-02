@@ -1,6 +1,6 @@
 # Change Log
 
-## 0.5.5 (Unreleased)
+## 0.5.4
 
 ### Features
 - Expanded manifest file pattern support for all commands
@@ -44,10 +44,6 @@
 - Fixed security vulnerabilities
 - Updated minimum required Okteto CLI version to 3.19.0
 - Refreshed documentation references for minimum supported CLI version
-
-## 0.5.4
-- Updated minimum required Okteto CLI version to 3.16.0
-- Updated dependencies
 
 ## 0.5.3
 - Updated minimum required Okteto CLI version to 3.11.0

@@ -11,13 +11,13 @@ This is a **VS Code extension** called "Remote - Kubernetes" that wraps the [Okt
 ## Quick Reference
 
 ```bash
-npm run compile       # Build (development mode via esbuild)
-npm test              # Run unit tests (compiles first via pretest hook)
-npm run test:e2e      # Run e2e tests (compiles with tsc, launches VS Code)
-npm run lint          # Run ESLint
-npm run watch         # Build + watch for changes
-npm run package       # Create .vsix extension package
-npm run ci            # Full CI pipeline: install + lint + test + package
+pnpm run compile      # Build (development mode via esbuild)
+pnpm test             # Run unit tests (compiles first via pretest hook)
+pnpm run test:e2e     # Run e2e tests (compiles with tsc, launches VS Code)
+pnpm run lint         # Run ESLint
+pnpm run watch        # Build + watch for changes
+pnpm run package      # Create .vsix extension package
+pnpm run ci           # Full CI pipeline: install + lint + test + package
 ```
 
 ## Architecture
@@ -91,7 +91,7 @@ Defined in `package.json` under `contributes.configuration`:
 **Framework:** Mocha + Chai + Sinon + ts-node
 
 ```bash
-npm test    # Runs: mocha -r ts-node/register -r src/test/mock/vscode.ts src/test/suite/*.test.ts
+pnpm test    # Runs: mocha -r ts-node/register -r src/test/mock/vscode.ts src/test/suite/*.test.ts
 ```
 
 Unit tests are plain TypeScript files in `src/test/suite/`. They do **not** require a running VS Code instance. Test fixtures (YAML manifests) live in `src/test/suite/artifacts/`.
@@ -103,7 +103,7 @@ The `vscode` module is mocked via `src/test/mock/vscode.ts`, which intercepts No
 **Framework:** @vscode/test-electron + Mocha (TDD interface)
 
 ```bash
-npm run test:e2e    # Compiles with tsc, then launches VS Code with the extension
+pnpm run test:e2e    # Compiles with tsc, then launches VS Code with the extension
 ```
 
 E2E tests live in `src/test/e2e/`. They run inside a real VS Code instance and have access to the full `vscode` API. The tests use `suite`/`test` (TDD) syntax, not `describe`/`it` (BDD).
@@ -121,7 +121,7 @@ The e2e Mocha bootstrap is in `src/test/e2e/index.ts` and uses the **TDD** UI (`
 **Framework:** ESLint v9 with typescript-eslint (flat config format)
 
 ```bash
-npm run lint    # Runs: eslint src/
+pnpm run lint    # Runs: eslint src/
 ```
 
 Configuration is in `eslint.config.mjs`. Key rules:
@@ -130,7 +130,7 @@ Configuration is in `eslint.config.mjs`. Key rules:
 - `@typescript-eslint/no-require-imports: off` (needed for CommonJS interop)
 - Ignores: `dist/`, `out/`, `node_modules/`, `*.js`, `*.mjs`
 
-Linting is included in the CI pipeline (`npm run ci`).
+Linting is included in the CI pipeline (`pnpm run ci`).
 
 ## Code Conventions
 
@@ -162,7 +162,7 @@ Linting is included in the CI pipeline (`npm run ci`).
 ## CI/CD
 
 - **CI:** GitHub Actions (`.github/workflows/nodejs.yml`) - runs on every push, Node 22, Ubuntu
-- **Pipeline:** `npm ci → npm run lint → npm run test → npm run package`
+- **Pipeline:** `pnpm install → pnpm run lint → pnpm run test → pnpm run package`
 - **Publish:** `.github/workflows/publish.yml` - triggered on GitHub release, publishes to VS Code Marketplace via `vsce`
 - **Security:** CodeQL analysis on PRs to main + weekly schedule
 
@@ -189,13 +189,13 @@ Linting is included in the CI pipeline (`npm run ci`).
 4. Add the command ID to the `expectedCommands` array in `src/test/e2e/extension.test.ts`
 
 ### Updating minimum Okteto CLI version
-- Change the `minVersion` constant in `src/extension.ts`
+- Change the `minimum` export in `src/download.ts`
 - Update `CHANGELOG.md`
 
 ### Updating dependencies
 - `@types/vscode` version must match `engines.vscode` in `package.json` — `vsce package` will fail otherwise
 - `@types/node` should stay on the major version matching the Node.js runtime (currently 22.x, matching CI's Node 22)
-- After updating, run `npm test`, `npm run test:e2e`, and `npm run package` to verify
+- After updating, run `pnpm test`, `pnpm run test:e2e`, and `pnpm run package` to verify
 
 ### Modifying manifest parsing
 - Edit `src/manifest.ts`

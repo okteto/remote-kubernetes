@@ -17,7 +17,7 @@ The smoke test validates the core extension functionality by:
 - **macOS** (script designed for macOS, uses `screencapture`)
 - **Okteto CLI 3.19.0+** installed and in PATH
 - **Logged into Okteto cluster** (`okteto context` should show active context)
-- **Node.js 22.x** and npm
+- **Node.js 22.x** and pnpm
 - **Git** installed
 - **Internet connection** (to clone test repo and download VS Code)
 
@@ -35,7 +35,7 @@ The smoke test validates the core extension functionality by:
 1. **Prerequisites Check**
    - Verifies okteto CLI is installed
    - Confirms you're logged into Okteto
-   - Checks Node.js, npm, and git are available
+   - Checks Node.js, pnpm, and git are available
 
 2. **Test Setup**
    - Creates namespace: `okteto-smoke-test-{timestamp}`
@@ -44,7 +44,7 @@ The smoke test validates the core extension functionality by:
 
 3. **Smoke Tests**
    - Installs extension from .vsix in fresh VS Code instance
-   - Opens movies/catalog workspace
+   - Opens the movies repository root
    - Executes `Okteto: Up` command (catalog service)
    - Waits for development environment to be ready
    - Verifies logs appear in Output panel
@@ -71,7 +71,7 @@ The smoke test validates the core extension functionality by:
 [INFO] ✓ Okteto CLI found: okteto version 3.19.0
 [INFO] ✓ Logged into Okteto: https://cloud.okteto.com
 [INFO] ✓ Node.js found: v22.x.x
-[INFO] ✓ npm found: 10.x.x
+[INFO] ✓ pnpm found: 11.x.x
 [INFO] ✓ git found: git version 2.x.x
 [INFO] Prerequisites OK
 
@@ -80,15 +80,15 @@ The smoke test validates the core extension functionality by:
 
 [STEP] Setting up test repository...
 [INFO] ✓ Repository cloned successfully
-[INFO] ✓ Catalog service found
+[INFO] ✓ Movies repository at: /tmp/xxx/movies
 
 [STEP] Building extension...
-[INFO] ✓ Extension built: remote-kubernetes-0.5.4.vsix (1.6M)
+[INFO] ✓ Extension built: remote-kubernetes-X.X.X.vsix (1.6M)
 
 [STEP] Running smoke tests...
 [INFO] Test configuration:
-  Workspace: /tmp/xxx/movies/catalog
-  Extension: remote-kubernetes-0.5.4.vsix
+  Workspace: /tmp/xxx/movies
+  Extension: remote-kubernetes-X.X.X.vsix
   Namespace: okteto-smoke-test-1707763200
   Service: catalog
 
@@ -161,7 +161,7 @@ Check the full test output in the terminal for detailed logs.
 
 The script sets these environment variables for the test suite:
 
-- `SMOKE_TEST_WORKSPACE` - Path to movies/catalog directory
+- `SMOKE_TEST_WORKSPACE` - Path to the movies repository root
 - `SMOKE_TEST_VSIX` - Path to built .vsix file
 - `SMOKE_TEST_NAMESPACE` - Created test namespace
 - `SMOKE_TEST_SERVICE` - Service to test (catalog)

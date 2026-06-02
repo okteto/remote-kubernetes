@@ -16,7 +16,7 @@ The extension starts a development environment in your Kubernetes cluster by usi
 
 ## Requirements
 
-1. VS Code 1.88 or newer.
+1. VS Code 1.109 or newer.
 1. Okteto CLI 3.19.0 or newer.
 1. Deploy access to a Kubernetes cluster.
 1. An OpenSSH compatible [SSH client](https://code.visualstudio.com/docs/remote/troubleshooting#_installing-a-supported-ssh-client) available in your workstation.
@@ -43,7 +43,7 @@ The extension automatically detects Okteto manifest files in your workspace:
 
 - **Standard manifests**: `okteto.yml`, `okteto.yaml`, `docker-compose.yml`, `docker-compose.yaml`
 - **Pipeline manifests**: `okteto-pipeline.yml`, `okteto-pipeline.yaml`
-- **Custom patterns**: `okteto-*.yml`, `okteto.*.yml` (e.g., `okteto.dev.yml`, `okteto-stack.yml`)
+- **Custom patterns**: `okteto-*.yml`, `okteto-*.yaml`, `okteto.*.yml`, `okteto.*.yaml` (e.g., `okteto.dev.yml`, `okteto-stack.yml`)
 
 All commands (`Up`, `Deploy`, `Destroy`, `Test`) support the same manifest patterns, enabling flexible project organization.
 

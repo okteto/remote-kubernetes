@@ -44,13 +44,13 @@ check_prerequisites() {
     fi
     log_info "✓ Logged into Okteto: $(okteto context show --output json | grep name | cut -d'"' -f4)"
 
-    # Check Node.js and npm
-    if ! command -v node &> /dev/null || ! command -v npm &> /dev/null; then
-        log_error "Node.js/npm not found."
+    # Check Node.js and pnpm
+    if ! command -v node &> /dev/null || ! command -v pnpm &> /dev/null; then
+        log_error "Node.js/pnpm not found."
         exit 1
     fi
     log_info "✓ Node.js found: $(node --version)"
-    log_info "✓ npm found: $(npm --version)"
+    log_info "✓ pnpm found: $(pnpm --version)"
 
     # Check git
     if ! command -v git &> /dev/null; then
@@ -111,7 +111,7 @@ build_extension() {
     rm -f remote-kubernetes-*.vsix
 
     # Build the extension
-    npm run package > /dev/null 2>&1 || {
+    pnpm run package > /dev/null 2>&1 || {
         log_error "Failed to build extension"
         cleanup
         exit 1
@@ -155,7 +155,7 @@ run_smoke_tests() {
     echo ""
 
     # Run the smoke test suite
-    if npm run test:smoke; then
+    if pnpm run test:smoke; then
         log_info "✓ Smoke tests passed!"
         TEST_FAILED=0
     else
