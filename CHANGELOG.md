@@ -3,6 +3,8 @@
 ## 0.5.4
 
 ### Features
+- Added an `All services` option to `Okteto: Down` that matches `okteto down --all`.
+- Added progress and completion notifications for `Okteto: Down`.
 - Expanded manifest file pattern support for all commands
   - Now supports `okteto-*.yml`, `okteto-*.yaml` (e.g., `okteto-stack.yml`, `okteto-compose.yml`)
   - Now supports `okteto.*.yml`, `okteto.*.yaml` (e.g., `okteto.dev.yml`, `okteto.prod.yaml`)
@@ -35,6 +37,8 @@
   - Added automated smoke test suite for end-to-end validation
 
 ### Development
+- Added a default `Run Extension` VS Code debug configuration.
+- Fixed the Mocha debug configuration to load the VS Code test mock.
 - Removed legacy files (tslint.json, .snyk, unused dependencies)
 - Improved build performance with esbuild
 - Added comprehensive developer documentation (AGENT.md, CLAUDE.md)
