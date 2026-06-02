@@ -98,7 +98,7 @@ describe('splitStateError', () => {
 });
 
 describe('computeInstallState', () => {
-  const minimum = '3.17.0';
+  const minimum = '3.19.0';
 
   it('requires install when the binary is not present', () => {
     expect(okteto.computeInstallState(false, undefined, minimum)).to.deep.equal({
@@ -115,7 +115,7 @@ describe('computeInstallState', () => {
   });
 
   it('does nothing when the installed version meets the minimum', () => {
-    expect(okteto.computeInstallState(true, '3.17.0', minimum)).to.deep.equal({
+    expect(okteto.computeInstallState(true, '3.19.0', minimum)).to.deep.equal({
       install: false,
       upgrade: false,
     });
@@ -129,7 +129,7 @@ describe('computeInstallState', () => {
   });
 
   it('reports both install and upgrade when the installed version is outdated', () => {
-    expect(okteto.computeInstallState(true, '3.16.0', minimum)).to.deep.equal({
+    expect(okteto.computeInstallState(true, '3.18.0', minimum)).to.deep.equal({
       install: true,
       upgrade: true,
     });
