@@ -12,16 +12,13 @@ type ServicePickItem = {
     };
 };
 
-type QuickPickStubItem = string | ServicePickItem;
-
-type MutableWindow = typeof vscode.window & {
-    showQuickPick: typeof vscode.window.showQuickPick;
+type MutableWindow = Omit<typeof vscode.window, 'showQuickPick' | 'showInputBox'> & {
+    showQuickPick: (
+        items: ServicePickItem[] | Thenable<ServicePickItem[]>,
+        options?: vscode.QuickPickOptions
+    ) => Promise<ServicePickItem | undefined>;
     showInputBox: (options?: vscode.InputBoxOptions) => Promise<string | undefined>;
 };
-
-function isServicePickItem(item: QuickPickStubItem): item is ServicePickItem {
-    return typeof item !== 'string';
-}
 
 suite('Smoke Test Suite', function() {
     // Longer timeout for real Okteto operations
@@ -41,10 +38,10 @@ suite('Smoke Test Suite', function() {
         originalShowInputBox = vscode.window.showInputBox;
 
         // Stub showQuickPick to auto-select first option or specific ones
-        const showQuickPick = async function(
-            items: readonly QuickPickStubItem[] | Thenable<readonly QuickPickStubItem[]>,
+        (vscode.window as unknown as MutableWindow).showQuickPick = async function(
+            items: ServicePickItem[] | Thenable<ServicePickItem[]>,
             options?: vscode.QuickPickOptions
-        ): Promise<QuickPickStubItem | undefined> {
+        ): Promise<ServicePickItem | undefined> {
             const itemsArray = Array.isArray(items) ? items : await items;
 
             if (!itemsArray || itemsArray.length === 0) {
@@ -58,8 +55,8 @@ suite('Smoke Test Suite', function() {
                 return itemsArray[0];
             } else if (options?.placeHolder?.includes('service')) {
                 // Select catalog service
-                const catalogItem = itemsArray.find((item) =>
-                    isServicePickItem(item) && (item.label === service || item.service?.name === service)
+                const catalogItem = itemsArray.find((item: ServicePickItem) =>
+                    item.label === service || item.service?.name === service
                 );
                 console.log(`[SMOKE TEST] Auto-selecting service: ${service}`);
                 return catalogItem || itemsArray[0];
@@ -73,10 +70,9 @@ suite('Smoke Test Suite', function() {
             console.log('[SMOKE TEST] Auto-selecting first option');
             return itemsArray[0];
         };
-        (vscode.window as MutableWindow).showQuickPick = showQuickPick as typeof vscode.window.showQuickPick;
 
         // Stub showInputBox to provide predetermined values
-        (vscode.window as MutableWindow).showInputBox = async function(
+        (vscode.window as unknown as MutableWindow).showInputBox = async function(
             _options?: vscode.InputBoxOptions
         ): Promise<string | undefined> {
             console.log('[SMOKE TEST] Auto-providing input');
@@ -86,8 +82,8 @@ suite('Smoke Test Suite', function() {
 
     suiteTeardown(function() {
         // Restore original functions
-        (vscode.window as MutableWindow).showQuickPick = originalShowQuickPick as MutableWindow['showQuickPick'];
-        (vscode.window as MutableWindow).showInputBox = originalShowInputBox as MutableWindow['showInputBox'];
+        (vscode.window as unknown as MutableWindow).showQuickPick = originalShowQuickPick as unknown as MutableWindow['showQuickPick'];
+        (vscode.window as unknown as MutableWindow).showInputBox = originalShowInputBox as unknown as MutableWindow['showInputBox'];
     });
 
     test('Full smoke test workflow', async function() {
