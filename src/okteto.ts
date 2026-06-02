@@ -283,19 +283,18 @@ export function up(manifest: vscode.Uri, namespace: string, name: string, port: 
   term.sendText(cmd, true);
 }
 
+export type DownTarget = { type: 'service'; name: string } | { type: 'all' };
+
 /**
- * Stops an Okteto development environment.
- * Runs `okteto down` to clean up the development container and resources.
- * @param manifest - URI of the Okteto manifest file
- * @param namespace - Kubernetes namespace
- * @param name - Name of the service
- * @throws Error if the down command fails
+ * Builds the `okteto down` argv.
  */
-export async function down(manifest: vscode.Uri, namespace: string, name: string) {
-  isActive.set(`${terminalName}-${namespace}-${name}`, false);
-  disposeTerminal(`${terminalName}-${namespace}-${name}`);
-  
-  const r =  execa(getBinary(), ['down', name, '--file', `${manifest.fsPath}`, '--namespace', `${namespace}`], {
+export function buildDownArgs(opts: {target: DownTarget; manifestPath: string; namespace: string}): string[] {
+  const targetArgs = opts.target.type === 'all' ? ['--all'] : [opts.target.name];
+  return ['down', ...targetArgs, '--file', opts.manifestPath, '--namespace', opts.namespace];
+}
+
+async function runDown(manifest: vscode.Uri, namespace: string, target: DownTarget) {
+  const r = execa(getBinary(), buildDownArgs({target, manifestPath: manifest.fsPath, namespace}), {
     env: {
       "OKTETO_ORIGIN":"vscode"
     },
@@ -312,6 +311,38 @@ export async function down(manifest: vscode.Uri, namespace: string, name: string
   }
 
   getLogger().info('okteto down completed');
+}
+
+/**
+ * Stops an Okteto development environment.
+ * Runs `okteto down` to clean up the development container and resources.
+ * @param manifest - URI of the Okteto manifest file
+ * @param namespace - Kubernetes namespace
+ * @param name - Name of the service
+ * @throws Error if the down command fails
+ */
+export async function down(manifest: vscode.Uri, namespace: string, name: string) {
+  isActive.set(`${terminalName}-${namespace}-${name}`, false);
+  disposeTerminal(`${terminalName}-${namespace}-${name}`);
+
+  await runDown(manifest, namespace, {type: 'service', name});
+}
+
+/**
+ * Stops all Okteto development environments from the selected manifest.
+ * Runs `okteto down --all` to match the CLI behavior.
+ * @param manifest - URI of the Okteto manifest file
+ * @param namespace - Kubernetes namespace
+ * @param serviceNames - Service terminal names to close locally before running down
+ * @throws Error if the down command fails
+ */
+export async function downAll(manifest: vscode.Uri, namespace: string, serviceNames: string[]) {
+  for (const name of serviceNames) {
+    isActive.set(`${terminalName}-${namespace}-${name}`, false);
+    disposeTerminal(`${terminalName}-${namespace}-${name}`);
+  }
+
+  await runDown(manifest, namespace, {type: 'all'});
 }
 
 /**

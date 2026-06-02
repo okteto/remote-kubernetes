@@ -83,7 +83,10 @@ const vscodeStub: MockVscode = {
     showInformationMessage: async () => undefined,
     showQuickPick: async () => undefined,
     showInputBox: async () => undefined,
-    withProgress: async () => undefined,
+    withProgress: async (_options: unknown, task: (progress: unknown, token: unknown) => unknown) => task(
+      { report: () => {} },
+      { onCancellationRequested: () => ({ dispose: () => {} }) },
+    ),
     createTerminal: () => ({
       sendText: () => {},
       show: () => {},

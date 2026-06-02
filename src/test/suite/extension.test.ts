@@ -3,6 +3,7 @@ import sinon from 'sinon';
 import * as vscode from 'vscode';
 import * as telemetry from '../../telemetry';
 import * as okteto from '../../okteto';
+import * as manifest from '../../manifest';
 import { isManifestSupported, getUpTimeoutSeconds } from '../../extension';
 
 type MockVSCode = typeof vscode & {
@@ -317,6 +318,43 @@ describe('down command (manifest picker dismissed)', () => {
     await vscode.commands.executeCommand('okteto.down');
 
     expect(downStub.called).to.equal(false);
+  });
+
+  it('invokes okteto.downAll when the all-services option is selected', async () => {
+    sinon.stub(okteto, 'needsInstall').resolves({ install: false, upgrade: false });
+    sinon.stub(okteto, 'getContext').returns({ id: 'ctx', name: 'ctx', namespace: 'ns', isOkteto: true });
+    sinon.stub(okteto, 'getMachineId').returns('machine-id');
+
+    const manifestUri = vscode.Uri.file('/workspace/okteto.yml');
+    sinon.stub(vscode.workspace, 'findFiles').resolves([manifestUri]);
+    sinon.stub(manifest, 'get').resolves(new manifest.Manifest([
+      new manifest.Service('api', '/app', 0),
+      new manifest.Service('worker', '/worker', 0),
+    ], []));
+
+    const downStub = sinon.stub(okteto, 'down').resolves();
+    const downAllStub = sinon.stub(okteto, 'downAll').resolves();
+    const withProgressStub = sinon.stub(vscode.window, 'withProgress').callsFake(async (options, task) => {
+      expect(options.title).to.equal('Okteto: Running down');
+      return task(
+        { report: () => {} },
+        { onCancellationRequested: () => ({ dispose: () => {} }) } as unknown as vscode.CancellationToken,
+      ) as Promise<unknown>;
+    });
+    sinon.stub(vscode.window, 'showQuickPick').resolves({
+      label: 'All services',
+      target: { type: 'all' },
+    } as vscode.QuickPickItem & { target: { type: 'all' } });
+    const showInformationMessageStub = sinon.stub(vscode.window, 'showInformationMessage').resolves(undefined);
+
+    activateExtension();
+    await vscode.commands.executeCommand('okteto.down');
+
+    expect(downStub.called).to.equal(false);
+    expect(withProgressStub.calledOnce).to.equal(true);
+    expect(downAllStub.calledOnceWithExactly(manifestUri, 'ns', ['api', 'worker'])).to.equal(true);
+    expect(showInformationMessageStub.calledOnce).to.equal(true);
+    expect(showInformationMessageStub.firstCall.args[0]).to.equal('Okteto: Down completed');
   });
 });
 

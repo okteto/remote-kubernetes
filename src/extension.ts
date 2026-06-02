@@ -404,17 +404,9 @@ async function downCmd() {
         return onOktetoFailed(`Okteto: Down failed to load your Okteto manifest: ${getErrorMessage(err)}`);
     }
 
-    let service: manifest.Service;
-
-    if (m.services.length === 1 ) {
-        service = m.services[0];
-    } else {
-        const choice = await showManifestServicePicker(m.services);
-        if (!choice) {
-            return;
-        }
-
-        service = choice;
+    const target = await showManifestDownTargetPicker(m.services);
+    if (!target) {
+        return;
     }
     
 
@@ -422,9 +414,18 @@ async function downCmd() {
     
 
     try {
-        await okteto.down(manifestPath, ctx.namespace, service.name);
+        await vscode.window.withProgress(
+            {location: vscode.ProgressLocation.Notification, title: "Okteto: Running down"},
+            async () => {
+                if (target.type === 'all') {
+                    await okteto.downAll(manifestPath, ctx.namespace, m.services.map(s => s.name));
+                } else {
+                    await okteto.down(manifestPath, ctx.namespace, target.service.name);
+                }
+            },
+        );
         activeManifest.delete(manifestPath.fsPath);
-        vscode.window.showInformationMessage("Okteto environment deactivated");
+        vscode.window.showInformationMessage("Okteto: Down completed");
         reporter().track(events.downFinished);
     } catch(err: unknown) {
         reporter().track(events.oktetoDownFailed);
@@ -707,6 +708,34 @@ async function showManifestServicePicker(services: manifest.Service[]) : Promise
 
 
     return serviceItem ? serviceItem.service : undefined;
+}
+
+type DownTarget = {type: 'service'; service: manifest.Service} | {type: 'all'};
+
+interface DownTargetQuickPickItem extends vscode.QuickPickItem {
+    target: DownTarget;
+}
+
+async function showManifestDownTargetPicker(services: manifest.Service[]) : Promise<DownTarget | undefined>{
+    const items: DownTargetQuickPickItem[] = [{
+        label: "All services",
+        description: "Run okteto down --all",
+        target: {type: 'all'}
+    }];
+
+    for (const service of services) {
+        items.push({
+            label: service.name,
+            target: {type: 'service', service}
+        });
+    }
+
+    const targetItem = await vscode.window.showQuickPick(items, {
+        canPickMany: false,
+        placeHolder: 'Select the service to deactivate'
+    });
+
+    return targetItem ? targetItem.target : undefined;
 }
 
 async function showManifestTestPicker(tests: manifest.Test[]) : Promise<manifest.Test | undefined>{

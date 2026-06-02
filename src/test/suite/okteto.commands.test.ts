@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import {
+    buildDownArgs,
     buildDeployCommand,
     buildDestroyCommand,
     buildSetContextCommand,
@@ -221,6 +222,24 @@ describe('buildDeployCommand', () => {
             shell: 'cmd',
         });
         expect(cmd).to.equal(`"C:\\Users\\Bob\\AppData\\Local\\Programs\\okteto.exe" deploy -f "C:\\My Projects\\app\\okteto.yml" --wait`);
+    });
+});
+
+describe('buildDownArgs', () => {
+    it('builds args for a single service', () => {
+        expect(buildDownArgs({
+            target: {type: 'service', name: 'api'},
+            manifestPath: '/home/user/okteto.yml',
+            namespace: 'dev',
+        })).to.deep.equal(['down', 'api', '--file', '/home/user/okteto.yml', '--namespace', 'dev']);
+    });
+
+    it('builds args for all services', () => {
+        expect(buildDownArgs({
+            target: {type: 'all'},
+            manifestPath: '/home/user/okteto.yml',
+            namespace: 'dev',
+        })).to.deep.equal(['down', '--all', '--file', '/home/user/okteto.yml', '--namespace', 'dev']);
     });
 });
 
