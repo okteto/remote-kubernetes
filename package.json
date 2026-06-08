@@ -146,7 +146,7 @@
     "@types/command-exists": "^1.2.3",
     "@types/glob": "^9.0.0",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^22.19.19",
+    "@types/node": "^22.19.20",
     "@types/semver": "^7.7.1",
     "@types/sinon": "^21.0.1",
     "@types/vscode": "^1.109.0",
