@@ -1,5 +1,11 @@
 # Change Log
 
+## Unreleased
+
+### Changed
+- Dropped the deprecated `okteto-pipeline.yml` / `okteto-pipeline.yaml` names from the built-in supported manifest list and removed references to the deprecated `okteto-pipeline.*` and `okteto-stack.*` manifests from the docs and examples. The generic `okteto-*` / `okteto.*` filename patterns still match custom manifest names.
+- Updated the project's own `okteto.yml` to the current Okteto Manifest (v2) `dev:` format.
+
 ## 0.5.4
 
 ### Features

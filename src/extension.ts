@@ -35,9 +35,7 @@ function reporter(): Reporter {
     return currentReporter;
 }
 
-const supportedDeployFilenames = ['okteto-pipeline.yml',
-'okteto-pipeline.yaml',
-'docker-compose.yml',
+const supportedDeployFilenames = ['docker-compose.yml',
 'docker-compose.yaml',
 'okteto.yml',
 'okteto.yaml']

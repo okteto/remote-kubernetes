@@ -360,8 +360,6 @@ describe('down command (manifest picker dismissed)', () => {
 
 describe('isManifestSupported', () => {
   const supportedDeployFilenames = [
-    'okteto-pipeline.yml',
-    'okteto-pipeline.yaml',
     'docker-compose.yml',
     'docker-compose.yaml',
     'okteto.yml',
@@ -379,8 +377,6 @@ describe('isManifestSupported', () => {
     it('should accept exact matches from deploy list', () => {
       expect(isManifestSupported('okteto.yml', supportedDeployFilenames)).to.equal(true);
       expect(isManifestSupported('okteto.yaml', supportedDeployFilenames)).to.equal(true);
-      expect(isManifestSupported('okteto-pipeline.yml', supportedDeployFilenames)).to.equal(true);
-      expect(isManifestSupported('okteto-pipeline.yaml', supportedDeployFilenames)).to.equal(true);
       expect(isManifestSupported('docker-compose.yml', supportedDeployFilenames)).to.equal(true);
       expect(isManifestSupported('docker-compose.yaml', supportedDeployFilenames)).to.equal(true);
     });
@@ -395,8 +391,8 @@ describe('isManifestSupported', () => {
 
   describe('okteto-* pattern files', () => {
     it('should accept okteto-* patterns with any supported list', () => {
-      expect(isManifestSupported('okteto-stack.yml', supportedDeployFilenames)).to.equal(true);
-      expect(isManifestSupported('okteto-stack.yaml', supportedUpFilenames)).to.equal(true);
+      expect(isManifestSupported('okteto-api.yml', supportedDeployFilenames)).to.equal(true);
+      expect(isManifestSupported('okteto-api.yaml', supportedUpFilenames)).to.equal(true);
       expect(isManifestSupported('okteto-compose.yml', supportedDeployFilenames)).to.equal(true);
       expect(isManifestSupported('okteto-custom.yaml', supportedUpFilenames)).to.equal(true);
       expect(isManifestSupported('okteto-frontend.yml', supportedDeployFilenames)).to.equal(true);
@@ -426,7 +422,7 @@ describe('isManifestSupported', () => {
 
     it('should reject files with wrong extensions', () => {
       expect(isManifestSupported('okteto.dev.json', supportedDeployFilenames)).to.equal(false);
-      expect(isManifestSupported('okteto-stack.txt', supportedDeployFilenames)).to.equal(false);
+      expect(isManifestSupported('okteto-api.txt', supportedDeployFilenames)).to.equal(false);
       expect(isManifestSupported('okteto.yaml.bak', supportedDeployFilenames)).to.equal(false);
     });
   });
@@ -448,9 +444,9 @@ describe('isManifestSupported', () => {
     });
 
     it('should be case-sensitive for pattern matches', () => {
-      expect(isManifestSupported('Okteto-stack.yml', supportedDeployFilenames)).to.equal(false);
+      expect(isManifestSupported('Okteto-api.yml', supportedDeployFilenames)).to.equal(false);
       expect(isManifestSupported('OKTETO.dev.yml', supportedDeployFilenames)).to.equal(false);
-      expect(isManifestSupported('okteto-Stack.YML', supportedDeployFilenames)).to.equal(false);
+      expect(isManifestSupported('okteto-Api.YML', supportedDeployFilenames)).to.equal(false);
     });
   });
 

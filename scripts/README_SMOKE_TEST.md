@@ -69,7 +69,7 @@ The smoke test validates the core extension functionality by:
 
 [STEP] Checking prerequisites...
 [INFO] ✓ Okteto CLI found: okteto version 3.19.0
-[INFO] ✓ Logged into Okteto: https://cloud.okteto.com
+[INFO] ✓ Logged into Okteto: https://okteto.example.com
 [INFO] ✓ Node.js found: v22.x.x
 [INFO] ✓ pnpm found: 11.x.x
 [INFO] ✓ git found: git version 2.x.x
@@ -225,8 +225,8 @@ curl https://get.okteto.com -sSfL | sh
 
 ### "Not logged into Okteto cluster"
 ```bash
-# Login to Okteto
-okteto context use https://cloud.okteto.com
+# Login to Okteto (replace with your Okteto instance URL)
+okteto context use https://okteto.example.com
 ```
 
 ### "Failed to clone repository"
