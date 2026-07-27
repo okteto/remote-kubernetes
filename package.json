@@ -141,7 +141,7 @@
     "publish-sentry": "sentry-cli releases new $VERSION && sentry-cli releases set-commits --auto $VERSION && sentry-cli sourcemaps upload --release $VERSION dist && sentry-cli releases finalize $VERSION"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.4",
+    "@eslint/js": "^9.39.5",
     "@types/chai": "^5.2.3",
     "@types/command-exists": "^1.2.3",
     "@types/glob": "^9.0.0",
@@ -154,14 +154,14 @@
     "@vscode/vsce": "^3.9.1",
     "chai": "^6.2.2",
     "esbuild": "^0.28.0",
-    "eslint": "^9.39.4",
+    "eslint": "^9.39.5",
     "glob": "^13.0.6",
     "markdown-it": ">=14.2.0",
     "mocha": "^11.7.6",
     "sinon": "^22.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.59.3",
+    "typescript-eslint": "^8.65.0",
     "vscode-uri": "^3.1.0"
   },
   "dependencies": {
