@@ -29,7 +29,7 @@ src/
 ├── extension.ts      # Main entry point. Registers all VS Code commands, orchestrates workflows
 ├── okteto.ts         # Okteto CLI wrapper. Spawns CLI processes, monitors state via terminal
 ├── ssh.ts            # SSH readiness checks and port discovery
-├── telemetry.ts      # Analytics (Mixpanel) and error tracking (Sentry)
+├── telemetry.ts      # Analytics (Mixpanel). Errors are logged locally, never sent off-machine
 ├── manifest.ts       # YAML manifest parsing (Okteto v2, Docker Compose)
 ├── download.ts       # Downloads Okteto CLI binary per platform
 ├── machineid.ts      # Platform-specific machine ID generation
@@ -57,9 +57,9 @@ src/
 
 - **Bundler:** esbuild (`esbuild.js`)
 - **Entry:** `src/extension.ts` → **Output:** `dist/extension.js` (CommonJS, Node.js target)
-- **TypeScript:** Strict mode, ES6 target, NodeNext modules
+- **TypeScript:** Strict mode, ES2022 target, NodeNext modules
 - The `vscode` module is externalized (provided by VS Code at runtime)
-- **E2E tests use `tsc`** (not esbuild) via `tsconfig.test.json` because `@vscode/test-electron` needs individual `.js` files, not a bundle. The `tsconfig.test.json` extends the main config and adds `skipLibCheck: true` to avoid transitive type conflicts from `@types/eslint-scope` and `@types/glob`.
+- **E2E tests use `tsc`** (not esbuild) via `tsconfig.test.json` because `@vscode/test-electron` needs individual `.js` files, not a bundle. The `tsconfig.test.json` extends the main config and adds `skipLibCheck: true` to avoid transitive type conflicts from `@types/eslint-scope`.
 
 ### Key Extension Commands
 
@@ -118,7 +118,7 @@ The e2e Mocha bootstrap is in `src/test/e2e/index.ts` and uses the **TDD** UI (`
 
 ## Linting
 
-**Framework:** ESLint v9 with typescript-eslint (flat config format)
+**Framework:** ESLint v10 with typescript-eslint (flat config format)
 
 ```bash
 pnpm run lint    # Runs: eslint src/
@@ -140,7 +140,7 @@ Linting is included in the CI pipeline (`pnpm run ci`).
 - **Equality:** Use `===` (no `==`)
 - **Curly braces:** Always required for control structures
 - **Async:** Use async/await throughout (no raw Promises)
-- **Linting:** ESLint v9 with typescript-eslint flat config
+- **Linting:** ESLint v10 with typescript-eslint flat config
 - **Module system:** ESM-style imports compiled to CommonJS via esbuild
 - **Telemetry:** Respects `vscode.env.isTelemetryEnabled` and `onDidChangeTelemetryEnabled`
 - **Lifecycle:** Extension exports both `activate()` and `deactivate()` for proper cleanup
@@ -153,8 +153,6 @@ Linting is included in the CI pipeline (`pnpm run ci`).
 | `got` | HTTP client for downloading CLI binaries |
 | `yaml` | Parse Okteto and Docker Compose manifests |
 | `semver` | Version comparison for CLI update checks |
-| `@sentry/node` | Error tracking and crash reporting |
-| `@sentry/cli` | Sentry release management (source map uploads) |
 | `mixpanel` | Usage telemetry |
 | `tcp-ping` | SSH readiness checks |
 | `get-port` | Find available network ports |
@@ -172,7 +170,6 @@ Linting is included in the CI pipeline (`pnpm run ci`).
 2. Update `CHANGELOG.md`
 3. Create a GitHub release with a tag
 4. CI automatically builds, tests, and publishes to the VS Code Marketplace
-5. Sentry source maps are uploaded via `sentry-cli sourcemaps upload`
 
 ## GitHub Workflow
 
