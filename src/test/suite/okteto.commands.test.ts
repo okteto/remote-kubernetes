@@ -99,7 +99,7 @@ describe('buildUpCommand', () => {
         );
     });
 
-    it('Windows + PowerShell: wraps Windows paths in single quotes, preserves backslashes', () => {
+    it('Windows + PowerShell: prefixes the call operator and wraps paths in single quotes (issue #341)', () => {
         const cmd = buildUpCommand({
             binary: psBinary,
             name: 'api',
@@ -108,7 +108,7 @@ describe('buildUpCommand', () => {
             shell: 'powershell',
         });
         expect(cmd).to.equal(
-            `'C:\\Program Files\\okteto\\okteto.exe' up 'api' -f 'C:\\Users\\Bob\\My Code\\okteto.yml' --remote 22105`,
+            `& 'C:\\Program Files\\okteto\\okteto.exe' up 'api' -f 'C:\\Users\\Bob\\My Code\\okteto.yml' --remote 22105`,
         );
     });
 
@@ -121,7 +121,7 @@ describe('buildUpCommand', () => {
             shell: 'powershell',
         });
         expect(cmd).to.equal(
-            `'C:\\Program Files\\okteto\\okteto.exe' up 'o''reilly' -f 'C:\\okteto.yml' --remote 22106`,
+            `& 'C:\\Program Files\\okteto\\okteto.exe' up 'o''reilly' -f 'C:\\okteto.yml' --remote 22106`,
         );
     });
 
@@ -192,6 +192,12 @@ describe('buildUpCommand', () => {
             });
             // The metacharacters must appear inside the same quoted region as the value.
             expect(cmd).to.match(/up [`'"]; rm -rf \/[`'"]/);
+            // PowerShell command lines must always start with the call operator
+            // so a maliciously-named binary can't drop the prefix and turn the
+            // line into a string-expression-then-statement parse.
+            if (shell === 'powershell') {
+                expect(cmd.startsWith(`& '`)).to.equal(true);
+            }
         }
     });
 });
@@ -206,13 +212,13 @@ describe('buildDeployCommand', () => {
         expect(cmd).to.equal(`'/home/user/.okteto-vscode/okteto' deploy -f '/home/user/okteto.yml' --wait`);
     });
 
-    it('powershell: handles Windows paths with spaces', () => {
+    it('powershell: prefixes the call operator and handles Windows paths with spaces (issue #341)', () => {
         const cmd = buildDeployCommand({
             binary: psBinary,
             manifestPath: 'C:\\My Projects\\app\\okteto.yml',
             shell: 'powershell',
         });
-        expect(cmd).to.equal(`'C:\\Program Files\\okteto\\okteto.exe' deploy -f 'C:\\My Projects\\app\\okteto.yml' --wait`);
+        expect(cmd).to.equal(`& 'C:\\Program Files\\okteto\\okteto.exe' deploy -f 'C:\\My Projects\\app\\okteto.yml' --wait`);
     });
 
     it('cmd: handles Windows paths with spaces', () => {
@@ -252,12 +258,12 @@ describe('buildDestroyCommand', () => {
         })).to.equal(`'/home/user/.okteto-vscode/okteto' destroy -f '/home/user/okteto.yml'`);
     });
 
-    it('powershell with spaces', () => {
+    it('powershell with spaces (issue #341)', () => {
         expect(buildDestroyCommand({
             binary: psBinary,
             manifestPath: 'C:\\My Projects\\okteto.yml',
             shell: 'powershell',
-        })).to.equal(`'C:\\Program Files\\okteto\\okteto.exe' destroy -f 'C:\\My Projects\\okteto.yml'`);
+        })).to.equal(`& 'C:\\Program Files\\okteto\\okteto.exe' destroy -f 'C:\\My Projects\\okteto.yml'`);
     });
 
     it('cmd with spaces', () => {
@@ -290,14 +296,14 @@ describe('buildTestCommand', () => {
         expect(cmd).to.equal(`'/home/user/.okteto-vscode/okteto' test -f '/home/user/okteto.yml'`);
     });
 
-    it('powershell: handles a test name with a hyphen', () => {
+    it('powershell: handles a test name with a hyphen (issue #341)', () => {
         const cmd = buildTestCommand({
             binary: psBinary,
             manifestPath: 'C:\\okteto.yml',
             test: 'integration-tests',
             shell: 'powershell',
         });
-        expect(cmd).to.equal(`'C:\\Program Files\\okteto\\okteto.exe' test -f 'C:\\okteto.yml' 'integration-tests'`);
+        expect(cmd).to.equal(`& 'C:\\Program Files\\okteto\\okteto.exe' test -f 'C:\\okteto.yml' 'integration-tests'`);
     });
 
     it('cmd: handles a test name with spaces', () => {
@@ -321,13 +327,13 @@ describe('buildSetContextCommand', () => {
         expect(cmd).to.equal(`'/home/user/.okteto-vscode/okteto' context use 'https://okteto.example.com'`);
     });
 
-    it('powershell: handles a context with a hyphen', () => {
+    it('powershell: handles a context with a hyphen (issue #341)', () => {
         const cmd = buildSetContextCommand({
             binary: psBinary,
             context: 'my-kube-context',
             shell: 'powershell',
         });
-        expect(cmd).to.equal(`'C:\\Program Files\\okteto\\okteto.exe' context use 'my-kube-context'`);
+        expect(cmd).to.equal(`& 'C:\\Program Files\\okteto\\okteto.exe' context use 'my-kube-context'`);
     });
 
     it('cmd: handles a Kubernetes context name with spaces', () => {
@@ -349,12 +355,12 @@ describe('buildSetNamespaceCommand', () => {
         })).to.equal(`'/home/user/.okteto-vscode/okteto' namespace use 'dev'`);
     });
 
-    it('powershell with hyphen', () => {
+    it('powershell with hyphen (issue #341)', () => {
         expect(buildSetNamespaceCommand({
             binary: psBinary,
             namespace: 'team-platform',
             shell: 'powershell',
-        })).to.equal(`'C:\\Program Files\\okteto\\okteto.exe' namespace use 'team-platform'`);
+        })).to.equal(`& 'C:\\Program Files\\okteto\\okteto.exe' namespace use 'team-platform'`);
     });
 
     it('cmd', () => {
@@ -364,4 +370,52 @@ describe('buildSetNamespaceCommand', () => {
             shell: 'cmd',
         })).to.equal(`"C:\\Users\\Bob\\AppData\\Local\\Programs\\okteto.exe" namespace use "staging"`);
     });
+});
+
+describe('PowerShell call operator (issue #341)', () => {
+    // Cross-builder guardrail: every PowerShell command line must start with
+    // `& '` so a future builder added without invokeBinary fails CI here. A
+    // bare `'C:\…\okteto.exe' up …` line is parsed by PowerShell as a string
+    // expression followed by an unexpected statement.
+    const cases: Array<[string, () => string]> = [
+        ['buildUpCommand', () => buildUpCommand({
+            binary: psBinary,
+            name: 'api',
+            manifest: 'C:\\okteto.yml',
+            port: 22000,
+            shell: 'powershell',
+        })],
+        ['buildDeployCommand', () => buildDeployCommand({
+            binary: psBinary,
+            manifestPath: 'C:\\okteto.yml',
+            shell: 'powershell',
+        })],
+        ['buildDestroyCommand', () => buildDestroyCommand({
+            binary: psBinary,
+            manifestPath: 'C:\\okteto.yml',
+            shell: 'powershell',
+        })],
+        ['buildTestCommand', () => buildTestCommand({
+            binary: psBinary,
+            manifestPath: 'C:\\okteto.yml',
+            test: 'unit',
+            shell: 'powershell',
+        })],
+        ['buildSetContextCommand', () => buildSetContextCommand({
+            binary: psBinary,
+            context: 'my-context',
+            shell: 'powershell',
+        })],
+        ['buildSetNamespaceCommand', () => buildSetNamespaceCommand({
+            binary: psBinary,
+            namespace: 'dev',
+            shell: 'powershell',
+        })],
+    ];
+
+    for (const [name, run] of cases) {
+        it(`${name} starts with the call operator`, () => {
+            expect(run()).to.match(/^& '/);
+        });
+    }
 });

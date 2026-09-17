@@ -11,7 +11,7 @@ import * as semver from 'semver';
 import * as paths from './paths';
 import find from 'find-process';
 import { getLogger } from './logger';
-import { quote, detectShell, ShellKind } from './shell';
+import { quote, invokeBinary, detectShell, ShellKind } from './shell';
 import { getErrorMessage } from './errors';
 import { MtimeCache } from './cache';
 
@@ -1035,7 +1035,7 @@ export function buildUpCommand(opts: {
   shell: ShellKind;
 }): string {
   const { binary, name, manifest, port, extraArgs, shell } = opts;
-  let cmd = `${quote(binary, shell)} up ${quote(name, shell)} -f ${quote(manifest, shell)} --remote ${port}`;
+  let cmd = `${invokeBinary(binary, shell)} up ${quote(name, shell)} -f ${quote(manifest, shell)} --remote ${port}`;
   if (extraArgs) {
     cmd = `${cmd} ${extraArgs}`;
   }
@@ -1047,7 +1047,7 @@ export function buildUpCommand(opts: {
  */
 export function buildDeployCommand(opts: {binary: string; manifestPath: string; shell: ShellKind}): string {
   const { binary, manifestPath, shell } = opts;
-  return `${quote(binary, shell)} deploy -f ${quote(manifestPath, shell)} --wait`;
+  return `${invokeBinary(binary, shell)} deploy -f ${quote(manifestPath, shell)} --wait`;
 }
 
 /**
@@ -1055,7 +1055,7 @@ export function buildDeployCommand(opts: {binary: string; manifestPath: string; 
  */
 export function buildDestroyCommand(opts: {binary: string; manifestPath: string; shell: ShellKind}): string {
   const { binary, manifestPath, shell } = opts;
-  return `${quote(binary, shell)} destroy -f ${quote(manifestPath, shell)}`;
+  return `${invokeBinary(binary, shell)} destroy -f ${quote(manifestPath, shell)}`;
 }
 
 /**
@@ -1064,7 +1064,7 @@ export function buildDestroyCommand(opts: {binary: string; manifestPath: string;
 export function buildTestCommand(opts: {binary: string; manifestPath: string; test: string; shell: ShellKind}): string {
   const { binary, manifestPath, test, shell } = opts;
   const testArg = test ? ` ${quote(test, shell)}` : '';
-  return `${quote(binary, shell)} test -f ${quote(manifestPath, shell)}${testArg}`;
+  return `${invokeBinary(binary, shell)} test -f ${quote(manifestPath, shell)}${testArg}`;
 }
 
 /**
@@ -1072,7 +1072,7 @@ export function buildTestCommand(opts: {binary: string; manifestPath: string; te
  */
 export function buildSetContextCommand(opts: {binary: string; context: string; shell: ShellKind}): string {
   const { binary, context, shell } = opts;
-  return `${quote(binary, shell)} context use ${quote(context, shell)}`;
+  return `${invokeBinary(binary, shell)} context use ${quote(context, shell)}`;
 }
 
 /**
@@ -1080,7 +1080,7 @@ export function buildSetContextCommand(opts: {binary: string; context: string; s
  */
 export function buildSetNamespaceCommand(opts: {binary: string; namespace: string; shell: ShellKind}): string {
   const { binary, namespace, shell } = opts;
-  return `${quote(binary, shell)} namespace use ${quote(namespace, shell)}`;
+  return `${invokeBinary(binary, shell)} namespace use ${quote(namespace, shell)}`;
 }
 
 function extractMessage(error :string):string {

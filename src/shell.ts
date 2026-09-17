@@ -96,6 +96,26 @@ export function quoteCmd(value: string): string {
 }
 
 /**
+ * Builds the leading `<binary>` portion of a shell command line: a quoted
+ * binary path, plus the call operator `&` on PowerShell.
+ *
+ * On PowerShell, a string literal at the start of a statement is parsed as
+ * a string expression rather than a command, so `'C:\path\okteto.exe' up …`
+ * fails with `Unexpected token 'up' in expression or statement`. The call
+ * operator forces invocation while keeping stdout/stderr attached to the
+ * current host (issue #341).
+ *
+ * POSIX shells treat a leading `&` as the background operator, and cmd.exe
+ * runs `"path" arg` without any prefix, so neither needs `&`.
+ *
+ * Reference: https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_operators#call-operator-
+ */
+export function invokeBinary(binary: string, shell: ShellKind): string {
+    const quoted = quote(binary, shell);
+    return shell === 'powershell' ? `& ${quoted}` : quoted;
+}
+
+/**
  * Backwards-compatible alias for `quotePosix`. Prefer `quote(value, shell)`
  * with an explicit shell when adding new call sites.
  */

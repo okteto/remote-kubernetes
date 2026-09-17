@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import {
     detectShell,
+    invokeBinary,
     posixQuote,
     quote,
     quoteCmd,
@@ -178,6 +179,50 @@ describe('quote', () => {
 
         it('leaves single quotes alone (they are literal in cmd anyway)', () => {
             expect(quote(`it's`, 'cmd')).to.equal(`"it's"`);
+        });
+    });
+});
+
+describe('invokeBinary', () => {
+    describe('posix', () => {
+        it('quotes a bare binary name with no prefix', () => {
+            expect(invokeBinary('okteto', 'posix')).to.equal(`'okteto'`);
+        });
+
+        it('quotes an absolute path with no prefix', () => {
+            expect(invokeBinary('/usr/local/bin/okteto', 'posix')).to.equal(`'/usr/local/bin/okteto'`);
+        });
+
+        it('quotes a path with spaces with no prefix', () => {
+            expect(invokeBinary('/Users/Bob/My Tools/okteto', 'posix')).to.equal(`'/Users/Bob/My Tools/okteto'`);
+        });
+    });
+
+    describe('powershell (issue #341)', () => {
+        it('prefixes a bare binary name with the call operator', () => {
+            // PowerShell parses 'okteto' as a string expression, not a command — & forces invocation.
+            expect(invokeBinary('okteto', 'powershell')).to.equal(`& 'okteto'`);
+        });
+
+        it('prefixes an absolute Windows path with the call operator', () => {
+            expect(invokeBinary('C:\\Program Files\\okteto\\okteto.exe', 'powershell'))
+                .to.equal(`& 'C:\\Program Files\\okteto\\okteto.exe'`);
+        });
+
+        it('escapes embedded single quotes via doubling and still prefixes with &', () => {
+            expect(invokeBinary("C:\\Tom's Tools\\okteto.exe", 'powershell'))
+                .to.equal(`& 'C:\\Tom''s Tools\\okteto.exe'`);
+        });
+    });
+
+    describe('cmd', () => {
+        it('wraps a bare binary in double quotes with no prefix', () => {
+            expect(invokeBinary('okteto', 'cmd')).to.equal(`"okteto"`);
+        });
+
+        it('wraps a Windows path with spaces in double quotes with no prefix', () => {
+            expect(invokeBinary('C:\\Program Files\\okteto\\okteto.exe', 'cmd'))
+                .to.equal(`"C:\\Program Files\\okteto\\okteto.exe"`);
         });
     });
 });
