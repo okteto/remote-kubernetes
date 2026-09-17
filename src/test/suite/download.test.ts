@@ -70,6 +70,91 @@ describe('getOktetoDownloadInfo', () => {
   });
 });
 
+// `getOktetoDownloadInfo` picks the binary purely from `os.platform()` and
+// `os.arch()`. The tests above only ever exercise whichever platform the test
+// runner happens to be on, so they cannot catch a regression in the other
+// branches. These stub both calls to cover the full matrix.
+//
+// TypeScript's `__importStar` helper copies a module namespace behind
+// non-configurable getters, so sinon cannot stub the imported `os` namespace
+// directly. Those getters read through to the underlying module object, so we
+// patch that and restore it after every test.
+const osModule = require('os') as { platform: () => string; arch: () => string };
+
+describe('getOktetoDownloadInfo platform matrix', () => {
+  const realPlatform = osModule.platform;
+  const realArch = osModule.arch;
+
+  afterEach(() => {
+    osModule.platform = realPlatform;
+    osModule.arch = realArch;
+  });
+
+  const resolveAs = (platform: string, arch: string) => {
+    osModule.platform = () => platform;
+    osModule.arch = () => arch;
+    return download.getOktetoDownloadInfo();
+  };
+
+  const cases = [
+    // Windows ignores the architecture entirely, and is the only platform that
+    // does not need the execute bit set.
+    { platform: 'win32', arch: 'arm64', binary: 'okteto.exe', chmod: false },
+    { platform: 'win32', arch: 'x64', binary: 'okteto.exe', chmod: false },
+    { platform: 'win32', arch: 'ia32', binary: 'okteto.exe', chmod: false },
+
+    // macOS splits on arm64 vs everything else.
+    { platform: 'darwin', arch: 'arm64', binary: 'okteto-Darwin-arm64', chmod: true },
+    { platform: 'darwin', arch: 'x64', binary: 'okteto-Darwin-x86_64', chmod: true },
+    { platform: 'darwin', arch: 'ia32', binary: 'okteto-Darwin-x86_64', chmod: true },
+
+    { platform: 'linux', arch: 'arm64', binary: 'okteto-Linux-arm64', chmod: true },
+    { platform: 'linux', arch: 'x64', binary: 'okteto-Linux-x86_64', chmod: true },
+    { platform: 'linux', arch: 'ia32', binary: 'okteto-Linux-x86_64', chmod: true },
+
+    // Anything that is not win32 or darwin falls through to the Linux binaries.
+    // That branch has no explicit `case`, so it is the one most likely to
+    // regress unnoticed.
+    { platform: 'freebsd', arch: 'arm64', binary: 'okteto-Linux-arm64', chmod: true },
+    { platform: 'freebsd', arch: 'x64', binary: 'okteto-Linux-x86_64', chmod: true },
+    { platform: 'aix', arch: 'x64', binary: 'okteto-Linux-x86_64', chmod: true },
+    { platform: 'sunos', arch: 'x64', binary: 'okteto-Linux-x86_64', chmod: true },
+    { platform: 'openbsd', arch: 'arm64', binary: 'okteto-Linux-arm64', chmod: true },
+    { platform: 'android', arch: 'arm64', binary: 'okteto-Linux-arm64', chmod: true },
+  ];
+
+  cases.forEach(({ platform, arch, binary, chmod }) => {
+    it(`resolves ${platform}/${arch} to ${binary}`, () => {
+      const info = resolveAs(platform, arch);
+      expect(info.url).to.equal(`https://downloads.okteto.com/cli/stable/${download.minimum}/${binary}`);
+      expect(info.chmod).to.equal(chmod);
+    });
+  });
+
+  it('always resolves a real binary name, never undefined', () => {
+    const known = [
+      'okteto.exe',
+      'okteto-Darwin-arm64',
+      'okteto-Darwin-x86_64',
+      'okteto-Linux-arm64',
+      'okteto-Linux-x86_64',
+    ];
+    const platforms = ['win32', 'darwin', 'linux', 'freebsd', 'aix', 'sunos', 'openbsd', 'android', 'cygwin', 'netbsd', 'haiku'];
+    const arches = ['arm64', 'x64', 'ia32', 'arm', 'ppc64', 's390x', 'riscv64', 'loong64', 'mips'];
+
+    let checked = 0;
+    for (const platform of platforms) {
+      for (const arch of arches) {
+        const info = resolveAs(platform, arch);
+        expect(info.url, `${platform}/${arch}`).to.not.include('undefined');
+        expect(info.url.split('/').pop(), `${platform}/${arch}`).to.be.oneOf(known);
+        checked++;
+      }
+    }
+    expect(checked).to.equal(platforms.length * arches.length);
+  });
+});
+
 describe('getBinary', () => {
   const mock = (vscode as unknown as { __mock: { setConfiguration: (s: string, k: string, v: unknown) => void; reset: () => void } }).__mock;
 

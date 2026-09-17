@@ -9,7 +9,7 @@ import { getLogger } from './logger';
 /**
  * Minimum required Okteto CLI version.
  */
-export const minimum = '3.19.0';
+export const minimum = '3.23.1';
 
 /**
  * Gets the platform-specific installation path for the Okteto CLI binary.
@@ -32,7 +32,7 @@ export function getInstallPath(): string {
  */
 export function getOktetoDownloadInfo() : {url: string, chmod: boolean} {
   let chmod = true;
-  let binaryName = "okteto.exe";
+  let binaryName: string;
 
   switch(os.platform()){
     case 'win32':

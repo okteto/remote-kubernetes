@@ -183,7 +183,7 @@ Use this checklist before releasing a new version of the Remote - Kubernetes ext
 #### Test 8a: Standard Manifests
 - [ ] Create project with multiple manifests:
   - [ ] `okteto.yml`
-  - [ ] `okteto-pipeline.yml`
+  - [ ] `okteto.yaml`
   - [ ] `docker-compose.yml`
 - [ ] Run `Okteto: Up`
 - [ ] Picker shows all manifests
@@ -194,7 +194,7 @@ Use this checklist before releasing a new version of the Remote - Kubernetes ext
 - [ ] Create project with custom pattern manifests:
   - [ ] `okteto.dev.yml`
   - [ ] `okteto.staging.yml`
-  - [ ] `okteto-stack.yml`
+  - [ ] `okteto-api.yml`
   - [ ] `okteto-frontend.yml`
 - [ ] Run `Okteto: Deploy`
 - [ ] Picker shows all custom manifests
@@ -205,7 +205,7 @@ Use this checklist before releasing a new version of the Remote - Kubernetes ext
 - [ ] Create project with mix:
   - [ ] `okteto.yml`
   - [ ] `okteto.dev.yml`
-  - [ ] `okteto-pipeline.yml`
+  - [ ] `okteto-api.yml`
   - [ ] `okteto-custom.yaml`
 - [ ] Run `Okteto: Up` - should show all manifests
 - [ ] Run `Okteto: Deploy` - should show all manifests

@@ -1,5 +1,4 @@
 allowBuilds:
-  '@sentry/cli': true
   '@vscode/vsce-sign': true
   esbuild: true
   keytar: true

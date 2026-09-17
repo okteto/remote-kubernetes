@@ -187,7 +187,7 @@ export async function install(progress: vscode.Progress<{increment: number, mess
     await promises.mkdir(folder, {mode: 0o700, recursive: true});
     getLogger().debug(`created ${folder}`);
   } catch(err: unknown) {
-    throw new Error(`failed to create dir: ${getErrorMessage(err)}`);
+    throw new Error(`failed to create dir: ${getErrorMessage(err)}`, { cause: err });
   }
 
 
@@ -196,10 +196,10 @@ export async function install(progress: vscode.Progress<{increment: number, mess
   } catch(err: unknown) {
     getLogger().error(`download fail: ${err}`);
     if (hasErrorCode(err) && err.code === 'EBUSY'){
-      throw new Error(`failed to install okteto, ${installPath} is in use`);
+      throw new Error(`failed to install okteto, ${installPath} is in use`, { cause: err });
     }
 
-    throw new Error(`failed to download ${source.url} into ${installPath}: ${getErrorMessage(err)}`);
+    throw new Error(`failed to download ${source.url} into ${installPath}: ${getErrorMessage(err)}`, { cause: err });
   }
 
   try {
@@ -214,7 +214,7 @@ export async function install(progress: vscode.Progress<{increment: number, mess
     await promises.rename(downloadPath, installPath);
   } catch(err: unknown) {
     getLogger().error(`rename fail: ${err}`);
-    throw new Error(`failed to download ${source.url} into ${installPath}: ${getErrorMessage(err)}`);
+    throw new Error(`failed to download ${source.url} into ${installPath}: ${getErrorMessage(err)}`, { cause: err });
   }
 
 
@@ -222,7 +222,7 @@ export async function install(progress: vscode.Progress<{increment: number, mess
     try {
       await execa('chmod', ['a+x', installPath]);
     } catch(err: unknown) {
-      throw new Error(`failed to chmod ${installPath}: ${getErrorMessage(err)}`);
+      throw new Error(`failed to chmod ${installPath}: ${getErrorMessage(err)}`, { cause: err });
     }
   }
 
@@ -307,7 +307,7 @@ async function runDown(manifest: vscode.Uri, namespace: string, target: DownTarg
     const stdout = isExecaError(err) ? err.stdout : '';
     getLogger().error(`${err}: ${stdout}`);
     const message = extractMessage(stdout || '');
-    throw new Error(message);
+    throw new Error(message, { cause: err });
   }
 
   getLogger().info('okteto down completed');
@@ -601,7 +601,7 @@ export async function getState(namespace: string, name: string): Promise<{state:
     return {state: state.starting, message: ""};
   }
 
-  let c = '';
+  let c: string;
 
   try {
     const buffer = await promises.readFile(p, {encoding: 'utf8'});
@@ -651,7 +651,7 @@ export async function isRunning(namespace: string, name: string): Promise<boolea
     return true;
   }
 
-  let c = '';
+  let c: string;
   try {
     const buffer = await promises.readFile(p, {encoding: 'utf8'});
     c = buffer.toString();
@@ -908,7 +908,7 @@ export function getMachineId(): string {
   }
 
   const analyticsFile =  path.join(os.homedir(), oktetoFolder,  "analytics.json");
-  let machineId = "";
+  let machineId: string;
   try {
     const c = fs.readFileSync(analyticsFile, {encoding: 'utf8'});
     const analytics = JSON.parse(c) as OktetoAnalytics;

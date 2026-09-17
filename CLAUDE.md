@@ -31,10 +31,10 @@ After any code change, verify with:
 - **E2E tests use TDD Mocha interface**: Use `suite`/`test` syntax in `src/test/e2e/`, not `describe`/`it`. The bootstrap (`src/test/e2e/index.ts`) is configured with `ui: 'tdd'`.
 - **Unit tests use BDD Mocha interface**: Use `describe`/`it` syntax in `src/test/suite/`.
 - **Unit tests mock `vscode`**: The mock at `src/test/mock/vscode.ts` is loaded via `-r` flag. It intercepts `require('vscode')` so modules with runtime `vscode` usage can be tested in plain Node.js.
-- **ESLint v9, not v10**: `typescript-eslint` requires ESLint `^8.57 || ^9.0`. Do not upgrade to ESLint 10 until typescript-eslint supports it.
+- **TypeScript stays on 6.x**: `typescript-eslint` peers on `typescript >=4.8.4 <6.1.0`. Do not upgrade to TypeScript 7 until typescript-eslint widens that range.
+- **ESLint 10 enables `preserve-caught-error` and `no-useless-assignment`**: rethrowing inside a `catch` must pass `{ cause: err }`, and a variable's initializer must not be dead. `tsconfig.json` targets ES2022 so the two-argument `Error` constructor type-checks.
 - **Squash merges only**: The repo disallows merge commits. Use `gh pr merge --squash`, not `--merge`.
 - **Branch protection**: PRs require passing CI checks. Use `--admin` flag to bypass review requirements if needed.
-- **Sentry CLI v3**: Source maps are uploaded with `sentry-cli sourcemaps upload`, not the old `sentry-cli releases files upload-sourcemaps`.
 
 ## Code Style
 
@@ -43,6 +43,7 @@ After any code change, verify with:
 - async/await over raw Promises
 - ESM imports compiled to CommonJS via esbuild
 - Telemetry must respect `vscode.env.isTelemetryEnabled`
+- No remote error tracking: errors go to the output channel via `Reporter.captureError`, never to a third-party service
 
 ## When Adding Commands
 

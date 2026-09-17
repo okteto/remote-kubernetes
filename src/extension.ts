@@ -35,9 +35,7 @@ function reporter(): Reporter {
     return currentReporter;
 }
 
-const supportedDeployFilenames = ['okteto-pipeline.yml',
-'okteto-pipeline.yaml',
-'docker-compose.yml',
+const supportedDeployFilenames = ['docker-compose.yml',
 'docker-compose.yaml',
 'okteto.yml',
 'okteto.yaml']
@@ -172,7 +170,7 @@ async function installCmd(upgrade: boolean, handleErr: boolean) {
             if (handleErr) {
                 vscode.window.showErrorMessage(`Okteto was not installed: ${getErrorMessage(err)}`);
             } else {
-                throw new Error(`Okteto was not installed: ${getErrorMessage(err)}`);
+                throw new Error(`Okteto was not installed: ${getErrorMessage(err)}`, { cause: err });
             }
             
         }
@@ -277,7 +275,7 @@ async function waitForUp(namespace: string, name: string, port: number) {
               } catch(err: unknown) {
                   reporter().track(events.sshServiceFailed);
                   reporter().captureError(`SSH wasn't available after 60 seconds: ${getErrorMessage(err)}`, err);
-                  throw new Error(`Okteto: Up command failed, SSH server wasn't available after 60 seconds`);
+                  throw new Error(`Okteto: Up command failed, SSH server wasn't available after 60 seconds`, { cause: err });
               }
           });
 }

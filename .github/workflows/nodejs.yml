@@ -2,7 +2,11 @@ name: CI/CD
 permissions:
   contents: read
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
 
 jobs:
   build:
@@ -11,11 +15,11 @@ jobs:
       contents: read
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: Install pnpm
       uses: pnpm/action-setup@v6
     - name: Use Node.js 22
-      uses: actions/setup-node@v6
+      uses: actions/setup-node@v7
       with:
         node-version: 22
         cache: 'pnpm'

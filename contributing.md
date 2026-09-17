@@ -75,7 +75,7 @@ remote-kubernetes/
 │   ├── manifest.ts        # Manifest parsing and validation
 │   ├── download.ts        # CLI download and installation
 │   ├── logger.ts          # LogOutputChannel for structured logging
-│   ├── telemetry.ts       # Sentry and Mixpanel integration
+│   ├── telemetry.ts       # Mixpanel integration
 │   ├── ssh.ts             # SSH port management
 │   └── test/
 │       ├── suite/         # Unit tests (Mocha, BDD style)

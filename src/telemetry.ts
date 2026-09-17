@@ -1,10 +1,8 @@
 import * as mixpanel from 'mixpanel';
 import * as vscode from 'vscode';
 import * as os from 'os';
-import * as sentry from '@sentry/node';
 import { getLogger } from './logger';
 
-const dsn = 'https://3becafe2cb9040fe9b43a353a1f524c6@sentry.io/1802969';
 const mpKey = '564133a36e3c39ecedf700669282c315';
 
 /**
@@ -44,7 +42,7 @@ export const events = {
 
 /**
  * Telemetry reporter for Okteto extension.
- * Handles Sentry error reporting and Mixpanel event tracking.
+ * Handles Mixpanel event tracking.
  * Respects VS Code's telemetry settings and the extension's own telemetry setting.
  */
 export class Reporter {
@@ -101,27 +99,6 @@ export class Reporter {
             this.distinctId = vscode.env.machineId;
         }
 
-        if (this.enabled) {
-            sentry.init({
-                dsn:  dsn,
-                integrations: defaults => defaults.filter(integration => (integration.name !== 'OnUncaughtException') && (integration.name !== 'OnUnhandledRejection')),
-                environment: 'prod',
-                release: `remote-kubernetes-vscode@${this.extensionVersion}`});
-
-
-            sentry.withScope(scope =>{
-                scope.setUser({"id": this.distinctId});
-                scope.setTags({
-                    'os': os.platform(),
-                    'version': this.extensionVersion,
-                    'vscodeversion': vscode.version,
-                    'session': vscode.env.sessionId,
-                    'vscode_machine_id': vscode.env.machineId,
-                    'machineId': machineId,
-                });
-            });
-        }
-
     }
 
     /**
@@ -155,7 +132,6 @@ export class Reporter {
          }, (err)=> {
             if (err) {
                 getLogger().debug(`failed to send telemetry: ${err}`);
-                sentry.captureException(err);
             }
 
             resolve();
@@ -165,14 +141,15 @@ export class Reporter {
 
     /**
      * Captures an error for reporting.
-     * Logs the error and sends it to Sentry if telemetry is enabled.
+     * Logs the error to the extension's output channel. Errors stay local,
+     * they are never sent to a remote error tracking service.
      * @param message - Human-readable error message
      * @param err - The error object to report
      */
     public captureError(message: string, err: unknown): void {
         getLogger().error(message);
-        if (this.enabled) {
-            sentry.captureException(err);
+        if (err !== undefined && err !== null) {
+            getLogger().debug(`${err}`);
         }
     }
 

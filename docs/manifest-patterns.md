@@ -9,15 +9,13 @@ All Okteto commands (`Up`, `Deploy`, `Destroy`, `Test`) support the same manifes
 #### Exact Filenames
 - `okteto.yml`
 - `okteto.yaml`
-- `okteto-pipeline.yml`
-- `okteto-pipeline.yaml`
 - `docker-compose.yml`
 - `docker-compose.yaml`
 
 #### Wildcard Patterns
 
 **`okteto-*.yml` / `okteto-*.yaml`**
-- `okteto-stack.yml`
+- `okteto-api.yml`
 - `okteto-compose.yaml`
 - `okteto-frontend.yml`
 - `okteto-backend.yaml`
@@ -113,9 +111,8 @@ All Okteto commands (`Okteto: Up`, `Okteto: Deploy`, `Okteto: Destroy`, `Okteto:
 
 ```bash
 okteto.yml                    # ✅ Exact match
-okteto-pipeline.yaml          # ✅ Exact match
 okteto.dev.yml                # ✅ Pattern match (okteto.*)
-okteto-stack.yaml             # ✅ Pattern match (okteto-*)
+okteto-api.yaml               # ✅ Pattern match (okteto-*)
 okteto.feature-auth.yml       # ✅ Pattern match (okteto.*)
 okteto-microservice-api.yml   # ✅ Pattern match (okteto-*)
 docker-compose.yml            # ✅ Exact match
@@ -175,7 +172,7 @@ okteto.dev.yml          # Not supported
 okteto.yml              # Works with all commands ✅
 okteto.dev.yml          # Works with all commands ✅
 okteto.staging.yml      # Works with all commands ✅
-okteto-stack.yml        # Works with all commands ✅
+okteto-api.yml          # Works with all commands ✅
 okteto-custom.yml       # Works with all commands ✅
 ```
 

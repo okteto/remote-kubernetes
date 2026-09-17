@@ -13,14 +13,11 @@ jobs:
     permissions:
       contents: read
     steps:
-    - uses: actions/checkout@v6
-    - name: get tag
-      id: vars
-      run: echo "release_tag=$(echo ${GITHUB_REF:11})" > $GITHUB_ENV
+    - uses: actions/checkout@v7
     - name: Install pnpm
       uses: pnpm/action-setup@v6
     - name: Use Node.js 22
-      uses: actions/setup-node@v6
+      uses: actions/setup-node@v7
       with:
         node-version: 22
         cache: 'pnpm'
@@ -35,9 +32,3 @@ jobs:
       run: pnpm run publish-prerelease
       env:
           VSCE_TOKEN: ${{secrets.VSCE_TOKEN}}
-    - run: pnpm run publish-sentry 
-      env:
-          VERSION: remote-kubernetes-code@${{ env.release_tag }}
-          SENTRY_AUTH_TOKEN: ${{secrets.SENTRY_AUTH_TOKEN}}
-          SENTRY_ORG: okteto-analytics
-          SENTRY_PROJECT: remote-kubernetes-vscode
