@@ -1,19 +1,25 @@
 # Change Log
 
-## Unreleased
-
-### Changed
-- Removed Sentry from the extension. The extension no longer initializes an error tracking client, and no longer sends exceptions, user ids, machine ids, session ids, or OS and version tags to sentry.io. `Reporter.captureError` now only writes to the extension's output channel, so errors stay on the user's machine. The `@sentry/node` and `@sentry/cli` dependencies, the `publish-sentry` release step, and the Sentry source map upload were all dropped. Mixpanel usage analytics are unchanged and still respect `okteto.telemetry` and VS Code's global telemetry setting.
-- Dropped the deprecated `okteto-pipeline.yml` / `okteto-pipeline.yaml` names from the built-in supported manifest list and removed references to the deprecated `okteto-pipeline.*` and `okteto-stack.*` manifests from the docs and examples. The generic `okteto-*` / `okteto.*` filename patterns still match custom manifest names.
-- Updated the project's own `okteto.yml` to the current Okteto Manifest (v2) `dev:` format.
-- Bumped the bundled Okteto CLI from 3.19.0 to 3.23.1. New installs and upgrades driven by the extension now pull the current stable CLI.
-- Updated dependencies to their latest stable versions. Runtime: `execa` 9 to 10, `got` 15 to 16, `mixpanel` 0.22 to 0.24, plus `semver` and `yaml` patches. Tooling: ESLint 9 to 10, `mocha` 11 to 12, `@vscode/vsce` 3 to 4, `@vscode/test-electron` 2 to 3, `typescript-eslint` 8.70.0, and matching type packages. Removed the deprecated `@types/glob`, since `glob` v13 ships its own types.
-- `tsconfig.json` now targets ES2022 instead of ES6, matching the Node 22 runtime the bundle is already built for.
-- Raised the minimum supported VS Code version from 1.109 to 1.137, and updated `@types/vscode` to match. Users on VS Code older than 1.137 will stay on the previously published version of the extension.
+## 0.6.0
 
 ### Fixed
-- Fixed the end-to-end test suite, which could not launch VS Code. `@vscode/test-electron` 2.5.2 looked for an `Electron` binary, but current VS Code builds ship it as `Code`, so every run failed with `spawn ... /Contents/MacOS/Electron ENOENT`. Upgrading to `@vscode/test-electron` 3.1.0 resolves the binary correctly.
+- Fixed every `Okteto:` command failing on PowerShell with `Unexpected token '<subcommand>' in expression or statement`. Shell-aware quoting wrapped the binary path in single quotes, and PowerShell parses a leading quoted string as a string expression rather than a command. The binary is now invoked through the call operator (`&`) on PowerShell, which keeps stdout and stderr attached to the integrated terminal. POSIX shells and `cmd.exe` are unchanged. Thanks to @Zionett.
 - Errors rethrown from a `catch` block now carry the original error as `cause`, so the underlying failure is no longer lost when an install, download, rename, chmod, or SSH readiness check fails.
+
+### Changed
+- Raised the minimum supported VS Code version from 1.109 to 1.137, and updated `@types/vscode` to match. Users on VS Code older than 1.137 will stay on the previously published version of the extension.
+- Removed Sentry from the extension. The extension no longer initializes an error tracking client, and no longer sends exceptions, user ids, machine ids, session ids, or OS and version tags to sentry.io. `Reporter.captureError` now only writes to the extension's output channel, so errors stay on the user's machine. The `@sentry/node` and `@sentry/cli` dependencies, the `publish-sentry` release step, and the Sentry source map upload were all dropped. Mixpanel usage analytics are unchanged and still respect `okteto.telemetry` and VS Code's global telemetry setting.
+- Bumped the bundled Okteto CLI from 3.19.0 to 3.23.1. New installs and upgrades driven by the extension now pull the current stable CLI.
+- Dropped the deprecated `okteto-pipeline.yml` / `okteto-pipeline.yaml` names from the built-in supported manifest list and removed references to the deprecated `okteto-pipeline.*` and `okteto-stack.*` manifests from the docs and examples. The generic `okteto-*` / `okteto.*` filename patterns still match custom manifest names.
+- Updated dependencies to their latest stable versions. Runtime: `execa` 9 to 10, `got` 15 to 16, `mixpanel` 0.22 to 0.24, plus `semver` and `yaml` patches. Tooling: ESLint 9 to 10, `mocha` 11 to 12, `@vscode/vsce` 3 to 4, `@vscode/test-electron` 2 to 3, `typescript-eslint` 8.70.0, and matching type packages. Removed the deprecated `@types/glob`, since `glob` v13 ships its own types.
+- `tsconfig.json` now targets ES2022 instead of ES6, matching the Node 22 runtime the bundle is already built for.
+- Updated the project's own `okteto.yml` to the current Okteto Manifest (v2) `dev:` format.
+
+### Internal
+- Fixed the end-to-end test suite, which could not launch VS Code. `@vscode/test-electron` 2.5.2 looked for an `Electron` binary, but current VS Code builds ship it as `Code`, so every run failed with `spawn ... /Contents/MacOS/Electron ENOENT`. Upgrading to `@vscode/test-electron` 3.1.0 resolves the binary correctly.
+- CI now runs on pull requests, not just pushes. The required `build` check could never be produced for a pull request from a fork, which made every external contribution unmergeable without an admin bypass.
+- Added a regression guard for the manifest discovery glob, asserting it stays a superset of `isManifestSupported` so the picker cannot silently hide a supported manifest.
+- Bumped `actions/checkout` and `actions/setup-node` to v7.
 
 ## 0.5.4
 
