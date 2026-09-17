@@ -4,7 +4,11 @@ import * as vscode from 'vscode';
 import * as telemetry from '../../telemetry';
 import * as okteto from '../../okteto';
 import * as manifest from '../../manifest';
-import { isManifestSupported, getUpTimeoutSeconds } from '../../extension';
+import { isManifestSupported, getUpTimeoutSeconds, manifestSearchPattern } from '../../extension';
+import { globSync } from 'glob';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 
 type MockVSCode = typeof vscode & {
   __mock: {
@@ -355,6 +359,71 @@ describe('down command (manifest picker dismissed)', () => {
     expect(downAllStub.calledOnceWithExactly(manifestUri, 'ns', ['api', 'worker'])).to.equal(true);
     expect(showInformationMessageStub.calledOnce).to.equal(true);
     expect(showInformationMessageStub.firstCall.args[0]).to.equal('Okteto: Down completed');
+  });
+});
+
+// The manifest picker works in two stages: `findFiles(manifestSearchPattern)`
+// discovers candidates, then `isManifestSupported` filters them per command.
+// `isManifestSupported` is covered below, but the glob itself had no test, so
+// dropping an alternative from it would silently hide manifests from the picker
+// while every other test still passed. That is exactly the symptom of #260
+// ("if my manifest is named okteto.foo.yaml the file picker won't find it").
+//
+// These run the real pattern against real files. VS Code's `findFiles` uses its
+// own matcher, but `{a,b}` alternation and `*` behave the same for a pattern
+// this simple, so this guards the pattern's intent.
+describe('manifestSearchPattern (issue #260)', () => {
+  let dir: string;
+
+  const seed = (names: string[]) => {
+    for (const name of names) {
+      const full = path.join(dir, name);
+      fs.mkdirSync(path.dirname(full), { recursive: true });
+      fs.writeFileSync(full, '');
+    }
+  };
+
+  const discovered = () =>
+    globSync(manifestSearchPattern, { cwd: dir }).map(p => p.split(path.sep).join('/')).sort();
+
+  beforeEach(() => { dir = fs.mkdtempSync(path.join(os.tmpdir(), 'okteto-glob-')); });
+  afterEach(() => { fs.rmSync(dir, { recursive: true, force: true }); });
+
+  it('discovers okteto.<env>.yaml manifests, including the okteto.foo.yaml from #260', () => {
+    seed(['okteto.foo.yaml', 'okteto.dev.yml', 'nested/okteto.prod.yaml']);
+    expect(discovered()).to.deep.equal(['nested/okteto.prod.yaml', 'okteto.dev.yml', 'okteto.foo.yaml']);
+  });
+
+  it('discovers the plain, dashed and compose manifest names', () => {
+    seed(['okteto.yml', 'okteto.yaml', 'okteto-stack.yml', 'docker-compose.yaml']);
+    expect(discovered()).to.deep.equal(['docker-compose.yaml', 'okteto-stack.yml', 'okteto.yaml', 'okteto.yml']);
+  });
+
+  it('does not discover unrelated files', () => {
+    seed(['random.yaml', 'manifest.yml', 'okteto.txt', 'okteto.yaml.bak', 'compose.yaml']);
+    expect(discovered()).to.deep.equal([]);
+  });
+
+  // The invariant that matters: the glob must be a superset of the filter.
+  // If it ever stops being one, the picker drops a manifest the command would
+  // have accepted, and the user sees "No manifests found".
+  it('is a superset of isManifestSupported, so the picker never hides a supported manifest', () => {
+    const supported = ['docker-compose.yml', 'docker-compose.yaml', 'okteto.yml', 'okteto.yaml'];
+    const corpus = [
+      'okteto.yml', 'okteto.yaml', 'docker-compose.yml', 'docker-compose.yaml',
+      'okteto-api.yml', 'okteto-api.yaml', 'okteto-compose.yml', 'okteto-frontend.yaml',
+      'okteto.foo.yaml', 'okteto.dev.yml', 'okteto.staging.yml', 'okteto.prod.yaml',
+      'okteto.a.b.c.yml', 'okteto..yml', 'okteto-.yml',
+      'random.yaml', 'manifest.yml', 'okteto.txt', 'okteto.yaml.bak', 'okteto.dev.json',
+    ];
+    seed(corpus);
+    const found = discovered();
+
+    const accepted = corpus.filter(name => isManifestSupported(name, supported));
+    const hidden = accepted.filter(name => !found.includes(name));
+
+    expect(accepted.length).to.be.greaterThan(0);
+    expect(hidden, `discoverable by isManifestSupported but missed by the glob: ${hidden.join(', ')}`).to.deep.equal([]);
   });
 });
 

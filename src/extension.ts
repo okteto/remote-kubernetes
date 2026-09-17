@@ -47,6 +47,19 @@ const supportedUpFilenames = [
 'okteto.yaml']
 
 /**
+ * Glob used to discover candidate manifests in the workspace.
+ *
+ * This is deliberately a SUPERSET of what `isManifestSupported` accepts:
+ * `findFiles` casts the wide net and `isManifestSupported` narrows it per
+ * command. Narrowing this pattern hides files from the picker before the
+ * filter ever runs, which is what issue #260 reported for `okteto.*.yaml`.
+ */
+export const manifestSearchPattern = '**/{okteto,docker-compose,okteto-*,okteto.*}.{yml,yaml}';
+
+/** Paths excluded from manifest discovery. */
+export const manifestSearchExclude = '**/node_modules/**';
+
+/**
  * Checks if a filename matches the supported patterns.
  * @param filename - The basename of the file to check
  * @param supportedFilenames - Array of explicitly supported filenames
@@ -655,7 +668,7 @@ function onOktetoFailed(message: string, terminalSuffix: string | null = null) {
 }
 
 async function showManifestPicker(supportedFilenames: string[]) : Promise<vscode.Uri | undefined> {
-    const files = await vscode.workspace.findFiles('**/{okteto,docker-compose,okteto-*,okteto.*}.{yml,yaml}', '**/node_modules/**');
+    const files = await vscode.workspace.findFiles(manifestSearchPattern, manifestSearchExclude);
 
     // Filter files to only include supported filenames for this command
     const filteredFiles = files.filter(file => {
