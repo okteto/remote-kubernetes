@@ -147,7 +147,7 @@ suite('Smoke Test Suite', function() {
         } catch (error) {
             console.error('[SMOKE TEST] Failed to execute Okteto: Up:', error);
             await captureScreenshot('okteto-up-failed');
-            throw new Error(`Failed to execute Okteto: Up - ${error}`);
+            throw new Error(`Failed to execute Okteto: Up - ${error}`, { cause: error });
         }
     }
 
@@ -237,7 +237,7 @@ suite('Smoke Test Suite', function() {
         } catch (error) {
             console.error('[SMOKE TEST] Failed to execute Okteto: Down:', error);
             await captureScreenshot('okteto-down-failed');
-            throw new Error(`Failed to execute Okteto: Down - ${error}`);
+            throw new Error(`Failed to execute Okteto: Down - ${error}`, { cause: error });
         }
     }
 
