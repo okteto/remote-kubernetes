@@ -9,6 +9,8 @@
 
 ### Internal
 - The Marketplace publish workflow now authenticates with OpenID Connect trusted publishing (`vsce publish --oidc`) instead of the long-lived `VSCE_TOKEN` personal access token.
+- Added a manual dry run for trusted publishing: running the `publish-marketplace` workflow by hand exchanges the OIDC token and checks publisher rights without publishing anything.
+- `scripts/` is no longer included in the packaged extension.
 
 ## 0.6.0
 
