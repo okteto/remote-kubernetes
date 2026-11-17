@@ -1,5 +1,11 @@
 # Change Log
 
+## Unreleased
+
+### Changed
+- Bumped the bundled Okteto CLI from 3.23.1 to 3.25.0. New installs and upgrades driven by the extension now pull the current stable CLI.
+- Updated dependencies to their latest compatible versions. Runtime: `execa` 10.2.1, `got` 16.2.0, `semver` 7.8.6. Tooling: `eslint` 10.15.0, `typescript-eslint` 8.73.0, `mocha` 12.0.3, `chai` 6.3.0, `@vscode/vsce` 4.1.1, `glob` 13 to 14, `markdown-it` 14 to 15, plus `@types/node` and `@types/sinon` patches. TypeScript stays on 6.x and `@types/node` on 22.x.
+
 ## 0.6.0
 
 ### Fixed
