@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      id-token: write
     steps:
     - uses: actions/checkout@v7
     - name: Install pnpm
@@ -25,10 +26,6 @@ jobs:
     - name: publish
       if: github.event.release.prerelease != true
       run: pnpm run publish
-      env:
-          VSCE_TOKEN: ${{secrets.VSCE_TOKEN}}
     - name: publish-prerelease
       if: github.event.release.prerelease == true
       run: pnpm run publish-prerelease
-      env:
-          VSCE_TOKEN: ${{secrets.VSCE_TOKEN}}

@@ -161,7 +161,7 @@ Linting is included in the CI pipeline (`pnpm run ci`).
 
 - **CI:** GitHub Actions (`.github/workflows/nodejs.yml`) - runs on every push, Node 22, Ubuntu
 - **Pipeline:** `pnpm install → pnpm run lint → pnpm run test → pnpm run package`
-- **Publish:** `.github/workflows/publish.yml` - triggered on GitHub release, publishes to VS Code Marketplace via `vsce`
+- **Publish:** `.github/workflows/publish.yml` - triggered on GitHub release, publishes to VS Code Marketplace via `vsce` using OIDC trusted publishing (no `VSCE_TOKEN` secret)
 - **Security:** CodeQL analysis on PRs to main + weekly schedule
 
 ## Release Process

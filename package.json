@@ -14,7 +14,7 @@
     "gke",
     "eks"
   ],
-  "version": "0.6.0",
+  "version": "0.6.1",
   "icon": "media/icon.png",
   "author": {
     "name": "Ramiro Berrelleza",
@@ -136,8 +136,8 @@
     "update-okteto": "bash scripts/update-okteto-version.sh",
     "lint": "eslint src/",
     "ci": "pnpm install --frozen-lockfile && pnpm run lint && pnpm run test && pnpm run package",
-    "publish": "vsce publish --no-dependencies -p $VSCE_TOKEN",
-    "publish-prerelease": "vsce publish --no-dependencies -p $VSCE_TOKEN --pre-release"
+    "publish": "vsce publish --no-dependencies --oidc",
+    "publish-prerelease": "vsce publish --no-dependencies --oidc --pre-release"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
