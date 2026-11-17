@@ -9,7 +9,7 @@
 
 ### Internal
 - The Marketplace publish workflow now authenticates with OpenID Connect trusted publishing (`vsce publish --oidc`) instead of the long-lived `VSCE_TOKEN` personal access token.
-- `scripts/` is no longer included in the packaged extension.
+- The packaged extension now contains only the bundled `dist/extension.js`, `package.json`, the icon, `README.md`, `CHANGELOG.md` and `LICENSE`. `.vscodeignore` is now an allowlist, so repo docs, lockfiles, configs, scripts and the source map are no longer shipped.
 
 ## 0.6.0
 
