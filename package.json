@@ -17,8 +17,8 @@
   "version": "0.6.1",
   "icon": "media/icon.png",
   "author": {
-    "name": "Ramiro Berrelleza",
-    "email": "ramiro@okteto.com"
+    "name": "Okteto",
+    "email": "hello@okteto.com"
   },
   "homepage": "https://github.com/okteto/remote-kubernetes",
   "bugs": {
