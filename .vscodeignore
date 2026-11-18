@@ -1,19 +1,9 @@
-.vscode
-node_modules
-out/
-src/
-remote-kubernetes-*/
-**/*.ts
-**/tsconfig.json
-**/tslint.json
-**/webpack.config.js
-**/esbuild.js
-
-okteto.yml
-.stignore
-
-.git
-.gitignore
-.github
-
-docs
+# Allowlist: package only what the extension needs at runtime, plus the
+# README, CHANGELOG and LICENSE the Marketplace listing uses.
+# package.json is always included by vsce.
+**
+!dist/extension.js
+!media/icon.png
+!README.md
+!CHANGELOG.md
+!LICENSE
