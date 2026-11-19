@@ -66,12 +66,9 @@ updates:
       # @types/node must stay on 22.x - updated manually
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
-      # ESLint v10 not yet supported by typescript-eslint
-      - dependency-name: "eslint"
-        versions: ["10.x"]
-      # @eslint/js must match eslint version
-      - dependency-name: "@eslint/js"
-        versions: ["10.x"]
+      # typescript-eslint peers on typescript <6.1.0 - stay on 6.x until it widens
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
 
   # Monitor GitHub Actions versions
   - package-ecosystem: "github-actions"
